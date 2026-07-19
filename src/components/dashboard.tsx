@@ -12,12 +12,13 @@ import {
   Clock,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useT } from "@/lib/i18n";
 
-const stats = [
-  { label: "AI employees", value: 6, delta: "+2 this week", icon: Bot, tone: "violet" as const },
-  { label: "Products", value: 148, delta: "+12", icon: Package, tone: "emerald" as const },
-  { label: "Orders (30d)", value: 342, delta: "+18%", icon: ShoppingCart, tone: "violet" as const },
-  { label: "Conversations", value: "2.1k", delta: "+412", icon: MessageSquare, tone: "emerald" as const },
+const statDefs = [
+  { key: "dash.stat.ai_employees", value: 6, deltaKey: "dash.stat.thisweek", icon: Bot, tone: "violet" as const },
+  { key: "dash.stat.products",     value: 148, delta: "+12",  icon: Package, tone: "emerald" as const },
+  { key: "dash.stat.orders",       value: 342, delta: "+18%", icon: ShoppingCart, tone: "violet" as const },
+  { key: "dash.stat.conversations",value: "2.1k", delta: "+412", icon: MessageSquare, tone: "emerald" as const },
 ];
 
 const employees = [
@@ -37,6 +38,7 @@ const conversations = [
 const spark = [8, 14, 11, 19, 17, 24, 22, 31, 28, 36, 33, 41, 44];
 
 export function Dashboard() {
+  const t = useT();
   return (
     <div className="space-y-6">
       <Header />
@@ -44,8 +46,8 @@ export function Dashboard() {
       {/* Bento grid */}
       <div className="grid grid-cols-12 gap-4">
         {/* Stat cards row */}
-        {stats.map((s) => (
-          <StatCard key={s.label} {...s} />
+        {statDefs.map((s) => (
+          <StatCard key={s.key} label={t(s.key)} value={s.value} delta={s.deltaKey ? t(s.deltaKey) : s.delta!} icon={s.icon} tone={s.tone} />
         ))}
 
         {/* Hero: activity + spark */}
@@ -53,7 +55,7 @@ export function Dashboard() {
           <div className="mb-6 flex items-start justify-between">
             <div>
               <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                Conversation volume
+                {t("dash.conv_volume")}
               </div>
               <div className="mt-1 flex items-baseline gap-3">
                 <span className="font-display text-4xl font-bold tracking-tight">2,148</span>
@@ -61,7 +63,7 @@ export function Dashboard() {
                   <TrendingUp className="h-4 w-4" /> +24.6%
                 </span>
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">vs. previous 30 days</div>
+              <div className="mt-1 text-sm text-muted-foreground">{t("dash.vs_prev")}</div>
             </div>
             <div className="flex gap-1 rounded-lg border border-border p-1 text-xs">
               {["7D", "30D", "90D"].map((t, i) => (
@@ -87,23 +89,23 @@ export function Dashboard() {
           <div className="absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-primary/40 blur-3xl" />
           <div className="relative">
             <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest backdrop-blur">
-              <Sparkles className="h-3 w-3" /> Suggestion
+              <Sparkles className="h-3 w-3" /> {t("dash.suggestion")}
             </div>
             <h3 className="font-display text-xl font-bold leading-tight">
-              Train <span className="aurora-gradient-text">Ember</span> on your new fall catalog
+              {t("dash.train_title")}
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              47 new products lack embeddings. Ember will answer 3× faster once trained.
+              {t("dash.train_desc")}
             </p>
             <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:opacity-90">
-              Start training <ArrowUpRight className="h-3.5 w-3.5" />
+              {t("dash.start_training")} <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
         {/* AI employees */}
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-7">
-          <SectionHeader title="Your AI employees" cta="Manage all" />
+          <SectionHeader title={t("dash.your_employees")} cta={t("dash.manage_all")} />
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {employees.map((e) => (
               <EmployeeCard key={e.name} {...e} />
@@ -113,7 +115,7 @@ export function Dashboard() {
 
         {/* Live conversations */}
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-5">
-          <SectionHeader title="Live conversations" cta="Open inbox" />
+          <SectionHeader title={t("dash.live_conv")} cta={t("dash.open_inbox")} />
           <ul className="mt-4 space-y-1">
             {conversations.map((c) => (
               <li
@@ -130,7 +132,7 @@ export function Dashboard() {
                   </div>
                   <div className="mt-0.5 truncate text-xs text-muted-foreground">{c.preview}</div>
                   <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-primary">
-                    <Zap className="h-2.5 w-2.5" /> Handled by {c.agent}
+                    <Zap className="h-2.5 w-2.5" /> {t("dash.handled_by")} {c.agent}
                   </div>
                 </div>
               </li>
@@ -141,7 +143,7 @@ export function Dashboard() {
         {/* Quick actions row */}
         {/* AI-confirmed orders */}
         <div className="glass-panel col-span-12 rounded-2xl p-6">
-          <SectionHeader title="Confirmed by AI today" cta="Open orders" />
+          <SectionHeader title={t("dash.confirmed_today")} cta={t("dash.open_orders")} />
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[
               { id: "ORD-2841", customer: "Sara M.",   product: "Argan hair oil ×2",     amount: 2980, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "3m" },
@@ -152,7 +154,7 @@ export function Dashboard() {
               <div key={o.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition hover:border-emerald-400/30 hover:bg-white/[0.04]">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
                   <span className="font-mono">{o.id}</span>
-                  <span>{o.time} ago</span>
+                  <span>{o.time} {t("common.ago")}</span>
                 </div>
                 <div className="mt-2 truncate text-sm font-semibold">{o.customer}</div>
                 <div className="mt-0.5 truncate text-xs text-muted-foreground">{o.product}</div>
@@ -162,11 +164,11 @@ export function Dashboard() {
                   </span>
                   <span className={"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium " + (o.status === "confirmed" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-400/30 bg-amber-400/10 text-amber-300")}>
                     {o.status === "confirmed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                    {o.status}
+                    {o.status === "confirmed" ? t("common.confirmed") : t("common.pending")}
                   </span>
                 </div>
                 <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary">
-                  <Zap className="h-2.5 w-2.5" /> Closed by {o.agent}
+                  <Zap className="h-2.5 w-2.5" /> {t("dash.closed_by")} {o.agent}
                 </div>
               </div>
             ))}
@@ -174,26 +176,27 @@ export function Dashboard() {
         </div>
 
         {/* Quick actions row — every button navigates */}
-        <QuickAction span={4} icon={Bot} title="Create AI employee" desc="Ship a new agent in under 2 minutes" to="/ai-employees" />
-        <QuickAction span={4} icon={Package} title="Manage products" desc="Your catalog, stock and pricing" to="/products" />
-        <QuickAction span={4} icon={MessageSquare} title="Open playground" desc="Test any prompt in real time" to="/playground" />
+        <QuickAction span={4} icon={Bot} title={t("dash.qa.create_title")} desc={t("dash.qa.create_desc")} to="/ai-employees" />
+        <QuickAction span={4} icon={Package} title={t("dash.qa.products_title")} desc={t("dash.qa.products_desc")} to="/products" />
+        <QuickAction span={4} icon={MessageSquare} title={t("dash.qa.playground_title")} desc={t("dash.qa.playground_desc")} to="/playground" />
       </div>
     </div>
   );
 }
 
 function Header() {
+  const t = useT();
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Sunday · Overview
+          {t("dash.weekday")}
         </div>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Welcome back, <span className="aurora-gradient-text">Khalid</span>
+          {t("dash.welcome")} <span className="aurora-gradient-text">Khalid</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your workforce handled 412 conversations while you were away.
+          {t("dash.subtitle")}
         </p>
       </div>
       <div className="glass-panel flex items-center gap-2 rounded-xl px-3 py-2 text-xs">
@@ -201,7 +204,7 @@ function Header() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
         </span>
-        <span className="font-medium">All systems operational</span>
+        <span className="font-medium">{t("dash.systems_ok")}</span>
       </div>
     </div>
   );
@@ -264,6 +267,7 @@ function EmployeeCard({
   chats: number;
   avatar: string;
 }) {
+  const t = useT();
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-white/[0.02] p-4 transition hover:border-primary/40 hover:bg-white/[0.04]">
       <div className="flex items-start gap-3">
@@ -282,13 +286,13 @@ function EmployeeCard({
               }
             >
               <Circle className={"h-1.5 w-1.5 " + (status === "active" ? "fill-accent" : "fill-primary")} />
-              {status}
+              {t("common." + status, status)}
             </span>
           </div>
           <div className="mt-0.5 text-xs text-muted-foreground">{role}</div>
           <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
             <span className="rounded-md border border-border px-1.5 py-0.5">{model}</span>
-            <span>{chats.toLocaleString()} chats</span>
+            <span>{chats.toLocaleString()} {t("dash.chats")}</span>
           </div>
         </div>
       </div>
