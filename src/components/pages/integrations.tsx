@@ -563,17 +563,17 @@ function IntegrationCard({
   return (
     <button
       onClick={onOpen}
-      className="glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+      className="glass-panel card-sheen group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
     >
       {/* accent band */}
-      <div className={"h-1 w-full bg-gradient-to-r " + i.accent} />
+      <div className={"h-1 w-full bg-gradient-to-r animate-gradient " + i.accent} />
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
             <div
               className={
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg ring-1 ring-white/10 " +
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg ring-1 ring-white/10 transition duration-300 group-hover:scale-110 group-hover:-rotate-3 " +
                 i.accent
               }
             >
