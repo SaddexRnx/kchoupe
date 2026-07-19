@@ -18,6 +18,11 @@ import {
   Phone,
   X,
   Check,
+  Loader2,
+  Zap as ZapIcon,
+  ExternalLink,
+  ShieldCheck,
+  Activity,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 
