@@ -316,7 +316,7 @@ export function IntegrationsPage() {
     );
     return seed;
   });
-  const [editing, setEditing] = useState<Integration | null>(null);
+  const [editing, setEditing] = useState<{ integration: Integration; categoryId: string } | null>(null);
 
   const toggleEmployee = (integration: string, employee: string) => {
     setAssignments((prev) => {
@@ -438,7 +438,7 @@ export function IntegrationsPage() {
                     key={c.id + i.name}
                     i={i}
                     usedBy={assignments[i.name] ?? []}
-                    onManage={() => setEditing(i)}
+                    onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
                 ))}
               </div>
@@ -453,10 +453,11 @@ export function IntegrationsPage() {
       </div>
 
       {editing && (
-        <AssignEmployeesModal
-          integration={editing}
-          selected={assignments[editing.name] ?? []}
-          onToggle={(emp) => toggleEmployee(editing.name, emp)}
+        <IntegrationDrawer
+          integration={editing.integration}
+          categoryId={editing.categoryId}
+          selected={assignments[editing.integration.name] ?? []}
+          onToggle={(emp) => toggleEmployee(editing.integration.name, emp)}
           onClose={() => setEditing(null)}
         />
       )}
