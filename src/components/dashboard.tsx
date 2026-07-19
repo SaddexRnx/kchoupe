@@ -15,10 +15,10 @@ import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
 
 const statDefs = [
-  { key: "dash.stat.ai_employees", value: 6, deltaKey: "dash.stat.thisweek", icon: Bot, tone: "violet" as const },
-  { key: "dash.stat.products",     value: 148, delta: "+12",  icon: Package, tone: "emerald" as const },
-  { key: "dash.stat.orders",       value: 342, delta: "+18%", icon: ShoppingCart, tone: "violet" as const },
-  { key: "dash.stat.conversations",value: "2.1k", delta: "+412", icon: MessageSquare, tone: "emerald" as const },
+  { key: "dash.stat.ai_employees", value: 6, deltaKey: "dash.stat.thisweek", icon: Bot, tone: "violet" as const, to: "/ai-employees" },
+  { key: "dash.stat.products",     value: 148, delta: "+12",  icon: Package, tone: "emerald" as const, to: "/products" },
+  { key: "dash.stat.orders",       value: 342, delta: "+18%", icon: ShoppingCart, tone: "violet" as const, to: "/orders" },
+  { key: "dash.stat.conversations",value: "2.1k", delta: "+412", icon: MessageSquare, tone: "emerald" as const, to: "/conversations" },
 ];
 
 const employees = [
@@ -47,7 +47,7 @@ export function Dashboard() {
       <div className="grid grid-cols-12 gap-4">
         {/* Stat cards row */}
         {statDefs.map((s) => (
-          <StatCard key={s.key} label={t(s.key)} value={s.value} delta={s.deltaKey ? t(s.deltaKey) : s.delta!} icon={s.icon} tone={s.tone} />
+          <StatCard key={s.key} label={t(s.key)} value={s.value} delta={s.deltaKey ? t(s.deltaKey) : s.delta!} icon={s.icon} tone={s.tone} to={s.to} />
         ))}
 
         {/* Hero: activity + spark */}
@@ -97,15 +97,15 @@ export function Dashboard() {
             <p className="mt-2 text-sm text-muted-foreground">
               {t("dash.train_desc")}
             </p>
-            <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:opacity-90">
+            <Link to="/ai-employees" className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:opacity-90 hover:-translate-y-0.5">
               {t("dash.start_training")} <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* AI employees */}
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-7">
-          <SectionHeader title={t("dash.your_employees")} cta={t("dash.manage_all")} />
+          <SectionHeader title={t("dash.your_employees")} cta={t("dash.manage_all")} to="/ai-employees" />
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {employees.map((e) => (
               <EmployeeCard key={e.name} {...e} />
@@ -115,12 +115,14 @@ export function Dashboard() {
 
         {/* Live conversations */}
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-5">
-          <SectionHeader title={t("dash.live_conv")} cta={t("dash.open_inbox")} />
+          <SectionHeader title={t("dash.live_conv")} cta={t("dash.open_inbox")} to="/conversations" />
           <ul className="mt-4 space-y-1">
             {conversations.map((c) => (
-              <li
+              <li key={c.customer + c.time}>
+              <Link
+                to="/conversations"
                 key={c.customer + c.time}
-                className="group flex cursor-pointer items-start gap-3 rounded-xl p-3 transition hover:bg-white/5"
+                className="group flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-all duration-300 hover:bg-white/5 hover:translate-x-1"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/40 to-accent/40 text-xs font-semibold">
                   {c.customer[0]}
@@ -135,6 +137,7 @@ export function Dashboard() {
                     <Zap className="h-2.5 w-2.5" /> {t("dash.handled_by")} {c.agent}
                   </div>
                 </div>
+              </Link>
               </li>
             ))}
           </ul>
@@ -143,7 +146,7 @@ export function Dashboard() {
         {/* Quick actions row */}
         {/* AI-confirmed orders */}
         <div className="glass-panel col-span-12 rounded-2xl p-6">
-          <SectionHeader title={t("dash.confirmed_today")} cta={t("dash.open_orders")} />
+          <SectionHeader title={t("dash.confirmed_today")} cta={t("dash.open_orders")} to="/orders" />
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[
               { id: "ORD-2841", customer: "Sara M.",   product: "Argan hair oil ×2",     amount: 2980, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "3m" },
@@ -151,7 +154,7 @@ export function Dashboard() {
               { id: "ORD-2839", customer: "Lena K.",   product: "Ceramic tagine 28cm",   amount: 4800, cur: "DZD", agent: "Ember", status: "confirmed" as const, time: "24m" },
               { id: "ORD-2838", customer: "Jon P.",    product: "Dates 1kg ×4",          amount: 5000, cur: "DZD", agent: "Kai",   status: "pending"   as const, time: "38m" },
             ].map((o) => (
-              <div key={o.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition hover:border-emerald-400/30 hover:bg-white/[0.04]">
+              <Link key={o.id} to="/orders" className="group block rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-emerald-400/10">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
                   <span className="font-mono">{o.id}</span>
                   <span>{o.time} {t("common.ago")}</span>
@@ -170,7 +173,7 @@ export function Dashboard() {
                 <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary">
                   <Zap className="h-2.5 w-2.5" /> {t("dash.closed_by")} {o.agent}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -216,38 +219,46 @@ function StatCard({
   delta,
   icon: Icon,
   tone,
+  to,
 }: {
   label: string;
   value: string | number;
   delta: string;
   icon: typeof Bot;
   tone: "violet" | "emerald";
+  to: string;
 }) {
   const ring =
     tone === "violet"
       ? "from-primary/25 to-primary/0 text-primary"
       : "from-accent/25 to-accent/0 text-accent";
   return (
-    <div className="glass-panel col-span-6 rounded-2xl p-5 lg:col-span-3">
+    <Link to={to} className="group glass-panel col-span-6 rounded-2xl p-5 lg:col-span-3 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
       <div className="flex items-start justify-between">
-        <div className={"flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br " + ring}>
+        <div className={"flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 " + ring}>
           <Icon className="h-4 w-4" />
         </div>
         <span className="text-[10px] font-semibold uppercase tracking-widest text-accent">{delta}</span>
       </div>
-      <div className="mt-4 font-display text-3xl font-bold tracking-tight">{value}</div>
+      <div className="mt-4 font-display text-3xl font-bold tracking-tight transition-colors group-hover:aurora-gradient-text">{value}</div>
       <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
-    </div>
+    </Link>
   );
 }
 
-function SectionHeader({ title, cta }: { title: string; cta: string }) {
+function SectionHeader({ title, cta, to }: { title: string; cta: string; to?: string }) {
   return (
     <div className="flex items-center justify-between">
       <h2 className="font-display text-lg font-semibold">{title}</h2>
-      <button className="inline-flex items-center gap-1 text-xs text-muted-foreground transition hover:text-foreground">
-        {cta} <ArrowUpRight className="h-3.5 w-3.5" />
-      </button>
+      {to ? (
+        <Link to={to} className="group inline-flex items-center gap-1 text-xs text-muted-foreground transition hover:text-foreground">
+          {cta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </Link>
+      ) : (
+        <button className="inline-flex items-center gap-1 text-xs text-muted-foreground transition hover:text-foreground">
+          {cta} <ArrowUpRight className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -269,9 +280,9 @@ function EmployeeCard({
 }) {
   const t = useT();
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-white/[0.02] p-4 transition hover:border-primary/40 hover:bg-white/[0.04]">
+    <Link to="/ai-employees" className="group relative block overflow-hidden rounded-xl border border-border bg-white/[0.02] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-white/[0.04] hover:shadow-lg hover:shadow-primary/10">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent font-display text-base font-bold text-primary-foreground">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent font-display text-base font-bold text-primary-foreground transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
           {avatar}
         </div>
         <div className="min-w-0 flex-1">
@@ -296,7 +307,7 @@ function EmployeeCard({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -317,18 +328,18 @@ function QuickAction({
     <Link
       to={to}
       className={
-        "group glass-panel col-span-12 flex items-center gap-4 rounded-2xl p-5 text-left transition hover:border-primary/40 hover:bg-white/[0.06] lg:col-span-" +
+        "group glass-panel col-span-12 flex items-center gap-4 rounded-2xl p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.06] hover:shadow-xl hover:shadow-primary/10 lg:col-span-" +
         span
       }
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 text-foreground transition group-hover:from-primary/40 group-hover:to-accent/40">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 text-foreground transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:from-primary/40 group-hover:to-accent/40">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="font-display font-semibold">{title}</div>
         <div className="text-xs text-muted-foreground">{desc}</div>
       </div>
-      <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />
+      <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground" />
     </Link>
   );
 }
