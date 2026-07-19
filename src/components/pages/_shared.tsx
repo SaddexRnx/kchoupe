@@ -12,13 +12,13 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="animate-fade-up mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
         <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {eyebrow}
         </div>
         <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
-          <span className="aurora-gradient-text">{title}</span>
+          <span className="aurora-gradient-text animate-gradient">{title}</span>
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
       </div>
