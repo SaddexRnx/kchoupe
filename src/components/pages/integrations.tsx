@@ -780,7 +780,7 @@ function IntegrationDrawer({
             <div className="flex items-center justify-between">
               <SectionTitle icon={Settings2}>Integration settings</SectionTitle>
               {status === "reauth" && (
-                <Chip tone="warn">
+                <Chip tone="amber">
                   <AlertTriangle className="h-3 w-3" /> Re-auth needed
                 </Chip>
               )}
