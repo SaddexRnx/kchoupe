@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Package, Plus, Search, Upload, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { useT } from "@/lib/i18n";
 
 // User's OWN products — sold on their store. Shown as a compact list, not big cards.
 type Row = {
@@ -35,6 +36,7 @@ function fmt(v: number, cur: Row["currency"]) {
 }
 
 export function Products() {
+  const t = useT();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
@@ -57,16 +59,16 @@ export function Products() {
   return (
     <div>
       <PageHeader
-        eyebrow="Your catalog"
-        title="Products"
-        description="Everything you sell — synced with your store. Your AI employees quote, upsell and reserve stock from this list."
+        eyebrow={t("prod.eyebrow")}
+        title={t("prod.title")}
+        description={t("prod.desc")}
         actions={
           <div className="flex gap-2">
             <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
-              <Upload className="h-4 w-4" /> Import CSV
+              <Upload className="h-4 w-4" /> {t("common.import")}
             </button>
             <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110">
-              <Plus className="h-4 w-4" /> New product
+              <Plus className="h-4 w-4" /> {t("prod.new")}
             </button>
           </div>
         }
@@ -74,10 +76,10 @@ export function Products() {
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { l: "Products", v: totals.products, sub: "in catalog" },
-          { l: "Active",   v: totals.active,   sub: "live on store" },
-          { l: "Total stock", v: totals.stock, sub: "units on hand" },
-          { l: "Sold by AI (30d)", v: totals.ai, sub: "auto-fulfilled" },
+          { l: t("prod.title"), v: totals.products, sub: t("prod.in_catalog") },
+          { l: t("common.active"),   v: totals.active,   sub: t("prod.live_on_store") },
+          { l: t("prod.total_stock"), v: totals.stock, sub: t("prod.units") },
+          { l: t("prod.sold_ai"), v: totals.ai, sub: t("prod.auto_fulfilled") },
         ].map((s) => (
           <Panel key={s.l} className="animate-fade-up">
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{s.l}</div>
@@ -91,18 +93,18 @@ export function Products() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search product or SKU…" className="w-full bg-transparent text-sm outline-none" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("prod.search")} className="w-full bg-transparent text-sm outline-none" />
           </div>
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select value={cat} onChange={(e) => setCat(e.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
-              {categories.map(c => <option key={c} value={c}>{c === "all" ? "All categories" : c}</option>)}
+              {categories.map(c => <option key={c} value={c}>{c === "all" ? t("common.all_categories") : c}</option>)}
             </select>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
-              <option value="all">Any status</option>
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
-              <option value="out">Out of stock</option>
+              <option value="all">{t("common.any_status")}</option>
+              <option value="active">{t("common.active")}</option>
+              <option value="draft">{t("common.draft")}</option>
+              <option value="out">{t("common.out_of_stock")}</option>
             </select>
           </div>
         </div>
@@ -110,12 +112,12 @@ export function Products() {
 
       <Panel className="overflow-hidden p-0">
         <div className="hidden grid-cols-[minmax(260px,2fr)_1fr_120px_100px_140px_140px_60px] items-center gap-3 border-b border-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-muted-foreground md:grid">
-          <div>Product</div>
-          <div>Category</div>
-          <div className="text-right">Price</div>
-          <div className="text-right">Stock</div>
-          <div className="text-right">Sold 30d</div>
-          <div className="text-right">Sold by AI</div>
+          <div>{t("prod.col.product")}</div>
+          <div>{t("prod.col.category")}</div>
+          <div className="text-right">{t("prod.col.price")}</div>
+          <div className="text-right">{t("prod.col.stock")}</div>
+          <div className="text-right">{t("prod.col.sold30")}</div>
+          <div className="text-right">{t("prod.col.sold_ai")}</div>
           <div />
         </div>
         <ul className="divide-y divide-white/5">
@@ -128,14 +130,14 @@ export function Products() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium">{r.name}</span>
-                    {r.status === "draft" && <Chip tone="amber">draft</Chip>}
-                    {r.status === "out" && <Chip tone="rose">out</Chip>}
+                    {r.status === "draft" && <Chip tone="amber">{t("common.draft")}</Chip>}
+                    {r.status === "out" && <Chip tone="rose">{t("common.out_of_stock")}</Chip>}
                   </div>
                   <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="font-mono">{r.sku}</span>
                     {r.aiSold > 0 && (
                       <span className="inline-flex items-center gap-1 text-primary">
-                        <TrendingUp className="h-3 w-3" /> AI drove {Math.round(r.aiSold / Math.max(1, r.sold30) * 100)}% of sales
+                        <TrendingUp className="h-3 w-3" /> {t("prod.ai_drove", { pct: Math.round(r.aiSold / Math.max(1, r.sold30) * 100) })}
                       </span>
                     )}
                   </div>
@@ -149,23 +151,23 @@ export function Products() {
                 <span className="rounded-md bg-primary/10 px-2 py-0.5 text-primary">{r.aiSold}</span>
               </div>
               <div className="flex justify-end gap-1 text-muted-foreground">
-                <button title="View"  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
-                <button title="Edit"  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
-                <button title="More"  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
+                <button title={t("common.view")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
+                <button title={t("common.edit")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
+                <button title={t("common.more")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
               </div>
             </li>
           ))}
           {rows.length === 0 && (
             <li className="p-10 text-center text-sm text-muted-foreground">
               <Package className="mx-auto mb-2 h-5 w-5 opacity-50" />
-              No products match your filters.
+              {t("prod.empty")}
             </li>
           )}
         </ul>
       </Panel>
 
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-        <Trash2 className="h-3 w-3" /> Bulk actions available on selection.
+        <Trash2 className="h-3 w-3" /> {t("prod.bulk")}
       </div>
     </div>
   );

@@ -357,7 +357,7 @@ function AppearanceSection() {
                 key={d}
                 onClick={() => setDensity(d)}
                 className={"flex-1 rounded-lg border px-3 py-2 text-sm capitalize transition " + (density === d ? "border-primary/50 bg-primary/10" : "border-border bg-white/5 hover:bg-white/10")}
-              >{d}</button>
+              >{t("appearance.density." + d, d)}</button>
             ))}
           </div>
         </Field>

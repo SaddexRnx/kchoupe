@@ -1,5 +1,6 @@
 import { MessageSquare, Search, Filter, ChevronRight } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { useT } from "@/lib/i18n";
 
 const convos = [
   { user: "sarah@northwind.io", employee: "Nova", last: "Perfect, I'll upgrade to the team plan.", time: "2m", status: "won", unread: 2 },
@@ -12,23 +13,25 @@ const convos = [
 ];
 
 const tones = { won: "emerald", open: "violet", risk: "rose", resolved: "muted" } as const;
+const statusKey = { won: "common.won", open: "common.open", risk: "common.risk", resolved: "common.resolved" } as const;
 
 export function Conversations() {
+  const t = useT();
   return (
     <div>
       <PageHeader
-        eyebrow="Inbox"
-        title="Conversations"
-        description="Every live thread across every AI employee — filter, jump in, or let them close the loop."
+        eyebrow={t("conv.eyebrow")}
+        title={t("conv.title")}
+        description={t("conv.desc")}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
         <Panel className="p-0">
           <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input placeholder="Search conversations…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+            <input placeholder={t("conv.search")} className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             <button className="flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1 text-xs hover:bg-white/5">
-              <Filter className="h-3 w-3" /> Filter
+              <Filter className="h-3 w-3" /> {t("common.filter")}
             </button>
           </div>
           <div className="divide-y divide-white/5">
@@ -40,7 +43,7 @@ export function Conversations() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="truncate text-sm font-semibold">{c.user}</div>
-                    <Chip tone={tones[c.status as keyof typeof tones]}>{c.status}</Chip>
+                    <Chip tone={tones[c.status as keyof typeof tones]}>{t(statusKey[c.status as keyof typeof statusKey])}</Chip>
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
                     <span className="text-primary/80">{c.employee}</span> · {c.last}
@@ -58,9 +61,9 @@ export function Conversations() {
 
         <div className="space-y-4">
           <Panel>
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4 text-primary" /> Today</div>
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4 text-primary" /> {t("common.today")}</div>
             <div className="grid grid-cols-2 gap-3 text-center">
-              {[["Active", 24], ["Won", 8], ["At risk", 2], ["Resolved", 41]].map(([l, v]) => (
+              {[[t("common.active"), 24], [t("common.won"), 8], [t("common.risk"), 2], [t("common.resolved"), 41]].map(([l, v]) => (
                 <div key={l as string} className="rounded-xl border border-white/5 bg-white/5 p-3">
                   <div className="font-display text-2xl font-bold">{v}</div>
                   <div className="text-[11px] text-muted-foreground">{l}</div>
@@ -69,7 +72,7 @@ export function Conversations() {
             </div>
           </Panel>
           <Panel>
-            <div className="mb-3 text-sm font-semibold">Top performing</div>
+            <div className="mb-3 text-sm font-semibold">{t("conv.top_performing")}</div>
             <div className="space-y-3 text-sm">
               {[["Nova", 47], ["Lumen", 32], ["Atlas", 28]].map(([n, v]) => (
                 <div key={n as string}>

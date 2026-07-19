@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { useT } from "@/lib/i18n";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -11,6 +12,7 @@ const seed: Msg[] = [
 ];
 
 export function Playground() {
+  const t = useT();
   const [messages, setMessages] = useState<Msg[]>(seed);
   const [input, setInput] = useState("");
   const [customModels, setCustomModels] = useState<{ id: string; label: string; base: string; model: string; key: string; revealed: boolean }[]>([
@@ -40,12 +42,12 @@ export function Playground() {
   return (
     <div>
       <PageHeader
-        eyebrow="Playground"
-        title="Prompt Playground"
-        description="Rapidly iterate on prompts, tools and personas before you promote to production."
+        eyebrow={t("pg.eyebrow")}
+        title={t("pg.title")}
+        description={t("pg.desc")}
         actions={
           <button className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5">
-            <RotateCcw className="h-4 w-4" /> Reset
+            <RotateCcw className="h-4 w-4" /> {t("common.reset")}
           </button>
         }
       />
@@ -55,7 +57,7 @@ export function Playground() {
           <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div>
             <div className="text-sm font-semibold">Nova · Sales Lead</div>
-            <Chip tone="emerald">live</Chip>
+            <Chip tone="emerald">{t("common.live")}</Chip>
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
             {messages.map((m, i) => (
@@ -76,7 +78,7 @@ export function Playground() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                 rows={2}
-                placeholder="Ask Nova something…"
+                placeholder={t("pg.ask")}
                 className="flex-1 resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground"
               />
               <button onClick={send} className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110">
@@ -89,9 +91,9 @@ export function Playground() {
         <div className="space-y-4">
           <Panel>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm font-semibold"><Sliders className="h-4 w-4 text-primary" /> Model</div>
+              <div className="flex items-center gap-2 text-sm font-semibold"><Sliders className="h-4 w-4 text-primary" /> {t("pg.model")}</div>
               <button onClick={() => setShowAdd((s) => !s)} className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">
-                <Plus className="h-3 w-3" /> Add
+                <Plus className="h-3 w-3" /> {t("pg.add")}
               </button>
             </div>
             <div className="space-y-2 text-sm">
@@ -103,7 +105,7 @@ export function Playground() {
               ))}
               {customModels.length > 0 && (
                 <div className="mt-3 mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  <Cpu className="h-3 w-3" /> Your custom endpoints
+                  <Cpu className="h-3 w-3" /> {t("pg.custom_endpoints")}
                 </div>
               )}
               {customModels.map((m) => (
@@ -129,23 +131,23 @@ export function Playground() {
             </div>
             {showAdd && (
               <div className="mt-3 space-y-2 rounded-lg border border-white/10 bg-background/40 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Add OpenAI-compatible model</div>
-                <input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} placeholder="Display name (e.g. My GPT-4o)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
-                <input value={draft.base}  onChange={(e) => setDraft({ ...draft, base:  e.target.value })} placeholder="Base URL (https://api.openai.com/v1)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
-                <input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })} placeholder="Model ID (gpt-4o, llama-3.1-70b, …)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
-                <input value={draft.key} type="password" onChange={(e) => setDraft({ ...draft, key: e.target.value })} placeholder="API key (sk-…)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("pg.add_model")}</div>
+                <input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} placeholder={t("pg.display_name")} className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.base}  onChange={(e) => setDraft({ ...draft, base:  e.target.value })} placeholder={t("pg.base_url")} className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })} placeholder={t("pg.model_id")} className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.key} type="password" onChange={(e) => setDraft({ ...draft, key: e.target.value })} placeholder={t("pg.api_key")} className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
                 <div className="flex justify-end gap-2 pt-1">
-                  <button onClick={() => setShowAdd(false)} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">Cancel</button>
-                  <button onClick={addModel} className="rounded-md bg-gradient-to-r from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground">Add model</button>
+                  <button onClick={() => setShowAdd(false)} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">{t("common.cancel")}</button>
+                  <button onClick={addModel} className="rounded-md bg-gradient-to-r from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground">{t("pg.add_btn")}</button>
                 </div>
-                <div className="text-[10px] text-muted-foreground">Works with any OpenAI-compatible endpoint: OpenAI, Groq, Together, DeepSeek, Ollama, LM Studio, vLLM…</div>
+                <div className="text-[10px] text-muted-foreground">{t("pg.add_model_hint")}</div>
               </div>
             )}
           </Panel>
           <Panel>
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-accent" /> Parameters</div>
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-accent" /> {t("pg.params")}</div>
             <div className="space-y-4 text-xs">
-              {[["Temperature", "0.7"], ["Top P", "0.9"], ["Max tokens", "2048"]].map(([label, val]) => (
+              {[[t("pg.temperature"), "0.7"], [t("pg.top_p"), "0.9"], [t("pg.max_tokens"), "2048"]].map(([label, val]) => (
                 <div key={label}>
                   <div className="mb-1 flex justify-between"><span className="text-muted-foreground">{label}</span><span>{val}</span></div>
                   <div className="h-1.5 rounded-full bg-white/5"><div className="h-full w-2/3 rounded-full bg-gradient-to-r from-primary to-accent" /></div>
