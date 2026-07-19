@@ -54,6 +54,21 @@ const EMPLOYEES = [
   { name: "Lumen", role: "Retention Specialist", emoji: "💡" },
 ];
 
+// Default capabilities per category — shown in the details drawer.
+const CATEGORY_CAPS: Record<string, string[]> = {
+  commerce: ["Sync product catalog", "Read live inventory", "Create + fulfill orders", "Push draft carts", "Listen to order webhooks"],
+  payments: ["Create checkout links", "Charge one-off + recurring", "Issue refunds", "Read payout history", "Listen to charge webhooks"],
+  social: ["Read DMs, comments, mentions", "Reply as page/profile", "Fetch conversation history", "Trigger on new message", "Attach media"],
+  email: ["Read inbox + threads", "Draft + send replies", "Apply labels / tags", "Attach files", "Trigger on new message"],
+  crm: ["Create + update contacts", "Log deals + activities", "Sync pipeline stages", "Search records", "Attach notes from chats"],
+  knowledge: ["Index docs + pages", "Chunk + embed on change", "Cite source in replies", "Refresh on schedule", "Respect access controls"],
+  marketing: ["Draft campaigns", "Read audience segments", "Push metrics into chat", "Trigger on ad events", "Sync creative assets"],
+  analytics: ["Read events + funnels", "Query cohorts", "Attach charts in replies", "Alert on anomalies", "Cross-source joins"],
+  logistics: ["Fetch tracking status", "Estimate delivery ETA", "Book labels", "Notify on delay", "Attach POD"],
+  voice: ["Place + receive calls", "Send SMS / MMS", "Transcribe voicemail", "Route by intent", "Log call summaries"],
+  automation: ["Trigger workflows", "Send + receive webhooks", "Call custom endpoints", "Read/write shared vars", "Chain multi-step actions"],
+};
+
 const CATEGORIES: Category[] = [
   {
     id: "commerce",
