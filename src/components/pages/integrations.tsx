@@ -630,6 +630,11 @@ type TestState =
   | { phase: "ok"; latency: number; at: string }
   | { phase: "fail"; message: string; at: string };
 
+type ReauthState =
+  | { phase: "idle" }
+  | { phase: "running" }
+  | { phase: "done"; at: string };
+
 function IntegrationDrawer({
   integration,
   categoryId,
@@ -644,6 +649,29 @@ function IntegrationDrawer({
   onClose: () => void;
 }) {
   const [test, setTest] = useState<TestState>({ phase: "idle" });
+  const fields = CATEGORY_FIELDS[categoryId] ?? [
+    { key: "apiKey", label: "API key", placeholder: "sk_live_…", secret: true, required: true },
+  ];
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      fields.map((f) => [
+        f.key,
+        integration.status === "connected" || integration.status === "reauth"
+          ? f.secret
+            ? "••••••••••••" + integration.initials
+            : f.key === "storeUrl"
+            ? "https://" + integration.name.toLowerCase().replace(/\s+/g, "-") + ".example.com"
+            : "atlas-" + integration.initials.toLowerCase()
+          : "",
+      ])
+    )
+  );
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [dirty, setDirty] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [reauth, setReauth] = useState<ReauthState>({ phase: "idle" });
+  const [statusOverride, setStatusOverride] = useState<Status | null>(null);
+  const status = statusOverride ?? integration.status;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -659,9 +687,9 @@ function IntegrationDrawer({
     const latency = Math.round(700 + Math.random() * 1100);
     window.setTimeout(() => {
       const at = new Date().toLocaleTimeString();
-      if (integration.status === "reauth") {
+      if (status === "reauth") {
         setTest({ phase: "fail", message: "Token expired — reconnect required.", at });
-      } else if (integration.status === "available") {
+      } else if (status === "available") {
         setTest({ phase: "fail", message: "Not connected yet — connect first.", at });
       } else {
         setTest({ phase: "ok", latency, at });
@@ -669,8 +697,23 @@ function IntegrationDrawer({
     }, latency);
   };
 
+  const runReauth = () => {
+    setReauth({ phase: "running" });
+    window.setTimeout(() => {
+      setReauth({ phase: "done", at: new Date().toLocaleTimeString() });
+      setStatusOverride("connected");
+    }, 1400);
+  };
+
+  const saveSettings = () => {
+    setSavedAt(new Date().toLocaleTimeString());
+    setDirty(false);
+  };
+
+  const missingRequired = fields.some((f) => f.required && !values[f.key]?.trim());
+
   const caps = CATEGORY_CAPS[categoryId] ?? ["Read data", "Write data", "Listen to events"];
-  const isConnected = integration.status === "connected";
+  const isConnected = status === "connected";
 
   return (
     <div
@@ -707,7 +750,7 @@ function IntegrationDrawer({
             </div>
           </div>
           <div className="mt-3 flex items-center gap-2 px-6">
-            {statusChip(integration.status)}
+            {statusChip(status)}
             <Chip tone="muted">
               <ShieldCheck className="h-3 w-3" /> OAuth 2.0
             </Chip>
@@ -730,6 +773,103 @@ function IntegrationDrawer({
                 </li>
               ))}
             </ul>
+          </section>
+
+          {/* Integration settings */}
+          <section>
+            <div className="flex items-center justify-between">
+              <SectionTitle icon={Settings2}>Integration settings</SectionTitle>
+              {status === "reauth" && (
+                <Chip tone="warn">
+                  <AlertTriangle className="h-3 w-3" /> Re-auth needed
+                </Chip>
+              )}
+            </div>
+            <div className="mt-2 space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+              {fields.map((f) => {
+                const show = !f.secret || revealed[f.key];
+                const val = values[f.key] ?? "";
+                const missing = f.required && !val.trim();
+                return (
+                  <div key={f.key}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {f.label}
+                        {f.required && <span className="ml-1 text-amber-300">*</span>}
+                      </label>
+                      {f.secret && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRevealed((r) => ({ ...r, [f.key]: !r[f.key] }))
+                          }
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                        >
+                          {show ? (
+                            <><EyeOff className="h-3 w-3" /> Hide</>
+                          ) : (
+                            <><Eye className="h-3 w-3" /> Reveal</>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type={f.secret && !show ? "password" : "text"}
+                      value={val}
+                      placeholder={f.placeholder}
+                      onChange={(e) => {
+                        setValues((v) => ({ ...v, [f.key]: e.target.value }));
+                        setDirty(true);
+                        setSavedAt(null);
+                      }}
+                      className={
+                        "w-full rounded-lg border bg-background/40 px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary/50 " +
+                        (missing ? "border-amber-400/40" : "border-white/10")
+                      }
+                    />
+                    {f.help && (
+                      <div className="mt-1 text-[10px] text-muted-foreground">{f.help}</div>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3">
+                <div className="text-[11px] text-muted-foreground">
+                  {savedAt
+                    ? "Saved · " + savedAt
+                    : dirty
+                    ? "Unsaved changes"
+                    : missingRequired
+                    ? "Required fields missing"
+                    : "All good"}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={runReauth}
+                    disabled={reauth.phase === "running"}
+                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-white/10 disabled:opacity-60"
+                  >
+                    {reauth.phase === "running" ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Re-authorizing…</>
+                    ) : (
+                      <><RefreshCw className="h-3.5 w-3.5" /> Re-authorize</>
+                    )}
+                  </button>
+                  <button
+                    onClick={saveSettings}
+                    disabled={!dirty || missingRequired}
+                    className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20 transition disabled:opacity-50"
+                  >
+                    <Save className="h-3.5 w-3.5" /> Save
+                  </button>
+                </div>
+              </div>
+              {reauth.phase === "done" && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Re-authorized · {reauth.at}
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Test connection */}
