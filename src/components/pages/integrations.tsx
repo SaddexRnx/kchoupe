@@ -18,6 +18,10 @@ import {
   Phone,
   X,
   Check,
+  Loader2,
+  ExternalLink,
+  ShieldCheck,
+  Activity,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 
@@ -49,6 +53,21 @@ const EMPLOYEES = [
   { name: "Orbit", role: "Product Advisor", emoji: "🪐" },
   { name: "Lumen", role: "Retention Specialist", emoji: "💡" },
 ];
+
+// Default capabilities per category — shown in the details drawer.
+const CATEGORY_CAPS: Record<string, string[]> = {
+  commerce: ["Sync product catalog", "Read live inventory", "Create + fulfill orders", "Push draft carts", "Listen to order webhooks"],
+  payments: ["Create checkout links", "Charge one-off + recurring", "Issue refunds", "Read payout history", "Listen to charge webhooks"],
+  social: ["Read DMs, comments, mentions", "Reply as page/profile", "Fetch conversation history", "Trigger on new message", "Attach media"],
+  email: ["Read inbox + threads", "Draft + send replies", "Apply labels / tags", "Attach files", "Trigger on new message"],
+  crm: ["Create + update contacts", "Log deals + activities", "Sync pipeline stages", "Search records", "Attach notes from chats"],
+  knowledge: ["Index docs + pages", "Chunk + embed on change", "Cite source in replies", "Refresh on schedule", "Respect access controls"],
+  marketing: ["Draft campaigns", "Read audience segments", "Push metrics into chat", "Trigger on ad events", "Sync creative assets"],
+  analytics: ["Read events + funnels", "Query cohorts", "Attach charts in replies", "Alert on anomalies", "Cross-source joins"],
+  logistics: ["Fetch tracking status", "Estimate delivery ETA", "Book labels", "Notify on delay", "Attach POD"],
+  voice: ["Place + receive calls", "Send SMS / MMS", "Transcribe voicemail", "Route by intent", "Log call summaries"],
+  automation: ["Trigger workflows", "Send + receive webhooks", "Call custom endpoints", "Read/write shared vars", "Chain multi-step actions"],
+};
 
 const CATEGORIES: Category[] = [
   {
@@ -297,7 +316,7 @@ export function IntegrationsPage() {
     );
     return seed;
   });
-  const [editing, setEditing] = useState<Integration | null>(null);
+  const [editing, setEditing] = useState<{ integration: Integration; categoryId: string } | null>(null);
 
   const toggleEmployee = (integration: string, employee: string) => {
     setAssignments((prev) => {
@@ -419,7 +438,7 @@ export function IntegrationsPage() {
                     key={c.id + i.name}
                     i={i}
                     usedBy={assignments[i.name] ?? []}
-                    onManage={() => setEditing(i)}
+                    onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
                 ))}
               </div>
@@ -434,10 +453,11 @@ export function IntegrationsPage() {
       </div>
 
       {editing && (
-        <AssignEmployeesModal
-          integration={editing}
-          selected={assignments[editing.name] ?? []}
-          onToggle={(emp) => toggleEmployee(editing.name, emp)}
+        <IntegrationDrawer
+          integration={editing.integration}
+          categoryId={editing.categoryId}
+          selected={assignments[editing.integration.name] ?? []}
+          onToggle={(emp) => toggleEmployee(editing.integration.name, emp)}
           onClose={() => setEditing(null)}
         />
       )}
@@ -464,97 +484,98 @@ function CategoryPill({ label, active, onClick }: { label: string; active: boole
 function IntegrationCard({
   i,
   usedBy,
-  onManage,
+  onOpen,
 }: {
   i: Integration;
   usedBy: string[];
-  onManage: () => void;
+  onOpen: () => void;
 }) {
   const isConnected = i.status === "connected";
   return (
-    <div className="glass-panel group relative flex flex-col gap-3 rounded-2xl p-4 transition hover:border-primary/30">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div
-            className={
-              "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg " +
-              i.accent
-            }
-          >
-            {i.initials}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate font-semibold">{i.name}</div>
-            <div className="truncate text-xs text-muted-foreground">{i.tag}</div>
-          </div>
-        </div>
-        {statusChip(i.status)}
-      </div>
+    <button
+      onClick={onOpen}
+      className="glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+    >
+      {/* accent band */}
+      <div className={"h-1 w-full bg-gradient-to-r " + i.accent} />
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {usedBy.length > 0 ? (
-          <>
-            <span>Used by</span>
-            <div className="flex -space-x-1.5">
-              {usedBy.map((u) => {
-                const emp = EMPLOYEES.find((e) => e.name === u);
-                return (
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className={
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg ring-1 ring-white/10 " +
+                i.accent
+              }
+            >
+              {i.initials}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-semibold leading-tight">{i.name}</div>
+              <div className="truncate text-xs text-muted-foreground">{i.tag}</div>
+            </div>
+          </div>
+          <div className="shrink-0">{statusChip(i.status)}</div>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-3">
+          {usedBy.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <div className="flex -space-x-1.5">
+                {usedBy.slice(0, 4).map((u) => (
                   <span
                     key={u}
                     className="flex h-6 w-6 items-center justify-center rounded-full border border-background bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-primary-foreground"
-                    title={emp ? `${emp.name} · ${emp.role}` : u}
+                    title={u}
                   >
                     {u[0]}
                   </span>
-                );
-              })}
+                ))}
+              </div>
+              {usedBy.length > 4 && (
+                <span className="text-[10px] text-muted-foreground">+{usedBy.length - 4}</span>
+              )}
             </div>
-            <button
-              onClick={onManage}
-              className="ml-auto text-[11px] text-primary hover:underline"
-            >
-              Edit
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={onManage}
-            className="text-[11px] text-primary hover:underline"
+          ) : (
+            <span className="text-[11px] text-muted-foreground">No employees assigned</span>
+          )}
+          <span
+            className={
+              "rounded-lg px-3 py-1.5 text-xs font-semibold transition " +
+              (isConnected
+                ? "bg-white/5 text-foreground group-hover:bg-white/10"
+                : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
+            }
           >
-            + Assign AI employees
-          </button>
-        )}
+            {isConnected ? "Details" : i.status === "reauth" ? "Reconnect" : "Connect"}
+          </span>
+        </div>
       </div>
-
-      <div className="mt-auto flex items-center justify-between pt-2">
-        <button
-          onClick={onManage}
-          className={
-            "rounded-lg px-3 py-1.5 text-xs font-semibold transition " +
-            (isConnected
-              ? "bg-white/5 text-muted-foreground hover:bg-white/10"
-              : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
-          }
-        >
-          {isConnected ? "Manage" : i.status === "reauth" ? "Reconnect" : "Connect"}
-        </button>
-        <button className="text-xs text-muted-foreground hover:text-foreground">Docs →</button>
-      </div>
-    </div>
+    </button>
   );
 }
 
-function AssignEmployeesModal({
+type TestState =
+  | { phase: "idle" }
+  | { phase: "running" }
+  | { phase: "ok"; latency: number; at: string }
+  | { phase: "fail"; message: string; at: string };
+
+function IntegrationDrawer({
   integration,
+  categoryId,
   selected,
   onToggle,
   onClose,
 }: {
   integration: Integration;
+  categoryId: string;
   selected: string[];
   onToggle: (employee: string) => void;
   onClose: () => void;
 }) {
+  const [test, setTest] = useState<TestState>({ phase: "idle" });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -563,88 +584,218 @@ function AssignEmployeesModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const runTest = () => {
+    setTest({ phase: "running" });
+    // Mock latency 700-1800ms; reauth cards deterministically fail.
+    const latency = Math.round(700 + Math.random() * 1100);
+    window.setTimeout(() => {
+      const at = new Date().toLocaleTimeString();
+      if (integration.status === "reauth") {
+        setTest({ phase: "fail", message: "Token expired — reconnect required.", at });
+      } else if (integration.status === "available") {
+        setTest({ phase: "fail", message: "Not connected yet — connect first.", at });
+      } else {
+        setTest({ phase: "ok", latency, at });
+      }
+    }, latency);
+  };
+
+  const caps = CATEGORY_CAPS[categoryId] ?? ["Read data", "Write data", "Listen to events"];
+  const isConnected = integration.status === "connected";
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="glass-panel w-full max-w-lg rounded-2xl p-6"
+        className="glass-panel h-full w-full max-w-md overflow-y-auto rounded-none border-l border-white/10 p-0 shadow-2xl md:max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
+        {/* Header */}
+        <div className="relative">
+          <div className={"h-24 w-full bg-gradient-to-br opacity-40 " + integration.accent} />
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg bg-background/60 text-muted-foreground backdrop-blur hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="-mt-8 flex items-end gap-3 px-6">
             <div
               className={
-                "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg " +
+                "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-lg font-bold text-neutral-900 shadow-xl ring-2 ring-background " +
                 integration.accent
               }
             >
               {integration.initials}
             </div>
-            <div>
-              <div className="font-display text-lg font-semibold">{integration.name}</div>
-              <div className="text-xs text-muted-foreground">
-                Choose which AI employees can use this integration.
+            <div className="min-w-0 pb-1">
+              <div className="font-display text-xl font-semibold leading-tight">
+                {integration.name}
               </div>
+              <div className="truncate text-xs text-muted-foreground">{integration.tag}</div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="mt-3 flex items-center gap-2 px-6">
+            {statusChip(integration.status)}
+            <Chip tone="muted">
+              <ShieldCheck className="h-3 w-3" /> OAuth 2.0
+            </Chip>
+          </div>
         </div>
 
-        <div className="mt-5 space-y-1.5">
-          {EMPLOYEES.map((e) => {
-            const on = selected.includes(e.name);
-            return (
-              <button
-                key={e.name}
-                onClick={() => onToggle(e.name)}
-                className={
-                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition " +
-                  (on
-                    ? "border-primary/40 bg-gradient-to-r from-primary/15 to-accent/10"
-                    : "border-white/10 bg-white/5 hover:bg-white/10")
-                }
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">
-                  {e.emoji}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold">{e.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">{e.role}</div>
-                </div>
-                <div
-                  className={
-                    "flex h-5 w-5 items-center justify-center rounded-md border transition " +
-                    (on
-                      ? "border-primary bg-gradient-to-br from-primary to-accent text-primary-foreground"
-                      : "border-white/20 bg-transparent")
-                  }
+        {/* Body */}
+        <div className="space-y-6 p-6">
+          {/* Capabilities */}
+          <section>
+            <SectionTitle icon={Zap}>Capabilities</SectionTitle>
+            <ul className="mt-2 grid grid-cols-1 gap-1.5">
+              {caps.map((c) => (
+                <li
+                  key={c}
+                  className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-sm"
                 >
-                  {on && <Check className="h-3 w-3" />}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <Check className="h-3.5 w-3.5 text-emerald-300" />
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {selected.length} of {EMPLOYEES.length} assigned
-          </span>
-          <button
-            onClick={onClose}
-            className="rounded-lg bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20"
-          >
-            Done
-          </button>
+          {/* Test connection */}
+          <section>
+            <SectionTitle icon={Activity}>Test connection</SectionTitle>
+            <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs text-muted-foreground">
+                  Ping the {integration.name} sandbox and time the round-trip.
+                </div>
+                <button
+                  onClick={runTest}
+                  disabled={test.phase === "running"}
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20 transition disabled:opacity-60"
+                >
+                  {test.phase === "running" ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Testing…
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3.5 w-3.5" /> Run test
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="mt-3 min-h-[46px] rounded-lg border border-white/5 bg-background/40 p-3 text-xs">
+                {test.phase === "idle" && (
+                  <span className="text-muted-foreground">No tests yet — click Run test to ping.</span>
+                )}
+                {test.phase === "running" && (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Establishing handshake…
+                  </span>
+                )}
+                {test.phase === "ok" && (
+                  <div className="flex items-center gap-2 text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="font-medium">Success</span>
+                    <span className="text-muted-foreground">
+                      · {test.latency}ms · {test.at}
+                    </span>
+                  </div>
+                )}
+                {test.phase === "fail" && (
+                  <div className="flex items-center gap-2 text-amber-300">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span className="font-medium">Failed</span>
+                    <span className="text-muted-foreground">· {test.message} · {test.at}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Assign employees */}
+          <section>
+            <SectionTitle icon={Users}>AI employees using this</SectionTitle>
+            <div className="mt-2 space-y-1.5">
+              {EMPLOYEES.map((e) => {
+                const on = selected.includes(e.name);
+                return (
+                  <button
+                    key={e.name}
+                    onClick={() => onToggle(e.name)}
+                    className={
+                      "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition " +
+                      (on
+                        ? "border-primary/40 bg-gradient-to-r from-primary/15 to-accent/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10")
+                    }
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">
+                      {e.emoji}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold">{e.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">{e.role}</div>
+                    </div>
+                    <div
+                      className={
+                        "flex h-5 w-5 items-center justify-center rounded-md border transition " +
+                        (on
+                          ? "border-primary bg-gradient-to-br from-primary to-accent text-primary-foreground"
+                          : "border-white/20 bg-transparent")
+                      }
+                    >
+                      {on && <Check className="h-3 w-3" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              {selected.length} of {EMPLOYEES.length} assigned
+            </div>
+          </section>
+
+          {/* Footer actions */}
+          <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-4">
+            <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <ExternalLink className="h-3.5 w-3.5" /> Read docs
+            </button>
+            <button
+              className={
+                "rounded-lg px-4 py-2 text-xs font-semibold transition " +
+                (isConnected
+                  ? "border border-white/10 bg-white/5 text-foreground hover:bg-white/10"
+                  : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
+              }
+            >
+              {isConnected
+                ? "Disconnect"
+                : integration.status === "reauth"
+                ? "Reconnect"
+                : "Connect " + integration.name}
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SectionTitle({
+  icon: Icon,
+  children,
+}: {
+  icon: typeof Zap;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <Icon className="h-3.5 w-3.5 text-primary" />
+      {children}
     </div>
   );
 }
