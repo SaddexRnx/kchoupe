@@ -13,7 +13,10 @@ import {
   Search,
   Plus,
   Plug,
+  Languages,
 } from "lucide-react";
+import { usePrefs, LANGS, type Lang } from "@/lib/preferences";
+import { useT } from "@/lib/i18n";
 
 type NavKey =
   | "dashboard"
@@ -26,16 +29,16 @@ type NavKey =
   | "integrations"
   | "settings";
 
-const nav: { key: NavKey; label: string; icon: typeof LayoutDashboard; to: string }[] = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/" },
-  { key: "ai-employees", label: "AI Employees", icon: Bot, to: "/ai-employees" },
-  { key: "playground", label: "Playground", icon: Play, to: "/playground" },
-  { key: "knowledge", label: "Knowledge", icon: BookOpen, to: "/knowledge" },
-  { key: "conversations", label: "Conversations", icon: MessageSquare, to: "/conversations" },
-  { key: "products", label: "Products", icon: Package, to: "/products" },
-  { key: "orders", label: "Orders", icon: ShoppingCart, to: "/orders" },
-  { key: "integrations", label: "Integrations", icon: Plug, to: "/integrations" },
-  { key: "settings", label: "Settings", icon: Settings, to: "/settings" },
+const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
+  { key: "dashboard", icon: LayoutDashboard, to: "/" },
+  { key: "ai-employees", icon: Bot, to: "/ai-employees" },
+  { key: "playground", icon: Play, to: "/playground" },
+  { key: "knowledge", icon: BookOpen, to: "/knowledge" },
+  { key: "conversations", icon: MessageSquare, to: "/conversations" },
+  { key: "products", icon: Package, to: "/products" },
+  { key: "orders", icon: ShoppingCart, to: "/orders" },
+  { key: "integrations", icon: Plug, to: "/integrations" },
+  { key: "settings", icon: Settings, to: "/settings" },
 ];
 
 export function AppShell({ active, children }: { active: NavKey; children: ReactNode }) {
@@ -53,6 +56,7 @@ export function AppShell({ active, children }: { active: NavKey; children: React
 }
 
 function Sidebar({ active }: { active: NavKey }) {
+  const t = useT();
   return (
     <aside className="glass-panel sticky top-6 hidden h-[calc(100vh-3rem)] w-60 shrink-0 flex-col rounded-2xl p-4 lg:flex">
       <Link to="/" className="mb-8 flex items-center gap-2.5 px-2">
@@ -61,12 +65,12 @@ function Sidebar({ active }: { active: NavKey }) {
         </div>
         <div className="leading-tight">
           <div className="font-display text-base font-bold tracking-tight">Atlas AI</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Command center</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("nav.command_center")}</div>
         </div>
       </Link>
 
       <nav className="flex-1 space-y-1">
-        {nav.map(({ key, label, icon: Icon, to }, idx) => {
+        {nav.map(({ key, icon: Icon, to }, idx) => {
           const isActive = key === active;
           return (
             <Link
@@ -81,7 +85,7 @@ function Sidebar({ active }: { active: NavKey }) {
               }
             >
               <Icon className={"h-4 w-4 transition duration-300 group-hover:scale-110 " + (isActive ? "text-primary" : "")} />
-              <span className="font-medium">{label}</span>
+              <span className="font-medium">{t(`nav.${key}`)}</span>
               {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent pulse-emerald shadow-[0_0_8px] shadow-accent" />}
             </Link>
           );
@@ -95,7 +99,7 @@ function Sidebar({ active }: { active: NavKey }) {
           </div>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-sm font-semibold">Khalid</div>
-            <div className="truncate text-xs text-muted-foreground">Pro plan</div>
+            <div className="truncate text-xs text-muted-foreground">{t("nav.pro_plan")}</div>
           </div>
         </div>
       </div>
@@ -104,25 +108,46 @@ function Sidebar({ active }: { active: NavKey }) {
 }
 
 function TopBar() {
+  const t = useT();
+  const { lang, setLang } = usePrefs();
   return (
     <div className="flex items-center gap-3">
       <div className="glass-panel flex flex-1 items-center gap-2 rounded-xl px-3.5 py-2.5">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
-          placeholder="Search employees, products, conversations…"
+          placeholder={t("top.search")}
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <kbd className="hidden rounded border border-border bg-white/5 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline">
           ⌘K
         </kbd>
       </div>
+      <LangSwitcher lang={lang} onChange={setLang} />
       <button className="glass-panel flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
         <Bell className="h-4 w-4" />
       </button>
       <button className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:shadow-primary/50">
         <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">New employee</span>
+        <span className="hidden sm:inline">{t("top.new_employee")}</span>
       </button>
     </div>
+  );
+}
+
+function LangSwitcher({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
+  return (
+    <label className="glass-panel relative flex h-11 items-center gap-2 rounded-xl pl-3 pr-2 text-sm transition hover:bg-white/10">
+      <Languages className="h-4 w-4 text-muted-foreground" />
+      <select
+        value={lang}
+        onChange={(e) => onChange(e.target.value as Lang)}
+        className="cursor-pointer bg-transparent pr-1 text-sm font-medium outline-none"
+        aria-label="Language"
+      >
+        {LANGS.map((l) => (
+          <option key={l.id} value={l.id}>{l.native}</option>
+        ))}
+      </select>
+    </label>
   );
 }

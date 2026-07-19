@@ -1,0 +1,87 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
+export type Lang = "en" | "fr" | "ar";
+export type ThemeId = "aurora" | "midnight" | "cloud" | "sunset" | "forest" | "rose";
+
+type Prefs = {
+  lang: Lang;
+  theme: ThemeId;
+  motion: boolean; // true = animations on
+  setLang: (l: Lang) => void;
+  setTheme: (t: ThemeId) => void;
+  setMotion: (v: boolean) => void;
+};
+
+const Ctx = createContext<Prefs | null>(null);
+
+const KEY = "atlas.prefs.v1";
+
+function readInitial(): { lang: Lang; theme: ThemeId; motion: boolean } {
+  if (typeof window === "undefined") return { lang: "en", theme: "aurora", motion: true };
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      return {
+        lang: (p.lang as Lang) ?? "en",
+        theme: (p.theme as ThemeId) ?? "aurora",
+        motion: p.motion ?? true,
+      };
+    }
+  } catch {}
+  return { lang: "en", theme: "aurora", motion: true };
+}
+
+export function PreferencesProvider({ children }: { children: ReactNode }) {
+  const [lang, setLang] = useState<Lang>("en");
+  const [theme, setTheme] = useState<ThemeId>("aurora");
+  const [motion, setMotion] = useState<boolean>(true);
+
+  // Hydrate from localStorage after mount to avoid SSR mismatch.
+  useEffect(() => {
+    const p = readInitial();
+    setLang(p.lang);
+    setTheme(p.theme);
+    setMotion(p.motion);
+  }, []);
+
+  // Apply to <html> and persist.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const html = document.documentElement;
+    html.setAttribute("data-theme", theme);
+    html.setAttribute("data-motion", motion ? "on" : "off");
+    html.setAttribute("lang", lang);
+    html.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify({ lang, theme, motion }));
+    } catch {}
+  }, [lang, theme, motion]);
+
+  return (
+    <Ctx.Provider value={{ lang, theme, motion, setLang, setTheme, setMotion }}>
+      {children}
+    </Ctx.Provider>
+  );
+}
+
+export function usePrefs() {
+  const v = useContext(Ctx);
+  if (!v) throw new Error("usePrefs must be used inside PreferencesProvider");
+  return v;
+}
+
+export const THEMES: { id: ThemeId; name: string; swatches: string[] }[] = [
+  { id: "aurora",   name: "Glass Aurora",     swatches: ["#1a1a2e", "#16213e", "#a78bfa", "#4ade80"] },
+  { id: "midnight", name: "Midnight Indigo",  swatches: ["#0b1220", "#1e293b", "#6366f1", "#22d3ee"] },
+  { id: "cloud",    name: "Cloud White",      swatches: ["#f8fafc", "#e2e8f0", "#8b5cf6", "#10b981"] },
+  { id: "sunset",   name: "Sahara Sunset",    swatches: ["#1a0f1f", "#2d1a2e", "#fb923c", "#f43f5e"] },
+  { id: "forest",   name: "Atlas Forest",     swatches: ["#0f1a17", "#152922", "#34d399", "#eab308"] },
+  { id: "rose",     name: "Rose Quartz",      swatches: ["#1f1420", "#2b1a2a", "#f472b6", "#818cf8"] },
+];
+
+export const LANGS: { id: Lang; label: string; native: string }[] = [
+  { id: "en", label: "English", native: "English" },
+  { id: "fr", label: "French",  native: "Français" },
+  { id: "ar", label: "Arabic",  native: "العربية" },
+];

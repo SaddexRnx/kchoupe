@@ -60,7 +60,7 @@
 
 :root {
   --radius: 0.875rem;
-  /* Glass Aurora (dark by default) */
+  /* Default = Glass Aurora (dark). Overridden by [data-theme="..."] blocks below. */
   --background: oklch(0.19 0.03 275);          /* #1a1a2e */
   --foreground: oklch(0.96 0.01 260);
   --card: oklch(0.24 0.05 260);                /* #16213e */
@@ -96,12 +96,106 @@
   --aurora-emerald: oklch(0.78 0.19 152);
   --aurora-violet: oklch(0.72 0.15 295);
   --aurora-surface: oklch(0.24 0.05 260);
+  --scheme: dark;
+}
+
+/* -------- Theme variants (applied via [data-theme] on <html>) -------- */
+[data-theme="midnight"] {
+  --background: oklch(0.17 0.04 260);
+  --foreground: oklch(0.97 0.01 250);
+  --card: oklch(0.24 0.05 255);
+  --popover: oklch(0.22 0.05 255);
+  --primary: oklch(0.66 0.19 265);              /* indigo */
+  --primary-foreground: oklch(0.15 0.02 260);
+  --accent: oklch(0.80 0.14 200);               /* cyan */
+  --accent-foreground: oklch(0.15 0.02 260);
+  --ring: oklch(0.66 0.19 265);
+  --sidebar: oklch(0.15 0.03 260);
+  --aurora-violet: oklch(0.66 0.19 265);
+  --aurora-emerald: oklch(0.80 0.14 200);
+  --scheme: dark;
+}
+[data-theme="cloud"] {
+  --background: oklch(0.98 0.005 260);
+  --foreground: oklch(0.20 0.02 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.20 0.02 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.20 0.02 265);
+  --primary: oklch(0.60 0.19 290);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.01 260);
+  --secondary-foreground: oklch(0.20 0.02 265);
+  --muted: oklch(0.94 0.01 260);
+  --muted-foreground: oklch(0.45 0.02 265);
+  --accent: oklch(0.70 0.17 160);
+  --accent-foreground: oklch(0.99 0 0);
+  --border: oklch(0.20 0.02 265 / 10%);
+  --input: oklch(0.20 0.02 265 / 8%);
+  --ring: oklch(0.60 0.19 290);
+  --sidebar: oklch(0.96 0.005 260);
+  --sidebar-foreground: oklch(0.25 0.02 265);
+  --aurora-violet: oklch(0.60 0.19 290);
+  --aurora-emerald: oklch(0.70 0.17 160);
+  --aurora-surface: oklch(1 0 0);
+  --scheme: light;
+}
+[data-theme="sunset"] {
+  --background: oklch(0.19 0.04 20);
+  --foreground: oklch(0.97 0.01 60);
+  --card: oklch(0.25 0.06 20);
+  --popover: oklch(0.22 0.05 20);
+  --primary: oklch(0.72 0.19 45);               /* orange */
+  --primary-foreground: oklch(0.15 0.02 20);
+  --accent: oklch(0.68 0.22 15);                /* rose/red */
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.72 0.19 45);
+  --sidebar: oklch(0.17 0.04 20);
+  --aurora-violet: oklch(0.72 0.19 45);
+  --aurora-emerald: oklch(0.68 0.22 15);
+  --scheme: dark;
+}
+[data-theme="forest"] {
+  --background: oklch(0.18 0.03 160);
+  --foreground: oklch(0.97 0.01 130);
+  --card: oklch(0.24 0.04 160);
+  --popover: oklch(0.22 0.04 160);
+  --primary: oklch(0.75 0.17 155);              /* emerald */
+  --primary-foreground: oklch(0.15 0.02 160);
+  --accent: oklch(0.80 0.16 90);                /* gold */
+  --accent-foreground: oklch(0.15 0.02 160);
+  --ring: oklch(0.75 0.17 155);
+  --sidebar: oklch(0.15 0.03 160);
+  --aurora-violet: oklch(0.75 0.17 155);
+  --aurora-emerald: oklch(0.80 0.16 90);
+  --scheme: dark;
+}
+[data-theme="rose"] {
+  --background: oklch(0.20 0.04 340);
+  --foreground: oklch(0.97 0.01 340);
+  --card: oklch(0.26 0.05 335);
+  --popover: oklch(0.23 0.05 335);
+  --primary: oklch(0.75 0.17 350);              /* pink */
+  --primary-foreground: oklch(0.15 0.02 340);
+  --accent: oklch(0.72 0.14 280);               /* indigo */
+  --accent-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.75 0.17 350);
+  --sidebar: oklch(0.17 0.04 340);
+  --aurora-violet: oklch(0.75 0.17 350);
+  --aurora-emerald: oklch(0.72 0.14 280);
+  --scheme: dark;
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+
+  /* Fix native <select> option dropdown showing white text on white — force the OS
+     picker to follow our theme's color-scheme. */
+  :root, html, body { color-scheme: var(--scheme, dark); }
+  select, input, textarea, button { color-scheme: inherit; }
+  option { background-color: var(--color-popover); color: var(--color-popover-foreground); }
 
   html, body {
     font-family: var(--font-sans);
@@ -237,3 +331,12 @@ body { animation: aurora-pan 24s ease-in-out infinite; background-size: 140% 140
     transition-duration: 0.001ms !important;
   }
 }
+
+/* User toggle: disable every animation/transition when data-motion="off" on <html>. */
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+html[data-motion="off"] body { background-size: auto !important; }
