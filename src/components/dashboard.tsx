@@ -8,7 +8,10 @@ import {
   Zap,
   TrendingUp,
   Circle,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const stats = [
   { label: "AI employees", value: 6, delta: "+2 this week", icon: Bot, tone: "violet" as const },
@@ -136,9 +139,44 @@ export function Dashboard() {
         </div>
 
         {/* Quick actions row */}
-        <QuickAction span={4} icon={Bot} title="Create AI employee" desc="Ship a new agent in under 2 minutes" />
-        <QuickAction span={4} icon={Package} title="Import products" desc="CSV, Shopify, or manual" />
-        <QuickAction span={4} icon={MessageSquare} title="Open playground" desc="Test any prompt in real time" />
+        {/* AI-confirmed orders */}
+        <div className="glass-panel col-span-12 rounded-2xl p-6">
+          <SectionHeader title="Confirmed by AI today" cta="Open orders" />
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { id: "ORD-2841", customer: "Sara M.",   product: "Argan hair oil ×2",     amount: 2980, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "3m" },
+              { id: "ORD-2840", customer: "Omar A.",   product: "Saffron 5g + Mint tea", amount: 2990, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "11m" },
+              { id: "ORD-2839", customer: "Lena K.",   product: "Ceramic tagine 28cm",   amount: 4800, cur: "DZD", agent: "Ember", status: "confirmed" as const, time: "24m" },
+              { id: "ORD-2838", customer: "Jon P.",    product: "Dates 1kg ×4",          amount: 5000, cur: "DZD", agent: "Kai",   status: "pending"   as const, time: "38m" },
+            ].map((o) => (
+              <div key={o.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition hover:border-emerald-400/30 hover:bg-white/[0.04]">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span className="font-mono">{o.id}</span>
+                  <span>{o.time} ago</span>
+                </div>
+                <div className="mt-2 truncate text-sm font-semibold">{o.customer}</div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">{o.product}</div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="font-display text-lg font-bold aurora-gradient-text">
+                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.cur, maximumFractionDigits: 0 }).format(o.amount)}
+                  </span>
+                  <span className={"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium " + (o.status === "confirmed" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-400/30 bg-amber-400/10 text-amber-300")}>
+                    {o.status === "confirmed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                    {o.status}
+                  </span>
+                </div>
+                <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary">
+                  <Zap className="h-2.5 w-2.5" /> Closed by {o.agent}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick actions row — every button navigates */}
+        <QuickAction span={4} icon={Bot} title="Create AI employee" desc="Ship a new agent in under 2 minutes" to="/ai-employees" />
+        <QuickAction span={4} icon={Package} title="Manage products" desc="Your catalog, stock and pricing" to="/products" />
+        <QuickAction span={4} icon={MessageSquare} title="Open playground" desc="Test any prompt in real time" to="/playground" />
       </div>
     </div>
   );
@@ -263,14 +301,17 @@ function QuickAction({
   icon: Icon,
   title,
   desc,
+  to,
 }: {
   span: number;
   icon: typeof Bot;
   title: string;
   desc: string;
+  to: string;
 }) {
   return (
-    <button
+    <Link
+      to={to}
       className={
         "group glass-panel col-span-12 flex items-center gap-4 rounded-2xl p-5 text-left transition hover:border-primary/40 hover:bg-white/[0.06] lg:col-span-" +
         span
@@ -284,7 +325,7 @@ function QuickAction({
         <div className="text-xs text-muted-foreground">{desc}</div>
       </div>
       <ArrowUpRight className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />
-    </button>
+    </Link>
   );
 }
 
