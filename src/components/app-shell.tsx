@@ -12,6 +12,7 @@ import {
   Bell,
   Search,
   Plus,
+  Plug,
 } from "lucide-react";
 
 type NavKey =
@@ -22,6 +23,7 @@ type NavKey =
   | "conversations"
   | "products"
   | "orders"
+  | "integrations"
   | "settings";
 
 const nav: { key: NavKey; label: string; icon: typeof LayoutDashboard; to: string }[] = [
@@ -32,6 +34,7 @@ const nav: { key: NavKey; label: string; icon: typeof LayoutDashboard; to: strin
   { key: "conversations", label: "Conversations", icon: MessageSquare, to: "/conversations" },
   { key: "products", label: "Products", icon: Package, to: "/products" },
   { key: "orders", label: "Orders", icon: ShoppingCart, to: "/orders" },
+  { key: "integrations", label: "Integrations", icon: Plug, to: "/integrations" },
   { key: "settings", label: "Settings", icon: Settings, to: "/settings" },
 ];
 
