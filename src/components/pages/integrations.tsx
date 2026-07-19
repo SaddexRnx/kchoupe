@@ -717,11 +717,11 @@ function IntegrationDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm animate-backdrop-in"
       onClick={onClose}
     >
       <div
-        className="glass-panel h-full w-full max-w-md overflow-y-auto rounded-none border-l border-white/10 p-0 shadow-2xl md:max-w-lg"
+        className="glass-panel h-full w-full max-w-md overflow-y-auto rounded-none border-l border-white/10 p-0 shadow-2xl md:max-w-lg animate-drawer-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
