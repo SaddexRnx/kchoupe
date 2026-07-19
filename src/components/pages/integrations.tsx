@@ -74,6 +74,14 @@ const CATEGORY_CAPS: Record<string, string[]> = {
   automation: ["Trigger workflows", "Send + receive webhooks", "Call custom endpoints", "Read/write shared vars", "Chain multi-step actions"],
 };
 
+CATEGORY_CAPS.sources = [
+  "Crawl your website + subpages",
+  "Extract products, FAQs, policies",
+  "Chunk + embed into knowledge",
+  "Refresh on schedule",
+  "Respect robots.txt + rate limits",
+];
+
 // Editable settings shown in the drawer, per category. `secret: true` masks the
 // value behind a reveal toggle. Values persist in component state only (mock).
 type FieldDef = {
@@ -137,6 +145,12 @@ const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
     { key: "signingSecret", label: "Signing secret", placeholder: "whsec_…", secret: true },
   ],
 };
+
+CATEGORY_FIELDS.sources = [
+  { key: "sourceUrl", label: "URL or handle", placeholder: "https://your-shop.com  ·  facebook.com/yourpage  ·  @your.brand", required: true, help: "Your website, Facebook page, Instagram handle, TikTok profile, or any public URL — we'll scrape it and feed the data to your AI." },
+  { key: "depth", label: "Crawl depth", placeholder: "2" },
+  { key: "refresh", label: "Refresh every", placeholder: "24h" },
+];
 
 const CATEGORIES: Category[] = [
   {
