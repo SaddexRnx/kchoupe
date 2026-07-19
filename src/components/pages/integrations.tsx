@@ -22,6 +22,11 @@ import {
   ExternalLink,
   ShieldCheck,
   Activity,
+  Settings2,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Save,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 
@@ -67,6 +72,70 @@ const CATEGORY_CAPS: Record<string, string[]> = {
   logistics: ["Fetch tracking status", "Estimate delivery ETA", "Book labels", "Notify on delay", "Attach POD"],
   voice: ["Place + receive calls", "Send SMS / MMS", "Transcribe voicemail", "Route by intent", "Log call summaries"],
   automation: ["Trigger workflows", "Send + receive webhooks", "Call custom endpoints", "Read/write shared vars", "Chain multi-step actions"],
+};
+
+// Editable settings shown in the drawer, per category. `secret: true` masks the
+// value behind a reveal toggle. Values persist in component state only (mock).
+type FieldDef = {
+  key: string;
+  label: string;
+  placeholder: string;
+  secret?: boolean;
+  required?: boolean;
+  help?: string;
+};
+const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
+  commerce: [
+    { key: "storeUrl", label: "Store URL", placeholder: "https://your-shop.myshopify.com", required: true },
+    { key: "apiKey", label: "API key", placeholder: "sk_live_…", secret: true, required: true },
+    { key: "apiSecret", label: "API secret", placeholder: "shpss_…", secret: true },
+    { key: "webhookSecret", label: "Webhook signing secret", placeholder: "whsec_…", secret: true, help: "Used to verify order + inventory webhooks." },
+  ],
+  payments: [
+    { key: "publishableKey", label: "Publishable key", placeholder: "pk_live_…", required: true },
+    { key: "secretKey", label: "Secret key", placeholder: "sk_live_…", secret: true, required: true },
+    { key: "webhookSecret", label: "Webhook secret", placeholder: "whsec_…", secret: true },
+  ],
+  social: [
+    { key: "pageId", label: "Page / account ID", placeholder: "1234567890", required: true },
+    { key: "accessToken", label: "Access token", placeholder: "EAAG…", secret: true, required: true },
+    { key: "verifyToken", label: "Webhook verify token", placeholder: "any random string", secret: true },
+  ],
+  email: [
+    { key: "fromAddress", label: "From address", placeholder: "support@yourbrand.com", required: true },
+    { key: "apiKey", label: "API key", placeholder: "SG.…", secret: true, required: true },
+    { key: "signingDomain", label: "Signing domain", placeholder: "mail.yourbrand.com" },
+  ],
+  crm: [
+    { key: "portalId", label: "Portal / org ID", placeholder: "26492834", required: true },
+    { key: "apiKey", label: "Private app token", placeholder: "pat-na1-…", secret: true, required: true },
+  ],
+  knowledge: [
+    { key: "workspace", label: "Workspace / drive", placeholder: "Atlas Wiki", required: true },
+    { key: "apiKey", label: "Integration token", placeholder: "secret_…", secret: true, required: true },
+    { key: "rootPath", label: "Root path (optional)", placeholder: "/handbook" },
+  ],
+  marketing: [
+    { key: "accountId", label: "Ad account / list ID", placeholder: "act_123456", required: true },
+    { key: "apiKey", label: "API key", placeholder: "pk-…", secret: true, required: true },
+  ],
+  analytics: [
+    { key: "propertyId", label: "Property / project ID", placeholder: "GA4-123456789", required: true },
+    { key: "serviceAccount", label: "Service account JSON", placeholder: "{ \"type\": \"service_account\", … }", secret: true, required: true },
+  ],
+  logistics: [
+    { key: "accountNumber", label: "Carrier account", placeholder: "ACCT-4820", required: true },
+    { key: "apiKey", label: "API key", placeholder: "live_…", secret: true, required: true },
+  ],
+  voice: [
+    { key: "phoneNumber", label: "Phone number", placeholder: "+1 415 555 0132", required: true },
+    { key: "accountSid", label: "Account SID", placeholder: "AC…", required: true },
+    { key: "authToken", label: "Auth token", placeholder: "•••", secret: true, required: true },
+  ],
+  automation: [
+    { key: "webhookUrl", label: "Webhook URL", placeholder: "https://hooks.example.com/…", required: true },
+    { key: "signingSecret", label: "Signing secret", placeholder: "whsec_…", secret: true },
+  ],
 };
 
 const CATEGORIES: Category[] = [
