@@ -1,5 +1,6 @@
 import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { useT } from "@/lib/i18n";
 
 const employees = [
   { name: "Nova", role: "Sales Lead", model: "Claude Sonnet 4.5", status: "active", convos: 1284, csat: 97, tone: "violet" as const, emoji: "🚀" },
@@ -11,15 +12,16 @@ const employees = [
 ];
 
 export function AiEmployees() {
+  const t = useT();
   return (
     <div>
       <PageHeader
-        eyebrow="Team"
-        title="AI Employees"
-        description="Design, train and orchestrate the AI teammates that power every customer conversation."
+        eyebrow={t("emp.eyebrow")}
+        title={t("emp.title")}
+        description={t("emp.desc")}
         actions={
           <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110">
-            <Plus className="h-4 w-4" /> New employee
+            <Plus className="h-4 w-4" /> {t("emp.new")}
           </button>
         }
       />
@@ -31,16 +33,16 @@ export function AiEmployees() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-sm font-semibold">Aurora recommends</div>
-              <div className="text-xs text-muted-foreground">Nova's conversion is up 24% this week — clone her prompt into Echo for the EU launch.</div>
+              <div className="text-sm font-semibold">{t("emp.recommend_title")}</div>
+              <div className="text-xs text-muted-foreground">{t("emp.recommend_desc")}</div>
             </div>
-            <button className="ml-auto rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/5">Apply</button>
+            <button className="ml-auto rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/5">{t("common.apply")}</button>
           </div>
         </Panel>
         <Panel>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Team CSAT</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("emp.team_csat")}</div>
               <div className="mt-1 font-display text-3xl font-bold">94.2</div>
             </div>
             <Chip tone="emerald"><TrendingUp className="h-3 w-3" /> +2.1</Chip>
@@ -59,7 +61,7 @@ export function AiEmployees() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-display text-lg font-semibold">{e.name}</div>
                   <Chip tone={e.status === "active" ? "emerald" : e.status === "training" ? "amber" : "muted"}>
-                    {e.status}
+                    {t("common." + e.status, e.status)}
                   </Chip>
                 </div>
                 <div className="text-xs text-muted-foreground">{e.role}</div>
@@ -68,15 +70,15 @@ export function AiEmployees() {
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
               <div>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><MessageSquare className="h-3 w-3" /> Convos</div>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><MessageSquare className="h-3 w-3" /> {t("emp.convos")}</div>
                 <div className="mt-0.5 font-display text-lg font-semibold">{e.convos}</div>
               </div>
               <div>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> CSAT</div>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> {t("emp.csat")}</div>
                 <div className="mt-0.5 font-display text-lg font-semibold">{e.csat}</div>
               </div>
               <div>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Bot className="h-3 w-3" /> Skills</div>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Bot className="h-3 w-3" /> {t("emp.skills")}</div>
                 <div className="mt-0.5 font-display text-lg font-semibold">7</div>
               </div>
             </div>
