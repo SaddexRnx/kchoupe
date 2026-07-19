@@ -461,7 +461,15 @@ function CategoryPill({ label, active, onClick }: { label: string; active: boole
   );
 }
 
-function IntegrationCard({ i }: { i: Integration }) {
+function IntegrationCard({
+  i,
+  usedBy,
+  onManage,
+}: {
+  i: Integration;
+  usedBy: string[];
+  onManage: () => void;
+}) {
   const isConnected = i.status === "connected";
   return (
     <div className="glass-panel group relative flex flex-col gap-3 rounded-2xl p-4 transition hover:border-primary/30">
@@ -483,25 +491,44 @@ function IntegrationCard({ i }: { i: Integration }) {
         {statusChip(i.status)}
       </div>
 
-      {i.usedBy && i.usedBy.length > 0 && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Used by</span>
-          <div className="flex -space-x-1.5">
-            {i.usedBy.map((u) => (
-              <span
-                key={u}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-background bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-primary-foreground"
-                title={u}
-              >
-                {u[0]}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {usedBy.length > 0 ? (
+          <>
+            <span>Used by</span>
+            <div className="flex -space-x-1.5">
+              {usedBy.map((u) => {
+                const emp = EMPLOYEES.find((e) => e.name === u);
+                return (
+                  <span
+                    key={u}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-background bg-gradient-to-br from-primary to-accent text-[10px] font-semibold text-primary-foreground"
+                    title={emp ? `${emp.name} · ${emp.role}` : u}
+                  >
+                    {u[0]}
+                  </span>
+                );
+              })}
+            </div>
+            <button
+              onClick={onManage}
+              className="ml-auto text-[11px] text-primary hover:underline"
+            >
+              Edit
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={onManage}
+            className="text-[11px] text-primary hover:underline"
+          >
+            + Assign AI employees
+          </button>
+        )}
+      </div>
 
       <div className="mt-auto flex items-center justify-between pt-2">
         <button
+          onClick={onManage}
           className={
             "rounded-lg px-3 py-1.5 text-xs font-semibold transition " +
             (isConnected
@@ -512,6 +539,111 @@ function IntegrationCard({ i }: { i: Integration }) {
           {isConnected ? "Manage" : i.status === "reauth" ? "Reconnect" : "Connect"}
         </button>
         <button className="text-xs text-muted-foreground hover:text-foreground">Docs →</button>
+      </div>
+    </div>
+  );
+}
+
+function AssignEmployeesModal({
+  integration,
+  selected,
+  onToggle,
+  onClose,
+}: {
+  integration: Integration;
+  selected: string[];
+  onToggle: (employee: string) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass-panel w-full max-w-lg rounded-2xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={
+                "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg " +
+                integration.accent
+              }
+            >
+              {integration.initials}
+            </div>
+            <div>
+              <div className="font-display text-lg font-semibold">{integration.name}</div>
+              <div className="text-xs text-muted-foreground">
+                Choose which AI employees can use this integration.
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-1.5">
+          {EMPLOYEES.map((e) => {
+            const on = selected.includes(e.name);
+            return (
+              <button
+                key={e.name}
+                onClick={() => onToggle(e.name)}
+                className={
+                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition " +
+                  (on
+                    ? "border-primary/40 bg-gradient-to-r from-primary/15 to-accent/10"
+                    : "border-white/10 bg-white/5 hover:bg-white/10")
+                }
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">
+                  {e.emoji}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold">{e.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{e.role}</div>
+                </div>
+                <div
+                  className={
+                    "flex h-5 w-5 items-center justify-center rounded-md border transition " +
+                    (on
+                      ? "border-primary bg-gradient-to-br from-primary to-accent text-primary-foreground"
+                      : "border-white/20 bg-transparent")
+                  }
+                >
+                  {on && <Check className="h-3 w-3" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {selected.length} of {EMPLOYEES.length} assigned
+          </span>
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   );
