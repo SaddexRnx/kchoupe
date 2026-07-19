@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Plug,
@@ -16,6 +16,8 @@ import {
   Megaphone,
   BarChart3,
   Phone,
+  X,
+  Check,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 
@@ -37,6 +39,16 @@ type Category = {
   blurb: string;
   items: Integration[];
 };
+
+// AI employees available to assign — kept in sync with /ai-employees mock roster.
+const EMPLOYEES = [
+  { name: "Nova", role: "Sales Lead", emoji: "🚀" },
+  { name: "Atlas", role: "Support Concierge", emoji: "🛎️" },
+  { name: "Sage", role: "Onboarding Coach", emoji: "🌿" },
+  { name: "Echo", role: "Marketing Analyst", emoji: "📡" },
+  { name: "Orbit", role: "Product Advisor", emoji: "🪐" },
+  { name: "Lumen", role: "Retention Specialist", emoji: "💡" },
+];
 
 const CATEGORIES: Category[] = [
   {
