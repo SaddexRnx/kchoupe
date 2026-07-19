@@ -288,6 +288,26 @@ function statusChip(s: Status) {
 export function IntegrationsPage() {
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
+  const [assignments, setAssignments] = useState<Record<string, string[]>>(() => {
+    const seed: Record<string, string[]> = {};
+    CATEGORIES.forEach((c) =>
+      c.items.forEach((i) => {
+        seed[i.name] = i.usedBy ? [...i.usedBy] : [];
+      })
+    );
+    return seed;
+  });
+  const [editing, setEditing] = useState<Integration | null>(null);
+
+  const toggleEmployee = (integration: string, employee: string) => {
+    setAssignments((prev) => {
+      const cur = prev[integration] ?? [];
+      const next = cur.includes(employee)
+        ? cur.filter((n) => n !== employee)
+        : [...cur, employee];
+      return { ...prev, [integration]: next };
+    });
+  };
 
   const totals = useMemo(() => {
     const all = CATEGORIES.flatMap((c) => c.items);
@@ -395,7 +415,12 @@ export function IntegrationsPage() {
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {c.items.map((i) => (
-                  <IntegrationCard key={c.id + i.name} i={i} />
+                  <IntegrationCard
+                    key={c.id + i.name}
+                    i={i}
+                    usedBy={assignments[i.name] ?? []}
+                    onManage={() => setEditing(i)}
+                  />
                 ))}
               </div>
             </section>
@@ -407,6 +432,15 @@ export function IntegrationsPage() {
           </Panel>
         )}
       </div>
+
+      {editing && (
+        <AssignEmployeesModal
+          integration={editing}
+          selected={assignments[editing.name] ?? []}
+          onToggle={(emp) => toggleEmployee(editing.name, emp)}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </>
   );
 }
