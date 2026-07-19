@@ -14,6 +14,7 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
 import { Route as IndexRouteImport } from './routes/index'
@@ -43,6 +44,11 @@ const KnowledgeRoute = KnowledgeRouteImport.update({
   path: '/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConversationsRoute = ConversationsRouteImport.update({
   id: '/conversations',
   path: '/conversations',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-employees'
     | '/conversations'
+    | '/integrations'
     | '/knowledge'
     | '/orders'
     | '/playground'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-employees'
     | '/conversations'
+    | '/integrations'
     | '/knowledge'
     | '/orders'
     | '/playground'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-employees'
     | '/conversations'
+    | '/integrations'
     | '/knowledge'
     | '/orders'
     | '/playground'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiEmployeesRoute: typeof AiEmployeesRoute
   ConversationsRoute: typeof ConversationsRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   KnowledgeRoute: typeof KnowledgeRoute
   OrdersRoute: typeof OrdersRoute
   PlaygroundRoute: typeof PlaygroundRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conversations': {
       id: '/conversations'
       path: '/conversations'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiEmployeesRoute: AiEmployeesRoute,
   ConversationsRoute: ConversationsRoute,
+  IntegrationsRoute: IntegrationsRoute,
   KnowledgeRoute: KnowledgeRoute,
   OrdersRoute: OrdersRoute,
   PlaygroundRoute: PlaygroundRoute,
