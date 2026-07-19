@@ -9,9 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProductsRouteImport } from './routes/products'
+import { Route as PlaygroundRouteImport } from './routes/playground'
+import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsRoute = ProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationsRoute = ConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiEmployeesRoute = AiEmployeesRouteImport.update({
   id: '/ai-employees',
   path: '/ai-employees',
@@ -26,31 +62,122 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
+  '/conversations': typeof ConversationsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/orders': typeof OrdersRoute
+  '/playground': typeof PlaygroundRoute
+  '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
+  '/conversations': typeof ConversationsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/orders': typeof OrdersRoute
+  '/playground': typeof PlaygroundRoute
+  '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
+  '/conversations': typeof ConversationsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/orders': typeof OrdersRoute
+  '/playground': typeof PlaygroundRoute
+  '/products': typeof ProductsRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ai-employees'
+  fullPaths:
+    | '/'
+    | '/ai-employees'
+    | '/conversations'
+    | '/knowledge'
+    | '/orders'
+    | '/playground'
+    | '/products'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai-employees'
-  id: '__root__' | '/' | '/ai-employees'
+  to:
+    | '/'
+    | '/ai-employees'
+    | '/conversations'
+    | '/knowledge'
+    | '/orders'
+    | '/playground'
+    | '/products'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-employees'
+    | '/conversations'
+    | '/knowledge'
+    | '/orders'
+    | '/playground'
+    | '/products'
+    | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiEmployeesRoute: typeof AiEmployeesRoute
+  ConversationsRoute: typeof ConversationsRoute
+  KnowledgeRoute: typeof KnowledgeRoute
+  OrdersRoute: typeof OrdersRoute
+  PlaygroundRoute: typeof PlaygroundRoute
+  ProductsRoute: typeof ProductsRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products': {
+      id: '/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversations': {
+      id: '/conversations'
+      path: '/conversations'
+      fullPath: '/conversations'
+      preLoaderRoute: typeof ConversationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-employees': {
       id: '/ai-employees'
       path: '/ai-employees'
@@ -71,6 +198,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiEmployeesRoute: AiEmployeesRoute,
+  ConversationsRoute: ConversationsRoute,
+  KnowledgeRoute: KnowledgeRoute,
+  OrdersRoute: OrdersRoute,
+  PlaygroundRoute: PlaygroundRoute,
+  ProductsRoute: ProductsRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
