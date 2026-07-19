@@ -56,7 +56,7 @@ function Sidebar({ active }: { active: NavKey }) {
   return (
     <aside className="glass-panel sticky top-6 hidden h-[calc(100vh-3rem)] w-60 shrink-0 flex-col rounded-2xl p-4 lg:flex">
       <Link to="/" className="mb-8 flex items-center gap-2.5 px-2">
-        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/30">
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/30 animate-gradient transition duration-500 hover:rotate-6 hover:scale-110">
           <span className="font-display text-lg font-bold text-primary-foreground">A</span>
         </div>
         <div className="leading-tight">
@@ -66,22 +66,23 @@ function Sidebar({ active }: { active: NavKey }) {
       </Link>
 
       <nav className="flex-1 space-y-1">
-        {nav.map(({ key, label, icon: Icon, to }) => {
+        {nav.map(({ key, label, icon: Icon, to }, idx) => {
           const isActive = key === active;
           return (
             <Link
               key={key}
               to={to}
+              style={{ animationDelay: `${idx * 40}ms` }}
               className={
-                "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all " +
+                "group animate-fade-up flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-300 hover:translate-x-0.5 " +
                 (isActive
                   ? "bg-gradient-to-r from-primary/20 to-accent/10 text-foreground shadow-inner"
                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground")
               }
             >
-              <Icon className={"h-4 w-4 " + (isActive ? "text-primary" : "")} />
+              <Icon className={"h-4 w-4 transition duration-300 group-hover:scale-110 " + (isActive ? "text-primary" : "")} />
               <span className="font-medium">{label}</span>
-              {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" />}
+              {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent pulse-emerald shadow-[0_0_8px] shadow-accent" />}
             </Link>
           );
         })}
