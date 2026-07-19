@@ -29,6 +29,7 @@ import {
   Save,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { useT } from "@/lib/i18n";
 
 type Status = "connected" | "available" | "reauth" | "beta";
 
@@ -155,9 +156,9 @@ CATEGORY_FIELDS.sources = [
 const CATEGORIES: Category[] = [
   {
     id: "commerce",
-    label: "Shops & Commerce",
+    label: "int.cat.commerce",
     icon: ShoppingBag,
-    blurb: "Sync catalog, stock and orders so agents can quote, upsell and take checkout.",
+    blurb: "int.cat.commerce_blurb",
     items: [
       { name: "Shopify", tag: "Storefront + Admin API", status: "connected", usedBy: ["Nova", "Atlas"], accent: "from-emerald-400 to-lime-300", initials: "SH" },
       { name: "WooCommerce", tag: "WordPress store", status: "available", accent: "from-violet-400 to-fuchsia-400", initials: "WC" },
@@ -188,9 +189,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "payments",
-    label: "Payments & Checkout",
+    label: "int.cat.payments",
     icon: CreditCard,
-    blurb: "Charge cards, subscriptions and links so agents can close a sale in-chat.",
+    blurb: "int.cat.payments_blurb",
     items: [
       { name: "Stripe", tag: "Cards + subscriptions", status: "connected", usedBy: ["Nova"], accent: "from-indigo-400 to-purple-300", initials: "ST" },
       { name: "PayPal", tag: "Global wallet", status: "available", accent: "from-sky-400 to-blue-500", initials: "PP" },
@@ -208,9 +209,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "social",
-    label: "Social & Messaging",
+    label: "int.cat.social",
     icon: MessageCircle,
-    blurb: "Reply to DMs, comments and threads wherever your customers hang out.",
+    blurb: "int.cat.social_blurb",
     items: [
       { name: "Instagram", tag: "DMs, comments, stories", status: "connected", usedBy: ["Nova", "Sage"], accent: "from-pink-400 to-orange-300", initials: "IG" },
       { name: "Facebook Pages", tag: "Messenger + posts", status: "connected", usedBy: ["Nova"], accent: "from-blue-500 to-sky-300", initials: "FB" },
@@ -239,9 +240,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "email",
-    label: "Email & Support",
+    label: "int.cat.email",
     icon: Mail,
-    blurb: "Triage inboxes and tickets, and reply with brand-safe drafts.",
+    blurb: "int.cat.email_blurb",
     items: [
       { name: "Gmail", tag: "Google Workspace", status: "connected", usedBy: ["Atlas"], accent: "from-red-400 to-yellow-300", initials: "GM" },
       { name: "Outlook", tag: "Microsoft 365", status: "available", accent: "from-blue-500 to-sky-300", initials: "OL" },
@@ -259,9 +260,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "crm",
-    label: "CRM & Sales",
+    label: "int.cat.crm",
     icon: Users,
-    blurb: "Push leads, deals and notes so nothing your agents learn is lost.",
+    blurb: "int.cat.crm_blurb",
     items: [
       { name: "HubSpot", tag: "CRM + marketing", status: "connected", usedBy: ["Atlas"], accent: "from-orange-500 to-amber-300", initials: "HS" },
       { name: "Salesforce", tag: "Enterprise CRM", status: "available", accent: "from-sky-400 to-blue-500", initials: "SF" },
@@ -275,9 +276,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "knowledge",
-    label: "Knowledge & Docs",
+    label: "int.cat.knowledge",
     icon: BookOpen,
-    blurb: "Feed the knowledge base so agents answer with facts, not vibes.",
+    blurb: "int.cat.knowledge_blurb",
     items: [
       { name: "Notion", tag: "Docs + wiki", status: "connected", usedBy: ["Sage"], accent: "from-neutral-200 to-neutral-500", initials: "NT" },
       { name: "Google Drive", tag: "Docs + Sheets", status: "connected", usedBy: ["Sage"], accent: "from-yellow-400 to-blue-400", initials: "GD" },
@@ -293,9 +294,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "marketing",
-    label: "Marketing & Ads",
+    label: "int.cat.marketing",
     icon: Megaphone,
-    blurb: "Draft campaigns, publish content, and let agents react to ad performance.",
+    blurb: "int.cat.marketing_blurb",
     items: [
       { name: "Meta Ads", tag: "FB + IG ads", status: "available", accent: "from-blue-500 to-sky-300", initials: "MA" },
       { name: "Google Ads", tag: "Search + PMax", status: "available", accent: "from-yellow-400 to-red-300", initials: "GA" },
@@ -313,9 +314,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "analytics",
-    label: "Analytics & Data",
+    label: "int.cat.analytics",
     icon: BarChart3,
-    blurb: "Give agents context: traffic, funnels, revenue, cohorts.",
+    blurb: "int.cat.analytics_blurb",
     items: [
       { name: "Google Analytics 4", tag: "Web analytics", status: "connected", accent: "from-yellow-400 to-orange-300", initials: "GA" },
       { name: "Mixpanel", tag: "Product analytics", status: "available", accent: "from-violet-400 to-purple-400", initials: "MX" },
@@ -329,9 +330,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "logistics",
-    label: "Shipping & Fulfillment",
+    label: "int.cat.logistics",
     icon: Truck,
-    blurb: "Track parcels and let agents answer 'where is my order?' correctly.",
+    blurb: "int.cat.logistics_blurb",
     items: [
       { name: "ShipStation", tag: "Multi-carrier ship", status: "available", accent: "from-sky-400 to-blue-500", initials: "SS" },
       { name: "Shippo", tag: "Rates + labels", status: "available", accent: "from-violet-400 to-purple-400", initials: "SH" },
@@ -347,9 +348,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "voice",
-    label: "Voice & Telephony",
+    label: "int.cat.voice",
     icon: Phone,
-    blurb: "Route calls and voicemails through AI agents.",
+    blurb: "int.cat.voice_blurb",
     items: [
       { name: "Twilio", tag: "SMS + voice API", status: "connected", usedBy: ["Atlas"], accent: "from-red-400 to-rose-300", initials: "TW" },
       { name: "Vonage", tag: "Voice + video", status: "available", accent: "from-neutral-200 to-neutral-500", initials: "VN" },
@@ -361,9 +362,9 @@ const CATEGORIES: Category[] = [
   },
   {
     id: "automation",
-    label: "Automation & Dev",
+    label: "int.cat.automation",
     icon: Zap,
-    blurb: "Wire anything else via webhooks, Zapier or your own APIs.",
+    blurb: "int.cat.automation_blurb",
     items: [
       { name: "Zapier", tag: "6k+ apps", status: "connected", accent: "from-orange-500 to-red-400", initials: "ZP" },
       { name: "Make (Integromat)", tag: "Visual automations", status: "available", accent: "from-violet-400 to-purple-400", initials: "MK" },
@@ -383,9 +384,9 @@ const CATEGORIES: Category[] = [
 // Custom sources — scrape your own website / socials without a "store" integration.
 CATEGORIES.unshift({
   id: "sources",
-  label: "Your sources",
+  label: "int.cat.sources",
   icon: Sparkles,
-  blurb: "No shop yet? Point Atlas at your website or social page and we'll extract products, FAQs and pricing automatically.",
+  blurb: "int.cat.sources_blurb",
   items: [
     { name: "Your website", tag: "Full crawl + refresh", status: "available", accent: "from-emerald-400 to-teal-300", initials: "WW" },
     { name: "Facebook page", tag: "Posts, products, DMs", status: "available", accent: "from-blue-500 to-sky-300", initials: "FB" },
@@ -396,14 +397,15 @@ CATEGORIES.unshift({
   ],
 });
 
-function statusChip(s: Status) {
-  if (s === "connected") return <Chip tone="emerald"><CheckCircle2 className="h-3 w-3" /> Connected</Chip>;
-  if (s === "reauth") return <Chip tone="amber"><AlertTriangle className="h-3 w-3" /> Re-auth</Chip>;
-  if (s === "beta") return <Chip tone="violet"><Sparkles className="h-3 w-3" /> Beta</Chip>;
-  return <Chip tone="muted">Available</Chip>;
+function statusChip(s: Status, t: (k: string, f?: string) => string) {
+  if (s === "connected") return <Chip tone="emerald"><CheckCircle2 className="h-3 w-3" /> {t("common.connected")}</Chip>;
+  if (s === "reauth") return <Chip tone="amber"><AlertTriangle className="h-3 w-3" /> {t("int.reauth")}</Chip>;
+  if (s === "beta") return <Chip tone="violet"><Sparkles className="h-3 w-3" /> {t("common.beta")}</Chip>;
+  return <Chip tone="muted">{t("common.available")}</Chip>;
 }
 
 export function IntegrationsPage() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
   const [assignments, setAssignments] = useState<Record<string, string[]>>(() => {
@@ -452,12 +454,12 @@ export function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Integrations"
-        title="Plug Atlas into everything you run"
-        description="Connect shops, socials, inboxes, CRMs, warehouses and automations. Your AI employees inherit every connection instantly."
+        eyebrow={t("int.eyebrow")}
+        title={t("int.title")}
+        description={t("int.desc")}
         actions={
           <button className="flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30">
-            <Plug className="h-4 w-4" /> Request integration
+            <Plug className="h-4 w-4" /> {t("int.request")}
           </button>
         }
       />
@@ -465,26 +467,23 @@ export function IntegrationsPage() {
       {/* Stats bento */}
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <Panel>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Available</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("int.available")}</div>
           <div className="mt-1 font-display text-3xl font-bold">{totals.total}+</div>
-          <div className="text-xs text-muted-foreground">across {totals.categories} categories</div>
+          <div className="text-xs text-muted-foreground">{t("int.across", { n: totals.categories })}</div>
         </Panel>
         <Panel>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Connected</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("int.connected")}</div>
           <div className="mt-1 font-display text-3xl font-bold text-emerald-300">{totals.connected}</div>
-          <div className="text-xs text-muted-foreground">live in your workspace</div>
+          <div className="text-xs text-muted-foreground">{t("int.live_ws")}</div>
         </Panel>
         <Panel>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Needs re-auth</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("int.needs_reauth")}</div>
           <div className="mt-1 font-display text-3xl font-bold text-amber-300">{totals.reauth}</div>
-          <div className="text-xs text-muted-foreground">tokens expiring soon</div>
+          <div className="text-xs text-muted-foreground">{t("int.tokens_soon")}</div>
         </Panel>
         <Panel className="bg-gradient-to-br from-primary/15 via-transparent to-accent/10">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Aurora tip</div>
-          <div className="mt-1 text-sm">
-            Connect <span className="text-foreground">WhatsApp</span> to give Nova a
-            <span className="text-foreground"> 3.4× </span> reply lift.
-          </div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("int.aurora_tip")}</div>
+          <div className="mt-1 text-sm">{t("int.aurora_tip_body")}</div>
         </Panel>
       </div>
 
@@ -496,16 +495,16 @@ export function IntegrationsPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search 150+ integrations…"
+              placeholder={t("int.search")}
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <CategoryPill label="All" active={activeCat === "all"} onClick={() => setActiveCat("all")} />
+            <CategoryPill label={t("common.all")} active={activeCat === "all"} onClick={() => setActiveCat("all")} />
             {CATEGORIES.map((c) => (
               <CategoryPill
                 key={c.id}
-                label={c.label}
+                label={t(c.label)}
                 active={activeCat === c.id}
                 onClick={() => setActiveCat(c.id)}
               />
@@ -525,10 +524,10 @@ export function IntegrationsPage() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 animate-float">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
-                    <h2 className="font-display text-xl font-semibold">{c.label}</h2>
+                    <h2 className="font-display text-xl font-semibold">{t(c.label)}</h2>
                     <span className="text-xs text-muted-foreground">· {c.items.length}</span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{c.blurb}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t(c.blurb)}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -547,7 +546,7 @@ export function IntegrationsPage() {
         })}
         {filtered.length === 0 && (
           <Panel className="text-center text-sm text-muted-foreground">
-            No integrations match “{query}”. Try another name or clear filters.
+            {t("int.no_match", { q: query })}
           </Panel>
         )}
       </div>
@@ -592,6 +591,7 @@ function IntegrationCard({
   usedBy: string[];
   onOpen: () => void;
 }) {
+  const t = useT();
   const isConnected = i.status === "connected";
   return (
     <button
@@ -618,7 +618,7 @@ function IntegrationCard({
               <div className="truncate text-xs text-muted-foreground">{i.tag}</div>
             </div>
           </div>
-          <div className="shrink-0">{statusChip(i.status)}</div>
+          <div className="shrink-0">{statusChip(i.status, t)}</div>
         </div>
 
         <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-3">
@@ -640,7 +640,7 @@ function IntegrationCard({
               )}
             </div>
           ) : (
-            <span className="text-[11px] text-muted-foreground">No employees assigned</span>
+            <span className="text-[11px] text-muted-foreground">{t("int.no_employees")}</span>
           )}
           <span
             className={
@@ -650,7 +650,7 @@ function IntegrationCard({
                 : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
             }
           >
-            {isConnected ? "Details" : i.status === "reauth" ? "Reconnect" : "Connect"}
+            {isConnected ? t("common.details") : i.status === "reauth" ? t("common.reconnect") : t("common.connect")}
           </span>
         </div>
       </div>
@@ -682,6 +682,7 @@ function IntegrationDrawer({
   onToggle: (employee: string) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [test, setTest] = useState<TestState>({ phase: "idle" });
   const fields = CATEGORY_FIELDS[categoryId] ?? [
     { key: "apiKey", label: "API key", placeholder: "sk_live_…", secret: true, required: true },
@@ -722,9 +723,9 @@ function IntegrationDrawer({
     window.setTimeout(() => {
       const at = new Date().toLocaleTimeString();
       if (status === "reauth") {
-        setTest({ phase: "fail", message: "Token expired — reconnect required.", at });
+        setTest({ phase: "fail", message: t("int.test_expired"), at });
       } else if (status === "available") {
-        setTest({ phase: "fail", message: "Not connected yet — connect first.", at });
+        setTest({ phase: "fail", message: t("int.test_notconn"), at });
       } else {
         setTest({ phase: "ok", latency, at });
       }
@@ -784,7 +785,7 @@ function IntegrationDrawer({
             </div>
           </div>
           <div className="mt-3 flex items-center gap-2 px-6">
-            {statusChip(status)}
+            {statusChip(status, t)}
             <Chip tone="muted">
               <ShieldCheck className="h-3 w-3" /> OAuth 2.0
             </Chip>
@@ -795,7 +796,7 @@ function IntegrationDrawer({
         <div className="space-y-6 p-6">
           {/* Capabilities */}
           <section>
-            <SectionTitle icon={Zap}>Capabilities</SectionTitle>
+            <SectionTitle icon={Zap}>{t("int.capabilities")}</SectionTitle>
             <ul className="mt-2 grid grid-cols-1 gap-1.5">
               {caps.map((c) => (
                 <li
@@ -812,10 +813,10 @@ function IntegrationDrawer({
           {/* Integration settings */}
           <section>
             <div className="flex items-center justify-between">
-              <SectionTitle icon={Settings2}>Integration settings</SectionTitle>
+              <SectionTitle icon={Settings2}>{t("int.settings")}</SectionTitle>
               {status === "reauth" && (
                 <Chip tone="amber">
-                  <AlertTriangle className="h-3 w-3" /> Re-auth needed
+                  <AlertTriangle className="h-3 w-3" /> {t("int.re_auth_needed")}
                 </Chip>
               )}
             </div>
@@ -840,9 +841,9 @@ function IntegrationDrawer({
                           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
                         >
                           {show ? (
-                            <><EyeOff className="h-3 w-3" /> Hide</>
+                            <><EyeOff className="h-3 w-3" /> {t("common.hide")}</>
                           ) : (
-                            <><Eye className="h-3 w-3" /> Reveal</>
+                            <><Eye className="h-3 w-3" /> {t("common.reveal")}</>
                           )}
                         </button>
                       )}
@@ -870,12 +871,12 @@ function IntegrationDrawer({
               <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-3">
                 <div className="text-[11px] text-muted-foreground">
                   {savedAt
-                    ? "Saved · " + savedAt
+                    ? t("int.saved_at", { t: savedAt })
                     : dirty
-                    ? "Unsaved changes"
+                    ? t("int.unsaved")
                     : missingRequired
-                    ? "Required fields missing"
-                    : "All good"}
+                    ? t("int.required_missing")
+                    : t("int.all_good")}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -884,9 +885,9 @@ function IntegrationDrawer({
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-white/10 disabled:opacity-60"
                   >
                     {reauth.phase === "running" ? (
-                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Re-authorizing…</>
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("int.reauthorizing")}</>
                     ) : (
-                      <><RefreshCw className="h-3.5 w-3.5" /> Re-authorize</>
+                      <><RefreshCw className="h-3.5 w-3.5" /> {t("int.reauthorize")}</>
                     )}
                   </button>
                   <button
@@ -894,13 +895,13 @@ function IntegrationDrawer({
                     disabled={!dirty || missingRequired}
                     className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/20 transition disabled:opacity-50"
                   >
-                    <Save className="h-3.5 w-3.5" /> Save
+                    <Save className="h-3.5 w-3.5" /> {t("common.save")}
                   </button>
                 </div>
               </div>
               {reauth.phase === "done" && (
                 <div className="flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs text-emerald-300">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Re-authorized · {reauth.at}
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t("int.reauthorized", { t: reauth.at })}
                 </div>
               )}
             </div>
@@ -908,11 +909,11 @@ function IntegrationDrawer({
 
           {/* Test connection */}
           <section>
-            <SectionTitle icon={Activity}>Test connection</SectionTitle>
+            <SectionTitle icon={Activity}>{t("int.test_title")}</SectionTitle>
             <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-xs text-muted-foreground">
-                  Ping the {integration.name} sandbox and time the round-trip.
+                  {t("int.test_ping", { name: integration.name })}
                 </div>
                 <button
                   onClick={runTest}
@@ -921,28 +922,28 @@ function IntegrationDrawer({
                 >
                   {test.phase === "running" ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Testing…
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("int.test_running")}
                     </>
                   ) : (
                     <>
-                      <Zap className="h-3.5 w-3.5" /> Run test
+                      <Zap className="h-3.5 w-3.5" /> {t("int.test_run")}
                     </>
                   )}
                 </button>
               </div>
               <div className="mt-3 min-h-[46px] rounded-lg border border-white/5 bg-background/40 p-3 text-xs">
                 {test.phase === "idle" && (
-                  <span className="text-muted-foreground">No tests yet — click Run test to ping.</span>
+                  <span className="text-muted-foreground">{t("int.test_idle")}</span>
                 )}
                 {test.phase === "running" && (
                   <span className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Establishing handshake…
+                    <Loader2 className="h-3 w-3 animate-spin" /> {t("int.test_handshake")}
                   </span>
                 )}
                 {test.phase === "ok" && (
                   <div className="flex items-center gap-2 text-emerald-300">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span className="font-medium">Success</span>
+                    <span className="font-medium">{t("int.test_ok")}</span>
                     <span className="text-muted-foreground">
                       · {test.latency}ms · {test.at}
                     </span>
@@ -951,7 +952,7 @@ function IntegrationDrawer({
                 {test.phase === "fail" && (
                   <div className="flex items-center gap-2 text-amber-300">
                     <AlertTriangle className="h-3.5 w-3.5" />
-                    <span className="font-medium">Failed</span>
+                    <span className="font-medium">{t("int.test_fail")}</span>
                     <span className="text-muted-foreground">· {test.message} · {test.at}</span>
                   </div>
                 )}
@@ -961,7 +962,7 @@ function IntegrationDrawer({
 
           {/* Assign employees */}
           <section>
-            <SectionTitle icon={Users}>AI employees using this</SectionTitle>
+            <SectionTitle icon={Users}>{t("int.employees_using")}</SectionTitle>
             <div className="mt-2 space-y-1.5">
               {EMPLOYEES.map((e) => {
                 const on = selected.includes(e.name);
@@ -998,14 +999,14 @@ function IntegrationDrawer({
               })}
             </div>
             <div className="mt-2 text-[11px] text-muted-foreground">
-              {selected.length} of {EMPLOYEES.length} assigned
+              {t("int.n_of_m", { n: selected.length, m: EMPLOYEES.length })}
             </div>
           </section>
 
           {/* Footer actions */}
           <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-4">
             <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <ExternalLink className="h-3.5 w-3.5" /> Read docs
+              <ExternalLink className="h-3.5 w-3.5" /> {t("int.read_docs")}
             </button>
             <button
               className={
@@ -1016,10 +1017,10 @@ function IntegrationDrawer({
               }
             >
               {isConnected
-                ? "Disconnect"
+                ? t("int.disconnect")
                 : integration.status === "reauth"
-                ? "Reconnect"
-                : "Connect " + integration.name}
+                ? t("common.reconnect")
+                : t("int.connect_name", { name: integration.name })}
             </button>
           </div>
         </div>
