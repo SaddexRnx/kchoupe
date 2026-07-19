@@ -380,6 +380,22 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+// Custom sources — scrape your own website / socials without a "store" integration.
+CATEGORIES.unshift({
+  id: "sources",
+  label: "Your sources",
+  icon: Sparkles,
+  blurb: "No shop yet? Point Atlas at your website or social page and we'll extract products, FAQs and pricing automatically.",
+  items: [
+    { name: "Your website", tag: "Full crawl + refresh", status: "available", accent: "from-emerald-400 to-teal-300", initials: "WW" },
+    { name: "Facebook page", tag: "Posts, products, DMs", status: "available", accent: "from-blue-500 to-sky-300", initials: "FB" },
+    { name: "Instagram profile", tag: "Posts + shop tags", status: "available", accent: "from-pink-400 to-orange-300", initials: "IG" },
+    { name: "TikTok profile", tag: "Videos + shop", status: "available", accent: "from-pink-400 to-cyan-300", initials: "TT" },
+    { name: "Google Business", tag: "Listing + reviews", status: "available", accent: "from-yellow-400 to-red-300", initials: "GB" },
+    { name: "PDF / catalog", tag: "Drop a file", status: "available", accent: "from-neutral-200 to-neutral-500", initials: "PD" },
+  ],
+});
+
 function statusChip(s: Status) {
   if (s === "connected") return <Chip tone="emerald"><CheckCircle2 className="h-3 w-3" /> Connected</Chip>;
   if (s === "reauth") return <Chip tone="amber"><AlertTriangle className="h-3 w-3" /> Re-auth</Chip>;
