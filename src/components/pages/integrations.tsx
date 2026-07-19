@@ -488,11 +488,11 @@ export function IntegrationsPage() {
         {filtered.map((c) => {
           const Icon = c.icon;
           return (
-            <section key={c.id}>
+            <section key={c.id} className="animate-fade-up">
               <div className="mb-3 flex items-end justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 animate-float">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
                     <h2 className="font-display text-xl font-semibold">{c.label}</h2>
@@ -502,10 +502,11 @@ export function IntegrationsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {c.items.map((i) => (
+                {c.items.map((i, idx) => (
                   <IntegrationCard
                     key={c.id + i.name}
                     i={i}
+                    index={idx}
                     usedBy={assignments[i.name] ?? []}
                     onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
@@ -552,10 +553,12 @@ function CategoryPill({ label, active, onClick }: { label: string; active: boole
 
 function IntegrationCard({
   i,
+  index = 0,
   usedBy,
   onOpen,
 }: {
   i: Integration;
+  index?: number;
   usedBy: string[];
   onOpen: () => void;
 }) {
@@ -563,7 +566,8 @@ function IntegrationCard({
   return (
     <button
       onClick={onOpen}
-      className="glass-panel card-sheen group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+      style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+      className="glass-panel card-sheen animate-fade-up group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
     >
       {/* accent band */}
       <div className={"h-1 w-full bg-gradient-to-r animate-gradient " + i.accent} />
