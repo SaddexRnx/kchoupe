@@ -74,6 +74,14 @@ const CATEGORY_CAPS: Record<string, string[]> = {
   automation: ["Trigger workflows", "Send + receive webhooks", "Call custom endpoints", "Read/write shared vars", "Chain multi-step actions"],
 };
 
+CATEGORY_CAPS.sources = [
+  "Crawl your website + subpages",
+  "Extract products, FAQs, policies",
+  "Chunk + embed into knowledge",
+  "Refresh on schedule",
+  "Respect robots.txt + rate limits",
+];
+
 // Editable settings shown in the drawer, per category. `secret: true` masks the
 // value behind a reveal toggle. Values persist in component state only (mock).
 type FieldDef = {
@@ -137,6 +145,12 @@ const CATEGORY_FIELDS: Record<string, FieldDef[]> = {
     { key: "signingSecret", label: "Signing secret", placeholder: "whsec_…", secret: true },
   ],
 };
+
+CATEGORY_FIELDS.sources = [
+  { key: "sourceUrl", label: "URL or handle", placeholder: "https://your-shop.com  ·  facebook.com/yourpage  ·  @your.brand", required: true, help: "Your website, Facebook page, Instagram handle, TikTok profile, or any public URL — we'll scrape it and feed the data to your AI." },
+  { key: "depth", label: "Crawl depth", placeholder: "2" },
+  { key: "refresh", label: "Refresh every", placeholder: "24h" },
+];
 
 const CATEGORIES: Category[] = [
   {
@@ -365,6 +379,22 @@ const CATEGORIES: Category[] = [
     ],
   },
 ];
+
+// Custom sources — scrape your own website / socials without a "store" integration.
+CATEGORIES.unshift({
+  id: "sources",
+  label: "Your sources",
+  icon: Sparkles,
+  blurb: "No shop yet? Point Atlas at your website or social page and we'll extract products, FAQs and pricing automatically.",
+  items: [
+    { name: "Your website", tag: "Full crawl + refresh", status: "available", accent: "from-emerald-400 to-teal-300", initials: "WW" },
+    { name: "Facebook page", tag: "Posts, products, DMs", status: "available", accent: "from-blue-500 to-sky-300", initials: "FB" },
+    { name: "Instagram profile", tag: "Posts + shop tags", status: "available", accent: "from-pink-400 to-orange-300", initials: "IG" },
+    { name: "TikTok profile", tag: "Videos + shop", status: "available", accent: "from-pink-400 to-cyan-300", initials: "TT" },
+    { name: "Google Business", tag: "Listing + reviews", status: "available", accent: "from-yellow-400 to-red-300", initials: "GB" },
+    { name: "PDF / catalog", tag: "Drop a file", status: "available", accent: "from-neutral-200 to-neutral-500", initials: "PD" },
+  ],
+});
 
 function statusChip(s: Status) {
   if (s === "connected") return <Chip tone="emerald"><CheckCircle2 className="h-3 w-3" /> Connected</Chip>;
