@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Bot, User, Sparkles, RotateCcw, Sliders } from "lucide-react";
+import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -13,6 +13,19 @@ const seed: Msg[] = [
 export function Playground() {
   const [messages, setMessages] = useState<Msg[]>(seed);
   const [input, setInput] = useState("");
+  const [customModels, setCustomModels] = useState<{ id: string; label: string; base: string; model: string; key: string; revealed: boolean }[]>([
+    { id: "m1", label: "My Llama (local)", base: "http://localhost:11434/v1", model: "llama-3.1-70b", key: "sk-local", revealed: false },
+  ]);
+  const [selected, setSelected] = useState<string>("Claude Sonnet 4.5");
+  const [showAdd, setShowAdd] = useState(false);
+  const [draft, setDraft] = useState({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
+
+  const addModel = () => {
+    if (!draft.label.trim() || !draft.model.trim()) return;
+    setCustomModels((m) => [...m, { id: Math.random().toString(36).slice(2), ...draft, revealed: false }]);
+    setDraft({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
+    setShowAdd(false);
+  };
 
   const send = () => {
     if (!input.trim()) return;
@@ -75,15 +88,59 @@ export function Playground() {
 
         <div className="space-y-4">
           <Panel>
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Sliders className="h-4 w-4 text-primary" /> Model</div>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-semibold"><Sliders className="h-4 w-4 text-primary" /> Model</div>
+              <button onClick={() => setShowAdd((s) => !s)} className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">
+                <Plus className="h-3 w-3" /> Add
+              </button>
+            </div>
             <div className="space-y-2 text-sm">
-              {["Claude Sonnet 4.5", "GPT-5", "Gemini 2.5 Pro"].map((m, i) => (
-                <label key={m} className="flex cursor-pointer items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2 hover:border-primary/30">
+              {["Claude Sonnet 4.5", "GPT-5", "Gemini 2.5 Pro"].map((m) => (
+                <label key={m} className={"flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2 " + (selected === m ? "border-primary/40 bg-primary/10" : "border-white/5 bg-white/5 hover:border-primary/30")}>
                   <span>{m}</span>
-                  <input type="radio" name="model" defaultChecked={i === 0} className="accent-primary" />
+                  <input type="radio" name="model" checked={selected === m} onChange={() => setSelected(m)} className="accent-primary" />
                 </label>
               ))}
+              {customModels.length > 0 && (
+                <div className="mt-3 mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <Cpu className="h-3 w-3" /> Your custom endpoints
+                </div>
+              )}
+              {customModels.map((m) => (
+                <div key={m.id} className={"rounded-lg border px-3 py-2 " + (selected === m.label ? "border-primary/40 bg-primary/10" : "border-white/5 bg-white/5")}>
+                  <label className="flex cursor-pointer items-center justify-between">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{m.label}</div>
+                      <div className="truncate text-[10px] text-muted-foreground">{m.model} · {m.base}</div>
+                    </div>
+                    <input type="radio" name="model" checked={selected === m.label} onChange={() => setSelected(m.label)} className="accent-primary" />
+                  </label>
+                  <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <span className="font-mono">{m.revealed ? m.key : "•".repeat(Math.min(m.key.length, 12))}</span>
+                    <button onClick={() => setCustomModels((cm) => cm.map((x) => x.id === m.id ? { ...x, revealed: !x.revealed } : x))} className="rounded p-0.5 hover:bg-white/10">
+                      {m.revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                    <button onClick={() => setCustomModels((cm) => cm.filter((x) => x.id !== m.id))} className="ml-auto rounded p-0.5 text-rose-300 hover:bg-rose-500/10">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
+            {showAdd && (
+              <div className="mt-3 space-y-2 rounded-lg border border-white/10 bg-background/40 p-3">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Add OpenAI-compatible model</div>
+                <input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} placeholder="Display name (e.g. My GPT-4o)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.base}  onChange={(e) => setDraft({ ...draft, base:  e.target.value })} placeholder="Base URL (https://api.openai.com/v1)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })} placeholder="Model ID (gpt-4o, llama-3.1-70b, …)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <input value={draft.key} type="password" onChange={(e) => setDraft({ ...draft, key: e.target.value })} placeholder="API key (sk-…)" className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50" />
+                <div className="flex justify-end gap-2 pt-1">
+                  <button onClick={() => setShowAdd(false)} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">Cancel</button>
+                  <button onClick={addModel} className="rounded-md bg-gradient-to-r from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground">Add model</button>
+                </div>
+                <div className="text-[10px] text-muted-foreground">Works with any OpenAI-compatible endpoint: OpenAI, Groq, Together, DeepSeek, Ollama, LM Studio, vLLM…</div>
+              </div>
+            )}
           </Panel>
           <Panel>
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-accent" /> Parameters</div>

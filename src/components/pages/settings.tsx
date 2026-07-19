@@ -437,40 +437,125 @@ function WebhooksSection() {
 }
 
 function BillingSection() {
+  const [country, setCountry] = useState<"DZ" | "TN" | "MA">("DZ");
+  const [method, setMethod] = useState<string>("cib");
+  const cfg = {
+    DZ: {
+      label: "Algeria",
+      flag: "🇩🇿",
+      currency: "DZD",
+      price: 2900,
+      methods: [
+        { id: "cib",       name: "CIB card",             desc: "Interbank card (SATIM)",           tone: "emerald" as const },
+        { id: "edahabia",  name: "EDAHABIA",             desc: "Algérie Poste gold card",          tone: "amber"   as const },
+        { id: "baridimob", name: "BaridiMob",            desc: "Mobile wallet — Algérie Poste",    tone: "violet"  as const },
+        { id: "chargily",  name: "Chargily Pay",         desc: "CIB + EDAHABIA aggregator",        tone: "emerald" as const },
+        { id: "cod",       name: "Cash on delivery",     desc: "Yalidine / ZR Express / Noest",    tone: "muted"   as const },
+        { id: "wire",      name: "Bank transfer",        desc: "Virement bancaire",                tone: "muted"   as const },
+      ],
+    },
+    TN: {
+      label: "Tunisia",
+      flag: "🇹🇳",
+      currency: "TND",
+      price: 79,
+      methods: [
+        { id: "d17",       name: "D17",                  desc: "La Poste mobile wallet",           tone: "emerald" as const },
+        { id: "flouci",    name: "Flouci",               desc: "Mobile payments + QR",             tone: "violet"  as const },
+        { id: "clictopay", name: "ClicToPay",            desc: "SMT gateway — Visa / MC / e-DINAR",tone: "amber"   as const },
+        { id: "konnect",   name: "Konnect",              desc: "Local card gateway",               tone: "emerald" as const },
+        { id: "paymee",    name: "Paymee",               desc: "Cards + wallets aggregator",       tone: "violet"  as const },
+        { id: "cod",       name: "Cash on delivery",     desc: "First Delivery / Aramex TN",       tone: "muted"   as const },
+      ],
+    },
+    MA: {
+      label: "Morocco",
+      flag: "🇲🇦",
+      currency: "MAD",
+      price: 249,
+      methods: [
+        { id: "cmi",       name: "CMI",                  desc: "Centre Monétique Interbancaire",   tone: "emerald" as const },
+        { id: "payzone",   name: "Payzone",              desc: "Cards + local wallets",            tone: "amber"   as const },
+        { id: "youcan",    name: "YouCan Pay",           desc: "MA online payments",               tone: "violet"  as const },
+        { id: "cashplus",  name: "Cash Plus",            desc: "Cash payment network",             tone: "muted"   as const },
+        { id: "wafacash",  name: "Wafacash",             desc: "Cash + transfer",                  tone: "muted"   as const },
+        { id: "cod",       name: "Cash on delivery",     desc: "Amana / CTM / Speedaf",            tone: "muted"   as const },
+      ],
+    },
+  }[country];
+
+  const fmt = (v: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: cfg.currency, maximumFractionDigits: 0 }).format(v);
+
   return (
     <div className="space-y-4">
-      <SectionShell title="Plan" desc="Your subscription and included quota." actions={<PrimaryBtn>Upgrade</PrimaryBtn>}>
+      <SectionShell
+        title="Region & currency"
+        desc="Atlas AI launches first for North Africa — pick your country to see local prices and payment methods."
+      >
+        <div className="grid grid-cols-3 gap-2">
+          {(["DZ", "TN", "MA"] as const).map((c) => {
+            const info = { DZ: { flag: "🇩🇿", name: "Algeria", cur: "DZD" }, TN: { flag: "🇹🇳", name: "Tunisia", cur: "TND" }, MA: { flag: "🇲🇦", name: "Morocco", cur: "MAD" } }[c];
+            const on = country === c;
+            return (
+              <button key={c} onClick={() => setCountry(c)} className={"rounded-xl border p-4 text-left transition " + (on ? "border-primary/50 bg-primary/10" : "border-border bg-white/5 hover:bg-white/10")}>
+                <div className="text-2xl">{info.flag}</div>
+                <div className="mt-1 text-sm font-semibold">{info.name}</div>
+                <div className="text-[11px] text-muted-foreground">Billed in {info.cur}</div>
+              </button>
+            );
+          })}
+        </div>
+      </SectionShell>
+
+      <SectionShell title="Plan" desc="Local pricing — no hidden FX fees." actions={<PrimaryBtn>Upgrade</PrimaryBtn>}>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Current</div>
-            <div className="mt-1 font-display text-xl font-bold">Pro</div>
-            <div className="text-xs text-muted-foreground">$149 / month · renews May 12</div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">Current — {cfg.flag} {cfg.label}</div>
+            <div className="mt-1 font-display text-2xl font-bold aurora-gradient-text">{fmt(cfg.price)}</div>
+            <div className="text-xs text-muted-foreground">/ month · Pro plan · renews May 12</div>
           </div>
           <UsageBar label="Conversations" used={12480} cap={25000} />
           <UsageBar label="Knowledge tokens" used={840000} cap={2000000} />
         </div>
       </SectionShell>
 
-      <SectionShell title="Payment method" desc="Card on file for auto-renewal." actions={<GhostBtn>Update</GhostBtn>}>
-        <div className="flex items-center gap-4 rounded-xl border border-border bg-white/5 p-4">
-          <div className="flex h-10 w-14 items-center justify-center rounded-md bg-gradient-to-br from-indigo-400 to-purple-400 text-xs font-bold text-primary-foreground">VISA</div>
-          <div className="flex-1">
-            <div className="text-sm font-medium">•••• •••• •••• 4242</div>
-            <div className="text-xs text-muted-foreground">Expires 08 / 2028</div>
-          </div>
+      <SectionShell title="Payment method" desc={"Choose how you'd like to pay in " + cfg.label + "."}>
+        <div className="grid gap-2 md:grid-cols-2">
+          {cfg.methods.map((m) => {
+            const on = method === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => setMethod(m.id)}
+                className={"flex items-center gap-3 rounded-xl border p-3 text-left transition " + (on ? "border-primary/50 bg-primary/10" : "border-border bg-white/5 hover:bg-white/10")}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">{m.name}</span>
+                    <Chip tone={m.tone}>{m.tone === "muted" ? "offline" : "online"}</Chip>
+                  </div>
+                  <div className="truncate text-[11px] text-muted-foreground">{m.desc}</div>
+                </div>
+                {on && <Check className="h-4 w-4 text-accent" />}
+              </button>
+            );
+          })}
         </div>
       </SectionShell>
 
       <SectionShell title="Invoices" desc="Downloadable receipts for your records.">
         <div className="overflow-hidden rounded-xl border border-border">
           {[
-            { d: "Apr 12, 2026", a: "$149.00", s: "paid" as const },
-            { d: "Mar 12, 2026", a: "$149.00", s: "paid" as const },
-            { d: "Feb 12, 2026", a: "$149.00", s: "paid" as const },
+            { d: "Apr 12, 2026", a: fmt(cfg.price), s: "paid" as const },
+            { d: "Mar 12, 2026", a: fmt(cfg.price), s: "paid" as const },
+            { d: "Feb 12, 2026", a: fmt(cfg.price), s: "paid" as const },
           ].map((inv, i) => (
             <div key={inv.d} className={"flex items-center px-4 py-2.5 text-sm " + (i > 0 ? "border-t border-border" : "")}>
               <span className="flex-1">{inv.d}</span>
-              <span className="w-24">{inv.a}</span>
+              <span className="w-28 font-mono text-xs">{inv.a}</span>
               <Chip tone="emerald">{inv.s}</Chip>
               <button className="ml-3 text-xs text-primary hover:underline">Download</button>
             </div>
