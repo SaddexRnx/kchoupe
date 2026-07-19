@@ -19,7 +19,6 @@ import {
   X,
   Check,
   Loader2,
-  Zap as ZapIcon,
   ExternalLink,
   ShieldCheck,
   Activity,
