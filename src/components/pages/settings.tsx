@@ -25,6 +25,8 @@ import {
   Zap,
 } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
+import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
+import { useT } from "@/lib/i18n";
 
 type SectionKey =
   | "profile"
@@ -53,18 +55,21 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
 
 export function SettingsPage() {
   const [active, setActive] = useState<SectionKey>("profile");
+  const t = useT();
+
+  const labelFor = (k: SectionKey) => t(`settings.${k}`);
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
-        title="Settings"
-        description="Manage your profile, workspace, teammates, billing and every connected system."
+        eyebrow={t("settings.eyebrow")}
+        title={t("settings.title")}
+        description={t("settings.description")}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <Panel className="animate-slide-in-left h-fit lg:sticky lg:top-6">
-          <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">Sections</div>
+          <div className="mb-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("settings.sections")}</div>
           <div className="space-y-1">
             {SECTIONS.map((s, i) => {
               const isActive = active === s.key;
@@ -81,7 +86,7 @@ export function SettingsPage() {
                   }
                 >
                   <s.icon className={"h-4 w-4 transition duration-300 group-hover:scale-110 " + (isActive ? "text-primary" : "")} />
-                  <span className="font-medium">{s.label}</span>
+                  <span className="font-medium">{labelFor(s.key)}</span>
                   {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent pulse-emerald shadow-[0_0_8px] shadow-accent" />}
                 </button>
               );
@@ -303,38 +308,49 @@ function TeamSection() {
 }
 
 function AppearanceSection() {
-  const [theme, setTheme] = useState<"aurora" | "midnight" | "cloud">("aurora");
+  const t = useT();
+  const { theme, setTheme, motion, setMotion, lang, setLang } = usePrefs();
   const [density, setDensity] = useState<"cozy" | "compact">("cozy");
-  const themes: { id: typeof theme; name: string; swatches: string[] }[] = [
-    { id: "aurora", name: "Glass Aurora", swatches: ["#1a1a2e", "#16213e", "#a78bfa", "#4ade80"] },
-    { id: "midnight", name: "Midnight Indigo", swatches: ["#0f172a", "#1e293b", "#6366f1", "#22d3ee"] },
-    { id: "cloud", name: "Cloud White", swatches: ["#f8fafc", "#e2e8f0", "#8b5cf6", "#10b981"] },
-  ];
   return (
-    <SectionShell title="Appearance" desc="Theme, density and the vibe of your workspace.">
-      <div className="mb-6 grid gap-3 md:grid-cols-3">
-        {themes.map((t, i) => (
+    <SectionShell title={t("settings.appearance")} desc={t("appearance.theme.desc")}>
+      <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("appearance.theme.title")}</div>
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+        {THEMES.map((th, i) => (
           <button
-            key={t.id}
-            onClick={() => setTheme(t.id)}
+            key={th.id}
+            onClick={() => setTheme(th.id)}
             style={{ animationDelay: `${i * 80}ms` }}
             className={
               "animate-scale-in group rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-0.5 " +
-              (theme === t.id ? "border-primary/50 bg-primary/5 shadow-lg shadow-primary/20" : "border-border bg-white/5 hover:border-white/20")
+              (theme === th.id ? "border-primary/50 bg-primary/5 shadow-lg shadow-primary/20" : "border-border bg-white/5 hover:border-white/20")
             }
           >
             <div className="flex h-16 overflow-hidden rounded-lg">
-              {t.swatches.map((c) => <div key={c} className="flex-1" style={{ background: c }} />)}
+              {th.swatches.map((c) => <div key={c} className="flex-1" style={{ background: c }} />)}
             </div>
             <div className="mt-2 flex items-center justify-between">
-              <span className="text-sm font-medium">{t.name}</span>
-              {theme === t.id && <Check className="h-4 w-4 text-accent" />}
+              <span className="text-sm font-medium">{th.name}</span>
+              {theme === th.id && <Check className="h-4 w-4 text-accent" />}
             </div>
           </button>
         ))}
       </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Density">
+        <Field label={t("appearance.language.title")} help={t("appearance.language.desc")}>
+          <select className={inputCls} value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
+            {LANGS.map((l) => (
+              <option key={l.id} value={l.id}>{l.native} — {l.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t("appearance.motion.title")} help={t("appearance.motion.desc")}>
+          <div className="flex items-center justify-between rounded-lg border border-border bg-white/5 px-3 py-2">
+            <span className="text-sm">{motion ? t("appearance.motion.on") : t("appearance.motion.off")}</span>
+            <Toggle checked={motion} onChange={setMotion} />
+          </div>
+        </Field>
+        <Field label={t("appearance.density.title")}>
           <div className="flex gap-2">
             {(["cozy", "compact"] as const).map((d) => (
               <button
@@ -343,12 +359,6 @@ function AppearanceSection() {
                 className={"flex-1 rounded-lg border px-3 py-2 text-sm capitalize transition " + (density === d ? "border-primary/50 bg-primary/10" : "border-border bg-white/5 hover:bg-white/10")}
               >{d}</button>
             ))}
-          </div>
-        </Field>
-        <Field label="Accent motion" help="Aurora background drift and micro-animations.">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-white/5 px-3 py-2">
-            <span className="text-sm">Enable animated aurora</span>
-            <Toggle checked={true} onChange={() => {}} />
           </div>
         </Field>
       </div>
