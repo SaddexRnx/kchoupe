@@ -488,11 +488,11 @@ export function IntegrationsPage() {
         {filtered.map((c) => {
           const Icon = c.icon;
           return (
-            <section key={c.id}>
+            <section key={c.id} className="animate-fade-up">
               <div className="mb-3 flex items-end justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 animate-float">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
                     <h2 className="font-display text-xl font-semibold">{c.label}</h2>
@@ -502,10 +502,11 @@ export function IntegrationsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {c.items.map((i) => (
+                {c.items.map((i, idx) => (
                   <IntegrationCard
                     key={c.id + i.name}
                     i={i}
+                    index={idx}
                     usedBy={assignments[i.name] ?? []}
                     onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
@@ -552,10 +553,12 @@ function CategoryPill({ label, active, onClick }: { label: string; active: boole
 
 function IntegrationCard({
   i,
+  index = 0,
   usedBy,
   onOpen,
 }: {
   i: Integration;
+  index?: number;
   usedBy: string[];
   onOpen: () => void;
 }) {
@@ -563,17 +566,18 @@ function IntegrationCard({
   return (
     <button
       onClick={onOpen}
-      className="glass-panel group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+      style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
+      className="glass-panel card-sheen animate-fade-up group relative flex h-full flex-col overflow-hidden rounded-2xl p-0 text-left transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
     >
       {/* accent band */}
-      <div className={"h-1 w-full bg-gradient-to-r " + i.accent} />
+      <div className={"h-1 w-full bg-gradient-to-r animate-gradient " + i.accent} />
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
             <div
               className={
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg ring-1 ring-white/10 " +
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-neutral-900 shadow-lg ring-1 ring-white/10 transition duration-300 group-hover:scale-110 group-hover:-rotate-3 " +
                 i.accent
               }
             >
@@ -717,11 +721,11 @@ function IntegrationDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex justify-end bg-background/70 backdrop-blur-sm animate-backdrop-in"
       onClick={onClose}
     >
       <div
-        className="glass-panel h-full w-full max-w-md overflow-y-auto rounded-none border-l border-white/10 p-0 shadow-2xl md:max-w-lg"
+        className="glass-panel h-full w-full max-w-md overflow-y-auto rounded-none border-l border-white/10 p-0 shadow-2xl md:max-w-lg animate-drawer-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
