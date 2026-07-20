@@ -79,7 +79,7 @@ export const listAllConversations = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("inbox_conversations")
-      .select("id,channel,status,subject,workspace_id,created_at,updated_at")
+      .select("id,channel,status,external_user,ai_employee_name,last_message,unread_count,workspace_id,created_at,updated_at")
       .order("updated_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
