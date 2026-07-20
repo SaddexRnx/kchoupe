@@ -420,36 +420,39 @@ export function IntegrationsPage() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
-  const [assignments, setAssignments] = useState<Record<string, string[]>>(() => {
-    const seed: Record<string, string[]> = {};
-    CATEGORIES.forEach((c) =>
-      c.items.forEach((i) => {
-        seed[i.name] = i.usedBy ? [...i.usedBy] : [];
-      })
-    );
-    return seed;
-  });
   const [editing, setEditing] = useState<{ integration: Integration; categoryId: string } | null>(null);
 
-  const toggleEmployee = (integration: string, employee: string) => {
-    setAssignments((prev) => {
-      const cur = prev[integration] ?? [];
-      const next = cur.includes(employee)
-        ? cur.filter((n) => n !== employee)
-        : [...cur, employee];
-      return { ...prev, [integration]: next };
-    });
-  };
+  const list = useServerFn(listIntegrations);
+  const listEmployees = useServerFn(listAiEmployees);
+  const { data: rows = [] } = useQuery({ queryKey: ["integrations"], queryFn: () => list() });
+  const { data: employees = [] } = useQuery({ queryKey: ["ai-employees"], queryFn: () => listEmployees() });
+
+  const rowByKey = useMemo(() => {
+    const m = new Map<string, IntegrationRow>();
+    for (const r of rows) m.set(r.integration_key, r);
+    return m;
+  }, [rows]);
+
+  const employeeById = useMemo(() => {
+    const m = new Map<string, AiEmployeeRow>();
+    for (const e of employees) m.set(e.id, e);
+    return m;
+  }, [employees]);
 
   const totals = useMemo(() => {
     const all = CATEGORIES.flatMap((c) => c.items);
-    return {
-      total: all.length,
-      connected: all.filter((i) => i.status === "connected").length,
-      reauth: all.filter((i) => i.status === "reauth").length,
-      categories: CATEGORIES.length,
-    };
-  }, []);
+    const connected = rows.filter((r) => r.status === "connected").length;
+    const reauth = rows.filter((r) => r.status === "reauth").length;
+    return { total: all.length, connected, reauth, categories: CATEGORIES.length };
+  }, [rows]);
+
+  // Derive an integration's effective status: DB row takes precedence.
+  const effective = (i: Integration): Integration => {
+    const r = rowByKey.get(i.name);
+    if (!r) return i;
+    const status: Status = r.status === "connected" ? "connected" : r.status === "reauth" ? "reauth" : i.status;
+    return { ...i, status };
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -546,9 +549,11 @@ export function IntegrationsPage() {
                 {c.items.map((i, idx) => (
                   <IntegrationCard
                     key={c.id + i.name}
-                    i={i}
+                    i={effective(i)}
                     index={idx}
-                    usedBy={assignments[i.name] ?? []}
+                    usedBy={(rowByKey.get(i.name)?.assigned_employees ?? [])
+                      .map((id) => employeeById.get(id)?.name)
+                      .filter((n): n is string => !!n)}
                     onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
                 ))}
@@ -565,10 +570,10 @@ export function IntegrationsPage() {
 
       {editing && (
         <IntegrationDrawer
-          integration={editing.integration}
+          integration={effective(editing.integration)}
           categoryId={editing.categoryId}
-          selected={assignments[editing.integration.name] ?? []}
-          onToggle={(emp) => toggleEmployee(editing.integration.name, emp)}
+          row={rowByKey.get(editing.integration.name) ?? null}
+          employees={employees}
           onClose={() => setEditing(null)}
         />
       )}
