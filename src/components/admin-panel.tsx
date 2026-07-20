@@ -125,10 +125,40 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Users; labe
 }
 
 function Overview() {
-  const fn = useServerFn(getPlatformStats);
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "stats"], queryFn: () => fn() });
+const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#22d3ee", "#f59e0b", "#ec4899", "#84cc16", "#8b5cf6", "#f43f5e"];
+
+function ChartCard({ title, subtitle, children, height = 260 }: { title: string; subtitle?: string; children: React.ReactNode; height?: number }) {
+  return (
+    <div className="glass-panel rounded-2xl p-4">
+      <div className="mb-3 flex items-baseline justify-between">
+        <div>
+          <div className="text-sm font-semibold">{title}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
+        </div>
+      </div>
+      <div style={{ width: "100%", height }}>
+        <ResponsiveContainer>{children as any}</ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function Overview() {
+  const statsFn = useServerFn(getPlatformStats);
+  const tsFn = useServerFn(getPlatformTimeseries);
+  const { data, isLoading } = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn() });
+  const { data: ts } = useQuery({ queryKey: ["admin", "timeseries"], queryFn: () => tsFn() });
   const s = (data ?? {}) as any;
+  const t = (ts ?? {}) as any;
   const fmt = (n: any) => (typeof n === "number" ? n.toLocaleString() : (n ?? 0));
+  const days = (t.days ?? []) as Array<any>;
+  const toEntries = (obj: any) => Object.entries((obj ?? {}) as Record<string, number>).map(([name, value]) => ({ name, value: Number(value) }));
+  const channels = toEntries(t.channels);
+  const orderStatus = toEntries(t.order_status);
+  const employeeStatus = toEntries(t.employee_status);
+  const integrationStatus = toEntries(t.integration_status);
+  const topWs = ((t.top_workspaces ?? []) as any[]).map((w) => ({ name: w.name?.slice(0, 14) ?? "—", revenue: Number(w.revenue), orders: Number(w.orders) }));
+
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading platform stats…</div>;
   return (
     <div className="animate-fade-up space-y-5">
@@ -142,6 +172,97 @@ function Overview() {
         <StatCard icon={BookOpen} label="Knowledge sources" value={fmt(s.knowledge_sources)} />
         <StatCard icon={Plug} label="Integrations" value={fmt(s.integrations)} />
       </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <ChartCard title="Revenue (30 days)" subtitle="Daily gross sales">
+          <AreaChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="url(#revGrad)" strokeWidth={2} />
+          </AreaChart>
+        </ChartCard>
+
+        <ChartCard title="Orders & new users (30 days)" subtitle="Daily count">
+          <LineChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Line type="monotone" dataKey="orders" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="users" stroke="#22d3ee" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ChartCard>
+
+        <ChartCard title="Messages (30 days)" subtitle="AI + inbound">
+          <BarChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Bar dataKey="messages" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartCard>
+
+        <ChartCard title="Top workspaces by revenue">
+          <BarChart data={topWs} layout="vertical" margin={{ left: 10, right: 8, top: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis type="number" tick={{ fontSize: 10 }} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ChartCard>
+
+        <ChartCard title="Conversation channels" height={240}>
+          <PieChart>
+            <Pie data={channels} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
+              {channels.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+          </PieChart>
+        </ChartCard>
+
+        <ChartCard title="Order status" height={240}>
+          <PieChart>
+            <Pie data={orderStatus} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
+              {orderStatus.map((_, i) => <Cell key={i} fill={CHART_COLORS[(i + 2) % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+          </PieChart>
+        </ChartCard>
+
+        <ChartCard title="AI employee status" height={240}>
+          <BarChart data={employeeStatus} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartCard>
+
+        <ChartCard title="Integration status" height={240}>
+          <BarChart data={integrationStatus} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+            <Bar dataKey="value" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartCard>
+      </div>
+
       <div className="glass-panel rounded-2xl p-5">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Crown className="h-4 w-4 text-primary" /> Plan breakdown</div>
         <div className="flex flex-wrap gap-2">
@@ -154,6 +275,7 @@ function Overview() {
           {Object.keys(s.plan_breakdown ?? {}).length === 0 && <div className="text-xs text-muted-foreground">No workspaces yet.</div>}
         </div>
       </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="glass-panel rounded-2xl p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Trial status</div>
