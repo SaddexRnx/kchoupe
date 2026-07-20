@@ -14,8 +14,10 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { dashboardStats } from "@/lib/orders.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const spark = [8, 14, 11, 19, 17, 24, 22, 31, 28, 36, 33, 41, 44];
 
