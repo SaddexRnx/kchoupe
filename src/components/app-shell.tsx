@@ -1,5 +1,5 @@
-import { type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Bot,
@@ -14,9 +14,13 @@ import {
   Plus,
   Plug,
   Languages,
+  CheckCircle2,
+  AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { usePrefs, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
+import { useToast } from "@/components/pages/_shared";
 
 type NavKey =
   | "dashboard"
@@ -110,23 +114,99 @@ function Sidebar({ active }: { active: NavKey }) {
 function TopBar() {
   const t = useT();
   const { lang, setLang } = usePrefs();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [query, setQuery] = useState("");
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => { if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false); };
+    window.addEventListener("mousedown", onDoc);
+    return () => window.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const SEARCH_MAP: { label: string; to: string; kw: string[] }[] = [
+    { label: "Dashboard",     to: "/",              kw: ["home", "dashboard", "overview"] },
+    { label: "AI employees",  to: "/ai-employees",  kw: ["employee", "agent", "bot", "team"] },
+    { label: "Playground",    to: "/playground",    kw: ["playground", "chat", "test", "model"] },
+    { label: "Knowledge",     to: "/knowledge",     kw: ["knowledge", "docs", "source"] },
+    { label: "Conversations", to: "/conversations", kw: ["conversation", "inbox", "chat", "message"] },
+    { label: "Products",      to: "/products",      kw: ["product", "catalog", "sku", "stock"] },
+    { label: "Orders",        to: "/orders",        kw: ["order", "invoice", "payment", "sale"] },
+    { label: "Integrations",  to: "/integrations",  kw: ["integration", "connect", "shop", "social", "facebook", "shopify", "instagram", "tiktok"] },
+    { label: "Settings",      to: "/settings",      kw: ["setting", "billing", "api", "team", "language", "theme"] },
+  ];
+  const matches = query.trim() ? SEARCH_MAP.filter((s) => s.label.toLowerCase().includes(query.toLowerCase()) || s.kw.some((k) => k.includes(query.toLowerCase()))) : [];
+
+  const notifications = [
+    { icon: CheckCircle2, tone: "text-emerald-300", title: "Nova closed 12 orders today", time: "just now" },
+    { icon: Zap,          tone: "text-primary",    title: "Atlas answered 42 conversations", time: "2m ago" },
+    { icon: AlertTriangle,tone: "text-amber-300",   title: "Product ‘Leather wallet’ is out of stock", time: "1h ago" },
+  ];
+
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && matches[0]) { navigate({ to: matches[0].to }); setQuery(""); }
+    if (e.key === "Escape") setQuery("");
+  };
+
+  const createNew = () => {
+    navigate({ to: "/ai-employees" });
+    // Employees page listens for this to open its Add modal.
+    setTimeout(() => window.dispatchEvent(new CustomEvent("atlas:new-employee")), 60);
+  };
+
   return (
     <div className="flex items-center gap-3">
-      <div className="glass-panel flex flex-1 items-center gap-2 rounded-xl px-3.5 py-2.5">
+      <div className="glass-panel relative flex flex-1 items-center gap-2 rounded-xl px-3.5 py-2.5">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onSearchKey}
           placeholder={t("top.search")}
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <kbd className="hidden rounded border border-border bg-white/5 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline">
           ⌘K
         </kbd>
+        {matches.length > 0 && (
+          <div className="glass-panel absolute left-0 right-0 top-full z-40 mt-1.5 max-h-80 overflow-auto rounded-xl p-1 text-sm">
+            {matches.map((m) => (
+              <button key={m.to} onMouseDown={(e) => { e.preventDefault(); navigate({ to: m.to }); setQuery(""); }}
+                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left hover:bg-white/10">
+                <span>{m.label}</span>
+                <span className="text-[10px] text-muted-foreground">{m.to}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <LangSwitcher lang={lang} onChange={setLang} />
-      <button className="glass-panel flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
-        <Bell className="h-4 w-4" />
-      </button>
-      <button className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:shadow-primary/50">
+      <div ref={bellRef} className="relative">
+        <button onClick={() => setBellOpen((v) => !v)} className="glass-panel relative flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" />
+        </button>
+        {bellOpen && (
+          <div className="glass-panel absolute right-0 z-50 mt-2 w-80 rounded-xl p-2">
+            <div className="mb-1 flex items-center justify-between px-2 py-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+              <span>Notifications</span>
+              <button onClick={() => { setBellOpen(false); toast.push({ kind: "success", title: "All caught up" }); }} className="text-[11px] normal-case text-muted-foreground hover:text-foreground">Mark all read</button>
+            </div>
+            {notifications.map((n, i) => (
+              <div key={i} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-white/5">
+                <n.icon className={"mt-0.5 h-4 w-4 shrink-0 " + n.tone} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm">{n.title}</div>
+                  <div className="text-[11px] text-muted-foreground">{n.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <button onClick={createNew} className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:shadow-primary/50">
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">{t("top.new_employee")}</span>
       </button>

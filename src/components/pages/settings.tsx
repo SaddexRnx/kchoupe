@@ -24,7 +24,7 @@ import {
   Slack,
   Zap,
 } from "lucide-react";
-import { PageHeader, Panel, Chip } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
 
@@ -242,11 +242,13 @@ function ProfileSection() {
 
 function WorkspaceSection() {
   const [name, setName] = useState("Atlas AI");
+  const toast = useToast();
+  const [saved, setSaved] = useState(false);
   return (
     <SectionShell
       title="Workspace"
       desc="Global settings for everyone in this workspace."
-      actions={<PrimaryBtn><Save className="h-4 w-4" /> Save</PrimaryBtn>}
+      actions={<PrimaryBtn onClick={() => { setSaved(true); toast.push({ kind: "success", title: "Workspace saved" }); setTimeout(() => setSaved(false), 1600); }}>{saved ? <><Check className="h-4 w-4" /> Saved</> : <><Save className="h-4 w-4" /> Save</>}</PrimaryBtn>}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Workspace name"><input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></Field>
@@ -272,17 +274,38 @@ function WorkspaceSection() {
 }
 
 function TeamSection() {
-  const members = [
+  const toast = useToast();
+  const { ask, node: confirmNode } = useConfirm();
+  const [members, setMembers] = useState([
     { name: "Khalid Chennoufi", email: "khalid@atlas.ai", role: "Owner", tone: "violet" as const },
     { name: "Sara Idrissi", email: "sara@atlas.ai", role: "Admin", tone: "emerald" as const },
     { name: "Mehdi Alaoui", email: "mehdi@atlas.ai", role: "Editor", tone: "emerald" as const },
     { name: "Lina Berrada", email: "lina@atlas.ai", role: "Viewer", tone: "muted" as const },
-  ];
+  ]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invite, setInvite] = useState({ email: "", role: "Editor" });
+  const [managing, setManaging] = useState<string | null>(null);
+
+  const send = () => {
+    if (!invite.email.includes("@")) { toast.push({ kind: "warn", title: "Enter a valid email" }); return; }
+    const tone = invite.role === "Admin" ? "emerald" : invite.role === "Editor" ? "emerald" : "muted";
+    setMembers((m) => [...m, { name: invite.email.split("@")[0], email: invite.email, role: invite.role, tone: tone as "violet" | "emerald" | "muted" }]);
+    setInviteOpen(false);
+    setInvite({ email: "", role: "Editor" });
+    toast.push({ kind: "success", title: "Invitation sent", body: invite.email });
+  };
+  const remove = async (email: string) => {
+    setManaging(null);
+    const ok = await ask({ title: `Remove ${email}?`, danger: true });
+    if (!ok) return;
+    setMembers((m) => m.filter((x) => x.email !== email));
+    toast.push({ kind: "success", title: "Member removed" });
+  };
   return (
     <SectionShell
       title="Team & roles"
       desc="Invite teammates and control what they can edit."
-      actions={<PrimaryBtn><Plus className="h-4 w-4" /> Invite</PrimaryBtn>}
+      actions={<PrimaryBtn onClick={() => setInviteOpen(true)}><Plus className="h-4 w-4" /> Invite</PrimaryBtn>}
     >
       <div className="overflow-hidden rounded-xl border border-border">
         {members.map((m, i) => (
@@ -299,10 +322,34 @@ function TeamSection() {
               <div className="truncate text-xs text-muted-foreground">{m.email}</div>
             </div>
             <Chip tone={m.tone}>{m.role}</Chip>
-            <GhostBtn>Manage</GhostBtn>
+            <div className="relative">
+              <GhostBtn onClick={() => setManaging(managing === m.email ? null : m.email)}>Manage</GhostBtn>
+              {managing === m.email && (
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setManaging(null)} />
+                  <div className="glass-panel absolute right-0 z-30 mt-1 w-40 overflow-hidden rounded-lg text-left text-xs">
+                    <button onClick={() => { setManaging(null); toast.push({ kind: "info", title: `Reset link sent to ${m.email}` }); }} className="block w-full px-3 py-2 hover:bg-white/10">Send reset link</button>
+                    {m.role !== "Owner" && <button onClick={() => remove(m.email)} className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10">Remove</button>}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>
+      <Modal open={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite teammate"
+        footer={<><BigGhost onClick={() => setInviteOpen(false)}>Cancel</BigGhost><BigPrimary onClick={send}>Send invite</BigPrimary></>}>
+        <div className="grid gap-4">
+          <TextField label="Email" value={invite.email} onChange={(v) => setInvite({ ...invite, email: v })} placeholder="teammate@company.com" />
+          <label className="block">
+            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Role</div>
+            <select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value })} className={inputCls}>
+              {["Admin", "Editor", "Viewer"].map((r) => <option key={r}>{r}</option>)}
+            </select>
+          </label>
+        </div>
+      </Modal>
+      {confirmNode}
     </SectionShell>
   );
 }
@@ -437,6 +484,7 @@ function WebhooksSection() {
 }
 
 function BillingSection() {
+  const toast = useToast();
   const [country, setCountry] = useState<"DZ" | "TN" | "MA">("DZ");
   const [method, setMethod] = useState<string>("cib");
   const cfg = {
@@ -507,7 +555,7 @@ function BillingSection() {
         </div>
       </SectionShell>
 
-      <SectionShell title="Plan" desc="Local pricing — no hidden FX fees." actions={<PrimaryBtn>Upgrade</PrimaryBtn>}>
+      <SectionShell title="Plan" desc="Local pricing — no hidden FX fees." actions={<PrimaryBtn onClick={() => toast.push({ kind: "info", title: "Upgrade flow", body: "Redirecting to secure checkout…" })}>Upgrade</PrimaryBtn>}>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">Current — {cfg.flag} {cfg.label}</div>
@@ -557,7 +605,7 @@ function BillingSection() {
               <span className="flex-1">{inv.d}</span>
               <span className="w-28 font-mono text-xs">{inv.a}</span>
               <Chip tone="emerald">{inv.s}</Chip>
-              <button className="ml-3 text-xs text-primary hover:underline">Download</button>
+              <button onClick={() => toast.push({ kind: "success", title: `Invoice ${inv.d} downloaded` })} className="ml-3 text-xs text-primary hover:underline">Download</button>
             </div>
           ))}
         </div>
@@ -581,6 +629,7 @@ function UsageBar({ label, used, cap }: { label: string; used: number; cap: numb
 }
 
 function NotificationsSection() {
+  const toast = useToast();
   const [prefs, setPrefs] = useState({
     emailDigest: true,
     emailAlerts: true,
@@ -596,7 +645,8 @@ function NotificationsSection() {
     { key: "inApp", icon: MessageSquare, title: "In-app", desc: "Bell notifications and toasts." },
   ];
   return (
-    <SectionShell title="Notifications" desc="Choose where and how Atlas reaches you.">
+    <SectionShell title="Notifications" desc="Choose where and how Atlas reaches you."
+      actions={<PrimaryBtn onClick={() => toast.push({ kind: "success", title: "Preferences saved" })}><Save className="h-4 w-4" /> Save</PrimaryBtn>}>
       <div className="space-y-2">
         {rows.map((r, i) => (
           <div key={r.key} style={{ animationDelay: `${i * 60}ms` }} className="animate-fade-up flex items-center gap-3 rounded-xl border border-border bg-white/5 p-3">
@@ -607,7 +657,7 @@ function NotificationsSection() {
               <div className="text-sm font-medium">{r.title}</div>
               <div className="text-xs text-muted-foreground">{r.desc}</div>
             </div>
-            <Toggle checked={prefs[r.key]} onChange={(v) => setPrefs((p) => ({ ...p, [r.key]: v }))} />
+            <Toggle checked={prefs[r.key]} onChange={(v) => { setPrefs((p) => ({ ...p, [r.key]: v })); toast.push({ kind: "info", title: `${r.title} ${v ? "on" : "off"}` }); }} />
           </div>
         ))}
       </div>
@@ -616,7 +666,26 @@ function NotificationsSection() {
 }
 
 function SecuritySection() {
+  const toast = useToast();
+  const { ask, node: confirmNode } = useConfirm();
   const [twofa, setTwofa] = useState(true);
+  const [sessions, setSessions] = useState([
+    { d: "MacBook Pro · Chrome", loc: "Casablanca, MA", now: true },
+    { d: "iPhone 15 · Safari",    loc: "Casablanca, MA", now: false },
+    { d: "Windows · Firefox",     loc: "Paris, FR",      now: false },
+  ]);
+  const revoke = async (d: string) => {
+    const ok = await ask({ title: `Sign out ${d}?`, danger: true });
+    if (!ok) return;
+    setSessions((s) => s.filter((x) => x.d !== d));
+    toast.push({ kind: "success", title: `Signed out ${d}` });
+  };
+  const signOutAll = async () => {
+    const ok = await ask({ title: "Sign out every device?", danger: true });
+    if (!ok) return;
+    setSessions((s) => s.filter((x) => x.now));
+    toast.push({ kind: "success", title: "All other sessions revoked" });
+  };
   return (
     <div className="space-y-4">
       <SectionShell title="Two-factor authentication" desc="Require a code from your authenticator app on sign-in.">
@@ -625,23 +694,19 @@ function SecuritySection() {
             <div className="text-sm font-medium">Authenticator app</div>
             <div className="text-xs text-muted-foreground">{twofa ? "Enabled · backup codes generated" : "Disabled"}</div>
           </div>
-          <Toggle checked={twofa} onChange={setTwofa} />
+          <Toggle checked={twofa} onChange={(v) => { setTwofa(v); toast.push({ kind: v ? "success" : "warn", title: `Two-factor ${v ? "enabled" : "disabled"}` }); }} />
         </div>
       </SectionShell>
 
-      <SectionShell title="Active sessions" desc="Devices currently signed in. Revoke anything unfamiliar." actions={<GhostBtn tone="danger">Sign out all</GhostBtn>}>
+      <SectionShell title="Active sessions" desc="Devices currently signed in. Revoke anything unfamiliar." actions={<GhostBtn tone="danger" onClick={signOutAll}>Sign out all</GhostBtn>}>
         <div className="overflow-hidden rounded-xl border border-border">
-          {[
-            { d: "MacBook Pro · Chrome", loc: "Casablanca, MA", now: true },
-            { d: "iPhone 15 · Safari", loc: "Casablanca, MA", now: false },
-            { d: "Windows · Firefox", loc: "Paris, FR", now: false },
-          ].map((s, i) => (
+          {sessions.map((s, i) => (
             <div key={s.d} className={"flex items-center gap-3 px-4 py-3 " + (i > 0 ? "border-t border-border" : "")}>
               <div className="flex-1">
                 <div className="text-sm">{s.d}</div>
                 <div className="text-xs text-muted-foreground">{s.loc}</div>
               </div>
-              {s.now ? <Chip tone="emerald">this device</Chip> : <GhostBtn>Revoke</GhostBtn>}
+              {s.now ? <Chip tone="emerald">this device</Chip> : <GhostBtn onClick={() => revoke(s.d)}>Revoke</GhostBtn>}
             </div>
           ))}
         </div>
@@ -656,11 +721,22 @@ function SecuritySection() {
           ].map((l) => (<div key={l} className="rounded-md px-2 py-1 hover:bg-white/5">{l}</div>))}
         </div>
       </SectionShell>
+      {confirmNode}
     </div>
   );
 }
 
 function DangerSection() {
+  const toast = useToast();
+  const { ask, node: confirmNode } = useConfirm();
+  const doTransfer = async () => {
+    const ok = await ask({ title: "Transfer workspace ownership?", body: "You'll lose owner permissions immediately.", danger: true });
+    if (ok) toast.push({ kind: "success", title: "Ownership transferred" });
+  };
+  const doDelete = async () => {
+    const ok = await ask({ title: "Delete this workspace forever?", body: "Every employee, conversation and integration will be lost.", danger: true });
+    if (ok) toast.push({ kind: "success", title: "Workspace scheduled for deletion" });
+  };
   return (
     <SectionShell title="Danger zone" desc="Irreversible actions. Please double-check before proceeding.">
       <div className="space-y-3">
@@ -669,16 +745,17 @@ function DangerSection() {
             <div className="text-sm font-medium">Transfer ownership</div>
             <div className="text-xs text-muted-foreground">Hand the workspace over to another admin.</div>
           </div>
-          <GhostBtn tone="danger"><Zap className="h-3.5 w-3.5" /> Transfer</GhostBtn>
+          <GhostBtn tone="danger" onClick={doTransfer}><Zap className="h-3.5 w-3.5" /> Transfer</GhostBtn>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-500/5 p-4">
           <div>
             <div className="text-sm font-medium">Delete workspace</div>
             <div className="text-xs text-muted-foreground">This deletes all employees, conversations, and integrations.</div>
           </div>
-          <GhostBtn tone="danger"><Trash2 className="h-3.5 w-3.5" /> Delete</GhostBtn>
+          <GhostBtn tone="danger" onClick={doDelete}><Trash2 className="h-3.5 w-3.5" /> Delete</GhostBtn>
         </div>
       </div>
+      {confirmNode}
     </SectionShell>
   );
 }
