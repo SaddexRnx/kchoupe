@@ -39,9 +39,11 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         toast.push({ kind: "success", title: "Workspace created", body: "Let's set things up." });
         navigate({ to: "/onboarding" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
-        toast.push({ kind: "success", title: "Welcome back" });
+        const u = data.user;
+        const dn = ((u?.user_metadata as any)?.full_name as string) || ((u?.user_metadata as any)?.name as string) || u?.email?.split("@")[0] || "";
+        toast.push({ kind: "success", title: `Welcome back${dn ? ", " + dn : ""}` });
         navigate({ to: "/dashboard" });
       }
     } catch (err: any) {
