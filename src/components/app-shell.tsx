@@ -240,23 +240,33 @@ function TopBar() {
       <div ref={bellRef} className="relative">
         <button onClick={() => setBellOpen((v) => !v)} className="glass-panel relative flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
           <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" />
+          {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" />}
         </button>
         {bellOpen && (
           <div className="glass-panel absolute right-0 z-50 mt-2 w-80 rounded-xl p-2">
             <div className="mb-1 flex items-center justify-between px-2 py-1 text-[11px] uppercase tracking-widest text-muted-foreground">
-              <span>Notifications</span>
-              <button onClick={() => { setBellOpen(false); toast.push({ kind: "success", title: "All caught up" }); }} className="text-[11px] normal-case text-muted-foreground hover:text-foreground">Mark all read</button>
+              <span>Notifications {unread > 0 && <span className="ml-1 rounded bg-accent/20 px-1.5 text-accent">{unread}</span>}</span>
+              <button onClick={() => { markMut.mutate({ all: true }); toast.push({ kind: "success", title: "All caught up" }); }} className="text-[11px] normal-case text-muted-foreground hover:text-foreground">Mark all read</button>
             </div>
-            {notifications.map((n, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-white/5">
-                <n.icon className={"mt-0.5 h-4 w-4 shrink-0 " + n.tone} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm">{n.title}</div>
-                  <div className="text-[11px] text-muted-foreground">{n.time}</div>
-                </div>
-              </div>
-            ))}
+            {notifications.length === 0 && (
+              <div className="px-3 py-6 text-center text-xs text-muted-foreground">No notifications yet.</div>
+            )}
+            {notifications.map((n) => {
+              const { Icon, tone } = iconFor(n.kind);
+              const unreadRow = !n.read_at;
+              return (
+                <button key={n.id} onClick={() => { if (unreadRow) markMut.mutate({ id: n.id }); if (n.link) { setBellOpen(false); navigate({ to: n.link as any }); } }}
+                  className={"flex w-full items-start gap-3 rounded-lg px-2 py-2 text-left hover:bg-white/5 " + (unreadRow ? "bg-white/[0.03]" : "")}>
+                  <Icon className={"mt-0.5 h-4 w-4 shrink-0 " + tone} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm">{n.title}</div>
+                    {n.body && <div className="truncate text-[11px] text-muted-foreground">{n.body}</div>}
+                    <div className="text-[10px] text-muted-foreground">{timeAgo(n.created_at)}</div>
+                  </div>
+                  {unreadRow && <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
