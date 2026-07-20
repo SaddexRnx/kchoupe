@@ -201,6 +201,62 @@ export type Database = {
           },
         ]
       }
+      integrations: {
+        Row: {
+          assigned_employees: string[]
+          category_id: string
+          created_at: string
+          credentials: Json
+          id: string
+          integration_key: string
+          last_test_at: string | null
+          last_test_latency_ms: number | null
+          last_test_message: string | null
+          last_test_status: string | null
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          assigned_employees?: string[]
+          category_id: string
+          created_at?: string
+          credentials?: Json
+          id?: string
+          integration_key: string
+          last_test_at?: string | null
+          last_test_latency_ms?: number | null
+          last_test_message?: string | null
+          last_test_status?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          assigned_employees?: string[]
+          category_id?: string
+          created_at?: string
+          credentials?: Json
+          id?: string
+          integration_key?: string
+          last_test_at?: string | null
+          last_test_latency_ms?: number | null
+          last_test_message?: string | null
+          last_test_status?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_chunks: {
         Row: {
           content: string
