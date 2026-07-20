@@ -37,15 +37,18 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     setLoading(true);
     try {
       if (isSignup) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password: pw,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
             data: { full_name: name },
           },
         });
         if (error) throw error;
         toast.push({ kind: "success", title: "Workspace created", body: "Let's set things up." });
+        if (requestedPlan && data.session) {
+          try { await activate({ data: { plan: requestedPlan } }); } catch { /* non-fatal */ }
+        }
         navigate({ to: "/onboarding" });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
@@ -53,6 +56,12 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         const u = data.user;
         const dn = ((u?.user_metadata as any)?.full_name as string) || ((u?.user_metadata as any)?.name as string) || u?.email?.split("@")[0] || "";
         toast.push({ kind: "success", title: `Welcome back${dn ? ", " + dn : ""}` });
+        if (requestedPlan) {
+          try {
+            await activate({ data: { plan: requestedPlan } });
+            toast.push({ kind: "success", title: `${requestedPlan[0].toUpperCase() + requestedPlan.slice(1)} plan activated` });
+          } catch { /* non-fatal */ }
+        }
         navigate({ to: "/dashboard" });
       }
     } catch (err: any) {
