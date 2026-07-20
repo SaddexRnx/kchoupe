@@ -112,17 +112,7 @@ function Sidebar({ active }: { active: NavKey }) {
         })}
       </nav>
 
-      <div className="glass-panel mt-6 rounded-xl p-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-primary text-sm font-semibold text-primary-foreground">
-            KC
-          </div>
-          <div className="min-w-0 leading-tight">
-            <div className="truncate text-sm font-semibold">Khalid</div>
-            <div className="truncate text-xs text-muted-foreground">{t("nav.pro_plan")}</div>
-          </div>
-        </div>
-      </div>
+      <UserChip />
     </aside>
   );
 }
