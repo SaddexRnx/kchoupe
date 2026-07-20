@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Search,
   Plug,
@@ -28,8 +30,18 @@ import {
   RefreshCw,
   Save,
 } from "lucide-react";
-import { PageHeader, Panel, Chip } from "./_shared";
+import { PageHeader, Panel, Chip, useToast } from "./_shared";
 import { useT } from "@/lib/i18n";
+import {
+  listIntegrations,
+  saveIntegration,
+  setIntegrationAssignments,
+  testIntegration as testIntegrationFn,
+  reauthIntegration,
+  disconnectIntegration,
+  type IntegrationRow,
+} from "@/lib/integrations.functions";
+import { listAiEmployees, type AiEmployeeRow } from "@/lib/ai-employees.functions";
 
 type Status = "connected" | "available" | "reauth" | "beta";
 
@@ -408,36 +420,39 @@ export function IntegrationsPage() {
   const t = useT();
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string>("all");
-  const [assignments, setAssignments] = useState<Record<string, string[]>>(() => {
-    const seed: Record<string, string[]> = {};
-    CATEGORIES.forEach((c) =>
-      c.items.forEach((i) => {
-        seed[i.name] = i.usedBy ? [...i.usedBy] : [];
-      })
-    );
-    return seed;
-  });
   const [editing, setEditing] = useState<{ integration: Integration; categoryId: string } | null>(null);
 
-  const toggleEmployee = (integration: string, employee: string) => {
-    setAssignments((prev) => {
-      const cur = prev[integration] ?? [];
-      const next = cur.includes(employee)
-        ? cur.filter((n) => n !== employee)
-        : [...cur, employee];
-      return { ...prev, [integration]: next };
-    });
-  };
+  const list = useServerFn(listIntegrations);
+  const listEmployees = useServerFn(listAiEmployees);
+  const { data: rows = [] } = useQuery({ queryKey: ["integrations"], queryFn: () => list() });
+  const { data: employees = [] } = useQuery({ queryKey: ["ai-employees"], queryFn: () => listEmployees() });
+
+  const rowByKey = useMemo(() => {
+    const m = new Map<string, IntegrationRow>();
+    for (const r of rows) m.set(r.integration_key, r);
+    return m;
+  }, [rows]);
+
+  const employeeById = useMemo(() => {
+    const m = new Map<string, AiEmployeeRow>();
+    for (const e of employees) m.set(e.id, e);
+    return m;
+  }, [employees]);
 
   const totals = useMemo(() => {
     const all = CATEGORIES.flatMap((c) => c.items);
-    return {
-      total: all.length,
-      connected: all.filter((i) => i.status === "connected").length,
-      reauth: all.filter((i) => i.status === "reauth").length,
-      categories: CATEGORIES.length,
-    };
-  }, []);
+    const connected = rows.filter((r) => r.status === "connected").length;
+    const reauth = rows.filter((r) => r.status === "reauth").length;
+    return { total: all.length, connected, reauth, categories: CATEGORIES.length };
+  }, [rows]);
+
+  // Derive an integration's effective status: DB row takes precedence.
+  const effective = (i: Integration): Integration => {
+    const r = rowByKey.get(i.name);
+    if (!r) return i;
+    const status: Status = r.status === "connected" ? "connected" : r.status === "reauth" ? "reauth" : i.status;
+    return { ...i, status };
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -534,9 +549,11 @@ export function IntegrationsPage() {
                 {c.items.map((i, idx) => (
                   <IntegrationCard
                     key={c.id + i.name}
-                    i={i}
+                    i={effective(i)}
                     index={idx}
-                    usedBy={assignments[i.name] ?? []}
+                    usedBy={(rowByKey.get(i.name)?.assigned_employees ?? [])
+                      .map((id) => employeeById.get(id)?.name)
+                      .filter((n): n is string => !!n)}
                     onOpen={() => setEditing({ integration: i, categoryId: c.id })}
                   />
                 ))}
@@ -553,10 +570,10 @@ export function IntegrationsPage() {
 
       {editing && (
         <IntegrationDrawer
-          integration={editing.integration}
+          integration={effective(editing.integration)}
           categoryId={editing.categoryId}
-          selected={assignments[editing.integration.name] ?? []}
-          onToggle={(emp) => toggleEmployee(editing.integration.name, emp)}
+          row={rowByKey.get(editing.integration.name) ?? null}
+          employees={employees}
           onClose={() => setEditing(null)}
         />
       )}
@@ -672,39 +689,45 @@ type ReauthState =
 function IntegrationDrawer({
   integration,
   categoryId,
-  selected,
-  onToggle,
+  row,
+  employees,
   onClose,
 }: {
   integration: Integration;
   categoryId: string;
-  selected: string[];
-  onToggle: (employee: string) => void;
+  row: IntegrationRow | null;
+  employees: AiEmployeeRow[];
   onClose: () => void;
 }) {
   const t = useT();
-  const [test, setTest] = useState<TestState>({ phase: "idle" });
+  const toast = useToast();
+  const qc = useQueryClient();
+  const saveFn = useServerFn(saveIntegration);
+  const assignFn = useServerFn(setIntegrationAssignments);
+  const testFn = useServerFn(testIntegrationFn);
+  const reauthFn = useServerFn(reauthIntegration);
+  const disconnectFn = useServerFn(disconnectIntegration);
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["integrations"] });
+
+  const [test, setTest] = useState<TestState>(
+    row?.last_test_status === "ok" && row.last_test_at
+      ? { phase: "ok", latency: row.last_test_latency_ms ?? 0, at: new Date(row.last_test_at).toLocaleTimeString() }
+      : row?.last_test_status === "fail" && row.last_test_at
+      ? { phase: "fail", message: row.last_test_message ?? "Failed", at: new Date(row.last_test_at).toLocaleTimeString() }
+      : { phase: "idle" }
+  );
   const fields = CATEGORY_FIELDS[categoryId] ?? [
     { key: "apiKey", label: "API key", placeholder: "sk_live_…", secret: true, required: true },
   ];
   const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      fields.map((f) => [
-        f.key,
-        integration.status === "connected" || integration.status === "reauth"
-          ? f.secret
-            ? "••••••••••••" + integration.initials
-            : f.key === "storeUrl"
-            ? "https://" + integration.name.toLowerCase().replace(/\s+/g, "-") + ".example.com"
-            : "atlas-" + integration.initials.toLowerCase()
-          : "",
-      ])
-    )
+    Object.fromEntries(fields.map((f) => [f.key, row?.credentials?.[f.key] ?? ""]))
   );
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [dirty, setDirty] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [reauth, setReauth] = useState<ReauthState>({ phase: "idle" });
+  const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>(row?.assigned_employees ?? []);
   const [statusOverride, setStatusOverride] = useState<Status | null>(null);
   const status = statusOverride ?? integration.status;
 
@@ -716,33 +739,83 @@ function IntegrationDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const runTest = () => {
+  const runTest = async () => {
     setTest({ phase: "running" });
-    // Mock latency 700-1800ms; reauth cards deterministically fail.
-    const latency = Math.round(700 + Math.random() * 1100);
-    window.setTimeout(() => {
-      const at = new Date().toLocaleTimeString();
-      if (status === "reauth") {
-        setTest({ phase: "fail", message: t("int.test_expired"), at });
-      } else if (status === "available") {
-        setTest({ phase: "fail", message: t("int.test_notconn"), at });
-      } else {
-        setTest({ phase: "ok", latency, at });
-      }
-    }, latency);
+    try {
+      const r = await testFn({ data: { integration_key: integration.name, category_id: categoryId } });
+      const at = r.last_test_at ? new Date(r.last_test_at).toLocaleTimeString() : new Date().toLocaleTimeString();
+      if (r.last_test_status === "ok") setTest({ phase: "ok", latency: r.last_test_latency_ms ?? 0, at });
+      else setTest({ phase: "fail", message: r.last_test_message ?? t("int.test_fail"), at });
+      invalidate();
+    } catch (e: any) {
+      setTest({ phase: "fail", message: e?.message ?? "Failed", at: new Date().toLocaleTimeString() });
+    }
   };
 
-  const runReauth = () => {
+  const runReauth = async () => {
     setReauth({ phase: "running" });
-    window.setTimeout(() => {
+    try {
+      await reauthFn({ data: { integration_key: integration.name, category_id: categoryId } });
       setReauth({ phase: "done", at: new Date().toLocaleTimeString() });
       setStatusOverride("connected");
-    }, 1400);
+      invalidate();
+      toast.push({ kind: "success", title: t("int.reauthorized", { t: new Date().toLocaleTimeString() }) });
+    } catch (e: any) {
+      setReauth({ phase: "idle" });
+      toast.push({ kind: "error", title: "Re-auth failed", body: e?.message });
+    }
   };
 
-  const saveSettings = () => {
-    setSavedAt(new Date().toLocaleTimeString());
-    setDirty(false);
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      await saveFn({
+        data: {
+          integration_key: integration.name,
+          category_id: categoryId,
+          status: "connected",
+          credentials: values,
+          assigned_employees: selected,
+        },
+      });
+      setSavedAt(new Date().toLocaleTimeString());
+      setDirty(false);
+      setStatusOverride("connected");
+      invalidate();
+      toast.push({ kind: "success", title: t("common.save") + " ✓", body: integration.name });
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Save failed", body: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEmployee = async (employeeId: string) => {
+    const next = selected.includes(employeeId) ? selected.filter((i) => i !== employeeId) : [...selected, employeeId];
+    setSelected(next);
+    try {
+      await assignFn({ data: { integration_key: integration.name, category_id: categoryId, assigned_employees: next } });
+      invalidate();
+    } catch (e: any) {
+      setSelected(selected); // rollback
+      toast.push({ kind: "error", title: "Could not update", body: e?.message });
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnectFn({ data: { integration_key: integration.name } });
+      invalidate();
+      toast.push({ kind: "success", title: t("int.disconnect") + " ✓", body: integration.name });
+      onClose();
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Failed", body: e?.message });
+    }
+  };
+
+  const handleConnect = async () => {
+    // "Connect" from an available card = save current field values (may be empty).
+    await saveSettings();
   };
 
   const missingRequired = fields.some((f) => f.required && !values[f.key]?.trim());
@@ -964,12 +1037,17 @@ function IntegrationDrawer({
           <section>
             <SectionTitle icon={Users}>{t("int.employees_using")}</SectionTitle>
             <div className="mt-2 space-y-1.5">
-              {EMPLOYEES.map((e) => {
-                const on = selected.includes(e.name);
+              {employees.length === 0 && (
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-center text-xs text-muted-foreground">
+                  No AI employees yet — create one first.
+                </div>
+              )}
+              {employees.map((e) => {
+                const on = selected.includes(e.id);
                 return (
                   <button
-                    key={e.name}
-                    onClick={() => onToggle(e.name)}
+                    key={e.id}
+                    onClick={() => toggleEmployee(e.id)}
                     className={
                       "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition " +
                       (on
@@ -978,7 +1056,7 @@ function IntegrationDrawer({
                     }
                   >
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">
-                      {e.emoji}
+                      {e.avatar_emoji}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold">{e.name}</div>
@@ -999,7 +1077,7 @@ function IntegrationDrawer({
               })}
             </div>
             <div className="mt-2 text-[11px] text-muted-foreground">
-              {t("int.n_of_m", { n: selected.length, m: EMPLOYEES.length })}
+              {t("int.n_of_m", { n: selected.length, m: employees.length })}
             </div>
           </section>
 
@@ -1009,6 +1087,8 @@ function IntegrationDrawer({
               <ExternalLink className="h-3.5 w-3.5" /> {t("int.read_docs")}
             </button>
             <button
+              onClick={isConnected ? handleDisconnect : handleConnect}
+              disabled={saving}
               className={
                 "rounded-lg px-4 py-2 text-xs font-semibold transition " +
                 (isConnected
@@ -1016,7 +1096,7 @@ function IntegrationDrawer({
                   : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
               }
             >
-              {isConnected
+              {saving ? "…" : isConnected
                 ? t("int.disconnect")
                 : integration.status === "reauth"
                 ? t("common.reconnect")
