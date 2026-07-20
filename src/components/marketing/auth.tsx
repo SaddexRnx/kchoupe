@@ -4,16 +4,25 @@ import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff, Check, ShieldCheck
 import { useToast } from "@/components/pages/_shared";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useServerFn } from "@tanstack/react-start";
+import { activatePlan } from "@/lib/workspace.functions";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
   const navigate = useNavigate();
   const toast = useToast();
+  const activate = useServerFn(activatePlan);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const requestedPlan = (() => {
+    if (typeof window === "undefined") return null;
+    const p = new URLSearchParams(window.location.search).get("plan");
+    return p && ["starter", "growth", "scale"].includes(p) ? p : null;
+  })();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
