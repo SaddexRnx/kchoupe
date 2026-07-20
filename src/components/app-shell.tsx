@@ -143,7 +143,7 @@ function TopBar() {
   }, []);
 
   const SEARCH_MAP: { label: string; to: string; kw: string[] }[] = [
-    { label: "Dashboard",     to: "/",              kw: ["home", "dashboard", "overview"] },
+    { label: "Dashboard",     to: "/dashboard",     kw: ["home", "dashboard", "overview"] },
     { label: "AI employees",  to: "/ai-employees",  kw: ["employee", "agent", "bot", "team"] },
     { label: "Playground",    to: "/playground",    kw: ["playground", "chat", "test", "model"] },
     { label: "Knowledge",     to: "/knowledge",     kw: ["knowledge", "docs", "source"] },
