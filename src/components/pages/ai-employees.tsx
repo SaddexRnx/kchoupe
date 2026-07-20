@@ -1,30 +1,49 @@
 import { useEffect, useState } from "react";
-import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2, Loader2 } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import { useT } from "@/lib/i18n";
-
-type Emp = { id: string; name: string; role: string; model: string; status: "active" | "training" | "paused"; convos: number; csat: number; tone: "violet" | "emerald" | "amber" | "muted"; emoji: string };
-
-const seedEmployees: Emp[] = [
-  { id: "e1", name: "Nova",  role: "Sales Lead",           model: "Claude Sonnet 4.5", status: "active",   convos: 1284, csat: 97, tone: "violet",  emoji: "🚀" },
-  { id: "e2", name: "Atlas", role: "Support Concierge",    model: "GPT-5",             status: "active",   convos: 892,  csat: 94, tone: "emerald", emoji: "🛎️" },
-  { id: "e3", name: "Sage",  role: "Onboarding Coach",     model: "Gemini 2.5 Pro",    status: "training", convos: 341,  csat: 91, tone: "amber",   emoji: "🌿" },
-  { id: "e4", name: "Echo",  role: "Marketing Analyst",    model: "Claude Opus",       status: "active",   convos: 512,  csat: 96, tone: "violet",  emoji: "📡" },
-  { id: "e5", name: "Orbit", role: "Product Advisor",      model: "GPT-5 Mini",        status: "paused",   convos: 128,  csat: 89, tone: "muted",   emoji: "🪐" },
-  { id: "e6", name: "Lumen", role: "Retention Specialist", model: "Claude Sonnet 4.5", status: "active",   convos: 678,  csat: 98, tone: "emerald", emoji: "💡" },
-];
+import {
+  listAiEmployees,
+  createAiEmployee,
+  updateAiEmployee,
+  deleteAiEmployee,
+  type AiEmployeeRow,
+} from "@/lib/ai-employees.functions";
 
 const EMOJI = ["🚀", "🛎️", "🌿", "📡", "🪐", "💡", "🤖", "🧠", "✨", "🎯", "📚", "🛍️"];
-const MODELS = ["Claude Sonnet 4.5", "GPT-5", "GPT-5 Mini", "Gemini 2.5 Pro", "Claude Opus", "Groq Llama 4"];
+export const MODELS: { id: string; label: string }[] = [
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, default)" },
+  { id: "google/gemini-3.5-flash", label: "Gemini 3.5 Flash" },
+  { id: "google/gemini-3.1-pro-preview", label: "Gemini 3.1 Pro" },
+  { id: "openai/gpt-5.4-mini", label: "GPT-5.4 Mini" },
+  { id: "openai/gpt-5.5", label: "GPT-5.5" },
+  { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra" },
+];
+
+const toneFor = (status: AiEmployeeRow["status"]): "violet" | "emerald" | "amber" | "muted" =>
+  status === "active" ? "emerald" : status === "training" ? "amber" : "muted";
 
 export function AiEmployees() {
   const t = useT();
   const toast = useToast();
   const { ask, node: confirmNode } = useConfirm();
-  const [employees, setEmployees] = useState<Emp[]>(seedEmployees);
+  const qc = useQueryClient();
+  const list = useServerFn(listAiEmployees);
+  const create = useServerFn(createAiEmployee);
+  const update = useServerFn(updateAiEmployee);
+  const del = useServerFn(deleteAiEmployee);
+
+  const { data: employees = [], isLoading } = useQuery({
+    queryKey: ["ai_employees"],
+    queryFn: () => list(),
+  });
+
   const [addOpen, setAddOpen] = useState(false);
-  const [editing, setEditing] = useState<Emp | null>(null);
-  const [draft, setDraft] = useState({ name: "", role: "", model: MODELS[0], emoji: EMOJI[0], prompt: "" });
+  const [editing, setEditing] = useState<AiEmployeeRow | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState({ name: "", role: "", model: MODELS[0].id, emoji: EMOJI[0], prompt: "" });
 
   // Listen for "New employee" from the top bar
   useEffect(() => {
@@ -33,56 +52,76 @@ export function AiEmployees() {
     return () => window.removeEventListener("atlas:new-employee", handler);
   }, []);
 
-  const resetDraft = () => setDraft({ name: "", role: "", model: MODELS[0], emoji: EMOJI[0], prompt: "" });
+  const resetDraft = () => setDraft({ name: "", role: "", model: MODELS[0].id, emoji: EMOJI[0], prompt: "" });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["ai_employees"] });
 
-  const create = () => {
+  const handleCreate = async () => {
     if (!draft.name.trim() || !draft.role.trim()) {
       toast.push({ kind: "warn", title: "Missing details", body: "Give your AI employee a name and role." });
       return;
     }
-    const emp: Emp = {
-      id: Math.random().toString(36).slice(2),
-      name: draft.name.trim(),
-      role: draft.role.trim(),
-      model: draft.model,
-      status: "training",
-      convos: 0,
-      csat: 0,
-      tone: "amber",
-      emoji: draft.emoji,
-    };
-    setEmployees((e) => [emp, ...e]);
-    setAddOpen(false);
-    resetDraft();
-    toast.push({ kind: "success", title: `${emp.name} added`, body: "Training on your knowledge base — takes ~3 minutes." });
-    // Simulate training completion
-    setTimeout(() => {
-      setEmployees((list) => list.map((x) => x.id === emp.id ? { ...x, status: "active", tone: "emerald" } : x));
-      toast.push({ kind: "success", title: `${emp.name} is live`, body: "Training complete — ready to take conversations." });
-    }, 3200);
+    setSaving(true);
+    try {
+      const row = await create({ data: {
+        name: draft.name,
+        role: draft.role,
+        model: draft.model,
+        avatar_emoji: draft.emoji,
+        system_prompt: draft.prompt || undefined,
+      }});
+      await invalidate();
+      setAddOpen(false);
+      resetDraft();
+      toast.push({ kind: "success", title: `${row.name} is live`, body: "Ready to take conversations in the Playground." });
+    } catch (e) {
+      toast.push({ kind: "warn", title: "Could not create", body: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleStatus = (id: string) => {
-    setEmployees((list) => list.map((x) => {
-      if (x.id !== id) return x;
-      const next = x.status === "active" ? "paused" : "active";
-      toast.push({ kind: "info", title: `${x.name} ${next === "active" ? "resumed" : "paused"}` });
-      return { ...x, status: next, tone: next === "active" ? "emerald" : "muted" };
-    }));
+  const toggleStatus = async (emp: AiEmployeeRow) => {
+    const next = emp.status === "active" ? "paused" : "active";
+    try {
+      await update({ data: { id: emp.id, status: next } });
+      await invalidate();
+      toast.push({ kind: "info", title: `${emp.name} ${next === "active" ? "resumed" : "paused"}` });
+    } catch (e) {
+      toast.push({ kind: "warn", title: "Update failed", body: e instanceof Error ? e.message : String(e) });
+    }
   };
 
-  const remove = async (e: Emp) => {
-    const ok = await ask({ title: `Delete ${e.name}?`, body: "This removes the AI employee and its history from the mock.", danger: true });
+  const remove = async (e: AiEmployeeRow) => {
+    const ok = await ask({ title: `Delete ${e.name}?`, body: "This removes the AI employee permanently.", danger: true });
     if (!ok) return;
-    setEmployees((list) => list.filter((x) => x.id !== e.id));
-    toast.push({ kind: "success", title: `${e.name} deleted` });
+    try {
+      await del({ data: { id: e.id } });
+      await invalidate();
+      toast.push({ kind: "success", title: `${e.name} deleted` });
+    } catch (err) {
+      toast.push({ kind: "warn", title: "Delete failed", body: err instanceof Error ? err.message : String(err) });
+    }
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editing) return;
-    setEmployees((list) => list.map((x) => x.id === editing.id ? editing : x));
-    toast.push({ kind: "success", title: `${editing.name} updated` });
-    setEditing(null);
+    setSaving(true);
+    try {
+      await update({ data: {
+        id: editing.id,
+        name: editing.name,
+        role: editing.role,
+        model: editing.model,
+        system_prompt: editing.system_prompt,
+      }});
+      await invalidate();
+      toast.push({ kind: "success", title: `${editing.name} updated` });
+      setEditing(null);
+    } catch (e) {
+      toast.push({ kind: "warn", title: "Update failed", body: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const applyRec = () => toast.push({ kind: "success", title: "Recommendation applied", body: "Added an Order-Tracker AI employee to your team." });
@@ -125,16 +164,31 @@ export function AiEmployees() {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {isLoading && (
+          <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-10 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading your team…
+          </Panel>
+        )}
+        {!isLoading && employees.length === 0 && (
+          <Panel className="md:col-span-2 xl:col-span-3 py-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary"><Bot className="h-6 w-6" /></div>
+            <div className="font-display text-lg font-semibold">No AI employees yet</div>
+            <div className="mt-1 text-sm text-muted-foreground">Create your first one — Atlas will bring them online instantly.</div>
+            <div className="mt-4 flex justify-center">
+              <PrimaryButton onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> {t("emp.new")}</PrimaryButton>
+            </div>
+          </Panel>
+        )}
         {employees.map((e) => (
           <Panel key={e.id} className="group transition hover:border-primary/30">
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 text-2xl">
-                {e.emoji}
+                {e.avatar_emoji}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-display text-lg font-semibold">{e.name}</div>
-                  <Chip tone={e.status === "active" ? "emerald" : e.status === "training" ? "amber" : "muted"}>
+                  <Chip tone={toneFor(e.status)}>
                     {t("common." + e.status, e.status)}
                   </Chip>
                 </div>
@@ -145,19 +199,19 @@ export function AiEmployees() {
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
               <div>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><MessageSquare className="h-3 w-3" /> {t("emp.convos")}</div>
-                <div className="mt-0.5 font-display text-lg font-semibold">{e.convos}</div>
+                <div className="mt-0.5 font-display text-lg font-semibold">0</div>
               </div>
               <div>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> {t("emp.csat")}</div>
-                <div className="mt-0.5 font-display text-lg font-semibold">{e.csat}</div>
+                <div className="mt-0.5 font-display text-lg font-semibold">—</div>
               </div>
               <div>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Bot className="h-3 w-3" /> {t("emp.skills")}</div>
-                <div className="mt-0.5 font-display text-lg font-semibold">7</div>
+                <div className="mt-0.5 font-display text-lg font-semibold">—</div>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
-              <button onClick={() => toggleStatus(e.id)} title={e.status === "active" ? "Pause" : "Resume"}
+              <button onClick={() => toggleStatus(e)} title={e.status === "active" ? "Pause" : "Resume"}
                 className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] hover:bg-white/10">
                 {e.status === "active" ? <><Pause className="h-3 w-3" /> Pause</> : <><Play className="h-3 w-3" /> Resume</>}
               </button>
@@ -180,7 +234,9 @@ export function AiEmployees() {
         footer={
           <>
             <GhostButton onClick={() => { setAddOpen(false); resetDraft(); }}>Cancel</GhostButton>
-            <PrimaryButton onClick={create}><Plus className="h-4 w-4" /> Create & train</PrimaryButton>
+            <PrimaryButton onClick={handleCreate} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Create
+            </PrimaryButton>
           </>
         }
       >
@@ -191,7 +247,7 @@ export function AiEmployees() {
             <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
             <select value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50">
-              {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+              {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </label>
           <label className="block">
@@ -223,7 +279,9 @@ export function AiEmployees() {
           footer={
             <>
               <GhostButton onClick={() => setEditing(null)}>Cancel</GhostButton>
-              <PrimaryButton onClick={saveEdit}>Save changes</PrimaryButton>
+              <PrimaryButton onClick={saveEdit} disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save changes
+              </PrimaryButton>
             </>
           }
         >
@@ -234,8 +292,13 @@ export function AiEmployees() {
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
               <select value={editing.model} onChange={(e) => setEditing({ ...editing, model: e.target.value })}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none">
-                {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+                {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
               </select>
+            </label>
+            <label className="block md:col-span-2">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">System prompt</div>
+              <textarea value={editing.system_prompt ?? ""} onChange={(e) => setEditing({ ...editing, system_prompt: e.target.value })}
+                rows={4} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
             </label>
           </div>
         </Modal>
