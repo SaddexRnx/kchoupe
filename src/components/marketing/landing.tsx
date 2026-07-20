@@ -295,7 +295,12 @@ function HeroPreview() {
   );
 }
 
-function Footer() {
+export function Footer() {
+  const cols: { h: string; l: [string, string][] }[] = [
+    { h: "Product", l: [["Features", "/#features"], ["Integrations", "/#integrations"], ["Pricing", "/#pricing"], ["How it works", "/#how-it-works"]] },
+    { h: "Company", l: [["About", "/about"], ["Contact", "/contact"], ["Sign in", "/login"], ["Get started", "/signup"]] },
+    { h: "Legal", l: [["Terms", "/terms"], ["Privacy", "/privacy"], ["Security", "/security"], ["Status", "/status"]] },
+  ];
   return (
     <footer className="relative border-t border-white/5 bg-black/20 backdrop-blur">
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 md:grid-cols-4">
@@ -308,18 +313,18 @@ function Footer() {
           </div>
           <p className="mt-3 text-xs text-muted-foreground">The AI workforce for North African commerce.</p>
           <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Shield className="h-3 w-3" /> SOC 2 · GDPR-aligned
+            <Shield className="h-3 w-3" /> Built with security & privacy in mind
           </div>
         </div>
-        {[
-          { h: "Product", l: [["Features", "#features"], ["Integrations", "#integrations"], ["Pricing", "#pricing"], ["How it works", "#how-it-works"]] },
-          { h: "Company", l: [["About", "#"], ["Contact", "mailto:hello@atlas.ai"], ["Sign in", "/login"], ["Get started", "/signup"]] },
-          { h: "Legal", l: [["Terms", "#"], ["Privacy", "#"], ["Security", "#"], ["Status", "#"]] },
-        ].map((col) => (
+        {cols.map((col) => (
           <div key={col.h}>
             <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{col.h}</div>
             <ul className="space-y-2 text-sm">
-              {col.l.map(([label, href]) => <li key={label}><a href={href} className="text-muted-foreground transition hover:text-foreground">{label}</a></li>)}
+              {col.l.map(([label, href]) => (
+                <li key={label}>
+                  <a href={href} className="text-muted-foreground transition hover:text-foreground">{label}</a>
+                </li>
+              ))}
             </ul>
           </div>
         ))}
