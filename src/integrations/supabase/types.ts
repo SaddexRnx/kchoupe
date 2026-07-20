@@ -751,6 +751,7 @@ export type Database = {
         }[]
       }
       admin_platform_stats: { Args: never; Returns: Json }
+      admin_timeseries: { Args: never; Returns: Json }
       ensure_default_workspace: { Args: { _user_id?: string }; Returns: string }
       has_role: {
         Args: {
