@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type Lang = "en" | "fr" | "ar";
-export type ThemeId = "aurora" | "midnight" | "cloud" | "sunset" | "forest" | "rose";
+export type ThemeId = "aurora" | "midnight" | "cloud" | "sunset" | "forest" | "rose" | "ocean" | "mono" | "candy" | "sand" | "royal";
 
 type Prefs = {
   lang: Lang;
@@ -78,6 +78,11 @@ export const THEMES: { id: ThemeId; name: string; swatches: string[] }[] = [
   { id: "sunset",   name: "Sahara Sunset",    swatches: ["#1a0f1f", "#2d1a2e", "#fb923c", "#f43f5e"] },
   { id: "forest",   name: "Atlas Forest",     swatches: ["#0f1a17", "#152922", "#34d399", "#eab308"] },
   { id: "rose",     name: "Rose Quartz",      swatches: ["#1f1420", "#2b1a2a", "#f472b6", "#818cf8"] },
+  { id: "ocean",    name: "Deep Ocean",       swatches: ["#0b1a2b", "#132a45", "#38bdf8", "#22d3ee"] },
+  { id: "mono",     name: "Mono Noir",        swatches: ["#0a0a0a", "#1c1c1c", "#e5e5e5", "#a3a3a3"] },
+  { id: "candy",    name: "Candy Pop",        swatches: ["#1f0f2a", "#2d1a3a", "#f472b6", "#22d3ee"] },
+  { id: "sand",     name: "Desert Sand",      swatches: ["#f5efe4", "#e6dcc5", "#b45309", "#10b981"] },
+  { id: "royal",    name: "Royal Amethyst",   swatches: ["#150b2b", "#221040", "#a78bfa", "#facc15"] },
 ];
 
 export const LANGS: { id: Lang; label: string; native: string }[] = [
