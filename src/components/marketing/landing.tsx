@@ -1,8 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight, Bot, Sparkles, ShoppingBag, MessageSquare, Zap, Globe, Shield, Check,
-  Instagram, Facebook, MessageCircle, Store, Package, BarChart3, Star, PlayCircle,
+  Instagram, Facebook, MessageCircle, Store, Package, BarChart3, PlayCircle,
 } from "lucide-react";
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export function Landing() {
   return (
@@ -35,8 +40,8 @@ export function Landing() {
           <Link to="/signup" className="animate-glow inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98]">
             Start free — no card needed <ArrowRight className="h-4 w-4" />
           </Link>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium backdrop-blur transition hover:bg-white/10">
-            <PlayCircle className="h-4 w-4" /> Watch 90-sec demo
+          <button onClick={() => scrollToId("how-it-works")} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium backdrop-blur transition hover:bg-white/10">
+            <PlayCircle className="h-4 w-4" /> See how it works
           </button>
         </div>
         <div className="animate-fade-up mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground" style={{ animationDelay: "320ms" }}>
@@ -48,18 +53,8 @@ export function Landing() {
         <HeroPreview />
       </section>
 
-      {/* LOGOS / SOCIAL PROOF */}
-      <section className="relative mx-auto max-w-6xl px-6 pb-16">
-        <div className="text-center text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Powering 2,400+ stores across MENA</div>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-70">
-          {["Batik Store", "Kasbah Beauty", "Djezzy Kids", "Sahara Home", "Medina Coffee", "Tanger Textiles"].map((n) => (
-            <div key={n} className="font-display text-sm font-semibold tracking-wide text-muted-foreground/80">{n}</div>
-          ))}
-        </div>
-      </section>
-
       {/* FEATURES BENTO */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="features" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Built to sell" title="Everything your store needs, in one command center." />
         <div className="mt-10 grid gap-3 md:grid-cols-6 md:grid-rows-2">
           <BentoCard className="md:col-span-4 md:row-span-2" icon={Bot} title="AI employees with roles"
@@ -90,7 +85,7 @@ export function Landing() {
       </section>
 
       {/* INTEGRATIONS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="integrations" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
         <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-6">
           {[
@@ -111,7 +106,7 @@ export function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="how-it-works" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Live in 5 minutes" title="Three steps to your first AI sale." />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
@@ -128,35 +123,14 @@ export function Landing() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
-        <SectionHeader eyebrow="Real stores, real revenue" title="Shopkeepers who never sleep, thanks to Atlas." />
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            { q: "Nova closed 41 orders overnight. I woke up to a full delivery route.", n: "Yasmine B.", r: "Kasbah Beauty · Algiers" },
-            { q: "Arabic replies feel like our team wrote them. Customers can't tell.", n: "Karim H.", r: "Medina Coffee · Casablanca" },
-            { q: "Cut our reply time from 4 hours to 12 seconds. Sales up 3.2×.", n: "Sofia M.", r: "Tanger Textiles · Tunis" },
-          ].map((t, i) => (
-            <div key={t.n} className="glass-panel animate-fade-up rounded-2xl p-6" style={{ animationDelay: `${i * 100}ms` }}>
-              <div className="flex gap-0.5 text-amber-300">
-                {Array.from({ length: 5 }).map((_, k) => <Star key={k} className="h-3.5 w-3.5 fill-current" />)}
-              </div>
-              <p className="mt-3 font-display text-base leading-relaxed">"{t.q}"</p>
-              <div className="mt-4 text-sm font-semibold">{t.n}</div>
-              <div className="text-xs text-muted-foreground">{t.r}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* PRICING */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="pricing" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Pricing" title="Local prices for local shops." />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { n: "Starter", p: "0", sub: "14-day trial", f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
-            { n: "Growth", p: "4,900", sub: "DZD / month", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
-            { n: "Scale", p: "14,900", sub: "DZD / month", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Talk to sales" },
+            { n: "Starter", plan: "starter", p: "0", sub: "14-day trial", f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
+            { n: "Growth", plan: "growth", p: "4,900", sub: "DZD / month", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
+            { n: "Scale", plan: "scale", p: "14,900", sub: "DZD / month", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
           ].map((t) => (
             <div key={t.n}
               className={"glass-panel animate-fade-up relative rounded-2xl p-6 " +
@@ -174,14 +148,18 @@ export function Landing() {
                   <li key={x} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {x}</li>
                 ))}
               </ul>
-              <Link to="/signup" className={"mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition " +
+              <a
+                href={`/signup?plan=${t.plan}`}
+                className={"mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition " +
                   (t.featured
                     ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110"
-                    : "border border-white/10 bg-white/5 hover:bg-white/10")}>{t.cta}</Link>
+                    : "border border-white/10 bg-white/5 hover:bg-white/10")}>{t.cta}</a>
             </div>
           ))}
         </div>
       </section>
+
+
 
       {/* CTA */}
       <section className="relative mx-auto max-w-5xl px-6 py-24">
@@ -223,8 +201,9 @@ function Nav() {
       </Link>
       <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
         <a href="#features" className="transition hover:text-foreground">Features</a>
+        <a href="#integrations" className="transition hover:text-foreground">Integrations</a>
         <a href="#pricing" className="transition hover:text-foreground">Pricing</a>
-        <Link to="/dashboard" className="transition hover:text-foreground">Product tour</Link>
+        <a href="#how-it-works" className="transition hover:text-foreground">How it works</a>
       </nav>
       <div className="flex items-center gap-2">
         <Link to="/login" className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:text-foreground">Sign in</Link>
@@ -332,14 +311,14 @@ function Footer() {
           </div>
         </div>
         {[
-          { h: "Product", l: ["Features", "Integrations", "Pricing", "Changelog"] },
-          { h: "Company", l: ["About", "Careers", "Contact", "Blog"] },
-          { h: "Resources", l: ["Docs", "API", "Community", "Status"] },
+          { h: "Product", l: [["Features", "#features"], ["Integrations", "#integrations"], ["Pricing", "#pricing"], ["How it works", "#how-it-works"]] },
+          { h: "Company", l: [["About", "#"], ["Contact", "mailto:hello@atlas.ai"], ["Sign in", "/login"], ["Get started", "/signup"]] },
+          { h: "Legal", l: [["Terms", "#"], ["Privacy", "#"], ["Security", "#"], ["Status", "#"]] },
         ].map((col) => (
           <div key={col.h}>
             <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{col.h}</div>
             <ul className="space-y-2 text-sm">
-              {col.l.map((x) => <li key={x}><a href="#" className="text-muted-foreground transition hover:text-foreground">{x}</a></li>)}
+              {col.l.map(([label, href]) => <li key={label}><a href={href} className="text-muted-foreground transition hover:text-foreground">{label}</a></li>)}
             </ul>
           </div>
         ))}

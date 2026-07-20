@@ -4,16 +4,25 @@ import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff, Check, ShieldCheck
 import { useToast } from "@/components/pages/_shared";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useServerFn } from "@tanstack/react-start";
+import { activatePlan } from "@/lib/workspace.functions";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
   const navigate = useNavigate();
   const toast = useToast();
+  const activate = useServerFn(activatePlan);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const requestedPlan = (() => {
+    if (typeof window === "undefined") return null;
+    const p = new URLSearchParams(window.location.search).get("plan");
+    return p && ["starter", "growth", "scale"].includes(p) ? p : null;
+  })();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +37,18 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
     setLoading(true);
     try {
       if (isSignup) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password: pw,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
             data: { full_name: name },
           },
         });
         if (error) throw error;
         toast.push({ kind: "success", title: "Workspace created", body: "Let's set things up." });
+        if (requestedPlan && data.session) {
+          try { await activate({ data: { plan: requestedPlan } }); } catch { /* non-fatal */ }
+        }
         navigate({ to: "/onboarding" });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
@@ -44,6 +56,12 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         const u = data.user;
         const dn = ((u?.user_metadata as any)?.full_name as string) || ((u?.user_metadata as any)?.name as string) || u?.email?.split("@")[0] || "";
         toast.push({ kind: "success", title: `Welcome back${dn ? ", " + dn : ""}` });
+        if (requestedPlan) {
+          try {
+            await activate({ data: { plan: requestedPlan } });
+            toast.push({ kind: "success", title: `${requestedPlan[0].toUpperCase() + requestedPlan.slice(1)} plan activated` });
+          } catch { /* non-fatal */ }
+        }
         navigate({ to: "/dashboard" });
       }
     } catch (err: any) {
@@ -183,7 +201,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
                 </label>
                 <button type="button" onClick={async () => {
                   if (!email) { toast.push({ kind: "warn", title: "Enter your email first" }); return; }
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
                   if (error) toast.push({ kind: "error", title: "Reset failed", body: error.message });
                   else toast.push({ kind: "success", title: "Reset link sent", body: "Check your inbox." });
                 }}

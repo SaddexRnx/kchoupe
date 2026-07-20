@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -32,6 +33,11 @@ const SignupRoute = SignupRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsRoute = ProductsRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
   '/products': typeof ProductsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/playground'
     | '/products'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/api/public/webhooks/inbound'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/playground'
     | '/products'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/api/public/webhooks/inbound'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/playground'
     | '/products'
+    | '/reset-password'
     | '/settings'
     | '/signup'
     | '/api/public/webhooks/inbound'
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PlaygroundRoute: typeof PlaygroundRoute
   ProductsRoute: typeof ProductsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products': {
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PlaygroundRoute: PlaygroundRoute,
   ProductsRoute: ProductsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
