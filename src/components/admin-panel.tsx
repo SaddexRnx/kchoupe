@@ -124,7 +124,6 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Users; labe
   );
 }
 
-function Overview() {
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#22d3ee", "#f59e0b", "#ec4899", "#84cc16", "#8b5cf6", "#f43f5e"];
 
 function ChartCard({ title, subtitle, children, height = 260 }: { title: string; subtitle?: string; children: React.ReactNode; height?: number }) {
