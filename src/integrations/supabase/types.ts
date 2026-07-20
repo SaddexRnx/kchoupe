@@ -64,6 +64,104 @@ export type Database = {
           },
         ]
       }
+      knowledge_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          source_id: string
+          token_count: number | null
+          workspace_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding: string
+          id?: string
+          source_id: string
+          token_count?: number | null
+          workspace_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          source_id?: string
+          token_count?: number | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_chunks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_sources: {
+        Row: {
+          created_at: string
+          created_by: string
+          doc_count: number
+          error: string | null
+          id: string
+          name: string
+          source_type: string
+          status: string
+          storage_path: string | null
+          updated_at: string
+          url: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          doc_count?: number
+          error?: string | null
+          id?: string
+          name: string
+          source_type: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          url?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          doc_count?: number
+          error?: string | null
+          id?: string
+          name?: string
+          source_type?: string
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+          url?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_sources_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playground_conversations: {
         Row: {
           ai_employee_id: string | null
@@ -272,6 +370,19 @@ export type Database = {
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
+      }
+      match_knowledge_chunks: {
+        Args: {
+          _workspace_id: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          similarity: number
+          source_id: string
+        }[]
       }
     }
     Enums: {
