@@ -201,7 +201,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
                 </label>
                 <button type="button" onClick={async () => {
                   if (!email) { toast.push({ kind: "warn", title: "Enter your email first" }); return; }
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
                   if (error) toast.push({ kind: "error", title: "Reset failed", body: error.message });
                   else toast.push({ kind: "success", title: "Reset link sent", body: "Check your inbox." });
                 }}
