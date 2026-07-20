@@ -689,6 +689,7 @@ export type Database = {
           name: string
           owner_id: string
           plan: string
+          trial_ends_at: string
           updated_at: string
         }
         Insert: {
@@ -699,6 +700,7 @@ export type Database = {
           name: string
           owner_id: string
           plan?: string
+          trial_ends_at?: string
           updated_at?: string
         }
         Update: {
@@ -709,6 +711,7 @@ export type Database = {
           name?: string
           owner_id?: string
           plan?: string
+          trial_ends_at?: string
           updated_at?: string
         }
         Relationships: []
