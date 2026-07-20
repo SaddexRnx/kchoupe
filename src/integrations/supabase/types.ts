@@ -64,6 +64,143 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_conversations: {
+        Row: {
+          ai_employee_id: string | null
+          ai_employee_name: string | null
+          channel: string
+          created_at: string
+          external_user: string
+          id: string
+          last_message: string | null
+          status: string
+          unread_count: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_employee_id?: string | null
+          ai_employee_name?: string | null
+          channel?: string
+          created_at?: string
+          external_user: string
+          id?: string
+          last_message?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_employee_id?: string | null
+          ai_employee_name?: string | null
+          channel?: string
+          created_at?: string
+          external_user?: string
+          id?: string
+          last_message?: string | null
+          status?: string
+          unread_count?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_conversations_ai_employee_id_fkey"
+            columns: ["ai_employee_id"]
+            isOneToOne: false
+            referencedRelation: "ai_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_conversations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          sender: string | null
+          workspace_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          sender?: string | null
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          sender?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_chunks: {
         Row: {
           content: string
@@ -162,6 +299,72 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          ai_employee_id: string | null
+          amount: number
+          confirmed_by_ai: boolean
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          id: string
+          notes: string | null
+          order_no: string
+          product_summary: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_employee_id?: string | null
+          amount?: number
+          confirmed_by_ai?: boolean
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          id?: string
+          notes?: string | null
+          order_no: string
+          product_summary: string
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_employee_id?: string | null
+          amount?: number
+          confirmed_by_ai?: boolean
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          id?: string
+          notes?: string | null
+          order_no?: string
+          product_summary?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_ai_employee_id_fkey"
+            columns: ["ai_employee_id"]
+            isOneToOne: false
+            referencedRelation: "ai_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playground_conversations: {
         Row: {
           ai_employee_id: string | null
@@ -231,6 +434,65 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "playground_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          ai_sold: number
+          category: string
+          created_at: string
+          currency: string
+          id: string
+          image_emoji: string
+          name: string
+          price: number
+          sku: string
+          sold_30: number
+          status: string
+          stock: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          ai_sold?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          image_emoji?: string
+          name: string
+          price?: number
+          sku: string
+          sold_30?: number
+          status?: string
+          stock?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          ai_sold?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          image_emoji?: string
+          name?: string
+          price?: number
+          sku?: string
+          sold_30?: number
+          status?: string
+          stock?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]

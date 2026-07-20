@@ -12,33 +12,37 @@ import {
   Clock,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/lib/i18n";
-
-const statDefs = [
-  { key: "dash.stat.ai_employees", value: 6, deltaKey: "dash.stat.thisweek", icon: Bot, tone: "violet" as const, to: "/ai-employees" },
-  { key: "dash.stat.products",     value: 148, delta: "+12",  icon: Package, tone: "emerald" as const, to: "/products" },
-  { key: "dash.stat.orders",       value: 342, delta: "+18%", icon: ShoppingCart, tone: "violet" as const, to: "/orders" },
-  { key: "dash.stat.conversations",value: "2.1k", delta: "+412", icon: MessageSquare, tone: "emerald" as const, to: "/conversations" },
-];
-
-const employees = [
-  { name: "Nova", role: "Sales Concierge", model: "Claude Sonnet 4.5", status: "active", chats: 428, avatar: "N" },
-  { name: "Atlas", role: "Support Lead", model: "GPT-5", status: "active", chats: 1204, avatar: "A" },
-  { name: "Ember", role: "Product Guide", model: "Gemini 2.5 Pro", status: "training", chats: 89, avatar: "E" },
-  { name: "Kai", role: "Order Tracker", model: "Groq Llama 4", status: "active", chats: 612, avatar: "K" },
-];
-
-const conversations = [
-  { customer: "Sara M.", preview: "Can I change the delivery address for #4821?", agent: "Kai", time: "2m" },
-  { customer: "Omar A.", preview: "Do you ship to Riyadh on weekends?", agent: "Atlas", time: "8m" },
-  { customer: "Lena K.", preview: "Which shade would suit warm undertones?", agent: "Ember", time: "17m" },
-  { customer: "Jon P.", preview: "Bulk pricing for 200 units?", agent: "Nova", time: "34m" },
-];
+import { dashboardStats } from "@/lib/orders.functions";
 
 const spark = [8, 14, 11, 19, 17, 24, 22, 31, 28, 36, 33, 41, 44];
 
+function ago(iso: string) {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return Math.floor(s) + "s";
+  if (s < 3600) return Math.floor(s / 60) + "m";
+  if (s < 86400) return Math.floor(s / 3600) + "h";
+  return Math.floor(s / 86400) + "d";
+}
+
 export function Dashboard() {
   const t = useT();
+  const stats = useServerFn(dashboardStats);
+  const { data } = useQuery({ queryKey: ["dashboard_stats"], queryFn: () => stats() });
+
+  const statDefs = [
+    { key: "dash.stat.ai_employees", value: data?.aiEmployees ?? 0, delta: t("dash.stat.thisweek"), icon: Bot, tone: "violet" as const, to: "/ai-employees" },
+    { key: "dash.stat.products",     value: data?.products ?? 0,    delta: "", icon: Package, tone: "emerald" as const, to: "/products" },
+    { key: "dash.stat.orders",       value: data?.orders ?? 0,      delta: "", icon: ShoppingCart, tone: "violet" as const, to: "/orders" },
+    { key: "dash.stat.conversations",value: data?.conversations ?? 0, delta: "", icon: MessageSquare, tone: "emerald" as const, to: "/conversations" },
+  ];
+
+  const employees = data?.aiAgents ?? [];
+  const conversations = data?.recentMessages ?? [];
+  const confirmed = data?.confirmedToday ?? [];
+
   return (
     <div className="space-y-6">
       <Header />
@@ -47,7 +51,7 @@ export function Dashboard() {
       <div className="grid grid-cols-12 gap-4">
         {/* Stat cards row */}
         {statDefs.map((s) => (
-          <StatCard key={s.key} label={t(s.key)} value={s.value} delta={s.deltaKey ? t(s.deltaKey) : s.delta!} icon={s.icon} tone={s.tone} to={s.to} />
+          <StatCard key={s.key} label={t(s.key)} value={s.value} delta={s.delta} icon={s.icon} tone={s.tone} to={s.to} />
         ))}
 
         {/* Hero: activity + spark */}
@@ -58,9 +62,9 @@ export function Dashboard() {
                 {t("dash.conv_volume")}
               </div>
               <div className="mt-1 flex items-baseline gap-3">
-                <span className="font-display text-4xl font-bold tracking-tight">2,148</span>
+                <span className="font-display text-4xl font-bold tracking-tight">{data?.conversations ?? 0}</span>
                 <span className="flex items-center gap-1 text-sm text-accent">
-                  <TrendingUp className="h-4 w-4" /> +24.6%
+                  <TrendingUp className="h-4 w-4" /> {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "DZD", maximumFractionDigits: 0 }).format(data?.volume7d ?? 0)}
                 </span>
               </div>
               <div className="mt-1 text-sm text-muted-foreground">{t("dash.vs_prev")}</div>
@@ -107,8 +111,9 @@ export function Dashboard() {
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-7">
           <SectionHeader title={t("dash.your_employees")} cta={t("dash.manage_all")} to="/ai-employees" />
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {employees.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-muted-foreground">No AI employees yet — <Link to="/ai-employees" className="text-primary hover:underline">create one</Link>.</div>}
             {employees.map((e) => (
-              <EmployeeCard key={e.name} {...e} />
+              <EmployeeCard key={e.id} name={e.name} role={e.role ?? ""} model={e.model ?? ""} status={e.status} chats={e.chats} avatar={e.name[0]?.toUpperCase() ?? "?"} />
             ))}
           </div>
         </div>
@@ -117,25 +122,27 @@ export function Dashboard() {
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-5">
           <SectionHeader title={t("dash.live_conv")} cta={t("dash.open_inbox")} to="/conversations" />
           <ul className="mt-4 space-y-1">
+            {conversations.length === 0 && <li className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-muted-foreground">No conversations yet.</li>}
             {conversations.map((c) => (
-              <li key={c.customer + c.time}>
+              <li key={c.id}>
               <Link
                 to="/conversations"
-                key={c.customer + c.time}
                 className="group flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-all duration-300 hover:bg-white/5 hover:translate-x-1"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/40 to-accent/40 text-xs font-semibold">
-                  {c.customer[0]}
+                  {c.external_user[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold">{c.customer}</span>
-                    <span className="shrink-0 text-[10px] text-muted-foreground">{c.time}</span>
+                    <span className="truncate text-sm font-semibold">{c.external_user}</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">{ago(c.updated_at)}</span>
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-muted-foreground">{c.preview}</div>
+                  <div className="mt-0.5 truncate text-xs text-muted-foreground">{c.last_message ?? "—"}</div>
+                  {c.ai_employee_name && (
                   <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-primary">
-                    <Zap className="h-2.5 w-2.5" /> {t("dash.handled_by")} {c.agent}
+                    <Zap className="h-2.5 w-2.5" /> {t("dash.handled_by")} {c.ai_employee_name}
                   </div>
+                  )}
                 </div>
               </Link>
               </li>
@@ -148,31 +155,29 @@ export function Dashboard() {
         <div className="glass-panel col-span-12 rounded-2xl p-6">
           <SectionHeader title={t("dash.confirmed_today")} cta={t("dash.open_orders")} to="/orders" />
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              { id: "ORD-2841", customer: "Sara M.",   product: "Argan hair oil ×2",     amount: 2980, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "3m" },
-              { id: "ORD-2840", customer: "Omar A.",   product: "Saffron 5g + Mint tea", amount: 2990, cur: "DZD", agent: "Nova",  status: "confirmed" as const, time: "11m" },
-              { id: "ORD-2839", customer: "Lena K.",   product: "Ceramic tagine 28cm",   amount: 4800, cur: "DZD", agent: "Ember", status: "confirmed" as const, time: "24m" },
-              { id: "ORD-2838", customer: "Jon P.",    product: "Dates 1kg ×4",          amount: 5000, cur: "DZD", agent: "Kai",   status: "pending"   as const, time: "38m" },
-            ].map((o) => (
+            {confirmed.length === 0 && <div className="col-span-full rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-muted-foreground">No AI-confirmed orders today.</div>}
+            {confirmed.map((o) => (
               <Link key={o.id} to="/orders" className="group block rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-emerald-400/10">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
-                  <span className="font-mono">{o.id}</span>
-                  <span>{o.time} {t("common.ago")}</span>
+                  <span className="font-mono">{o.order_no}</span>
+                  <span>{ago(o.created_at)} {t("common.ago")}</span>
                 </div>
-                <div className="mt-2 truncate text-sm font-semibold">{o.customer}</div>
-                <div className="mt-0.5 truncate text-xs text-muted-foreground">{o.product}</div>
+                <div className="mt-2 truncate text-sm font-semibold">{o.customer_name}</div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">{o.product_summary}</div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="font-display text-lg font-bold aurora-gradient-text">
-                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.cur, maximumFractionDigits: 0 }).format(o.amount)}
+                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.currency, maximumFractionDigits: 0 }).format(Number(o.amount))}
                   </span>
-                  <span className={"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium " + (o.status === "confirmed" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-400/30 bg-amber-400/10 text-amber-300")}>
-                    {o.status === "confirmed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                    {o.status === "confirmed" ? t("common.confirmed") : t("common.pending")}
+                  <span className={"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium " + (o.status === "paid" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-400/30 bg-amber-400/10 text-amber-300")}>
+                    {o.status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                    {o.status === "paid" ? t("common.confirmed") : t("common.pending")}
                   </span>
                 </div>
-                <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary">
-                  <Zap className="h-2.5 w-2.5" /> {t("dash.closed_by")} {o.agent}
-                </div>
+                {o.ai_employee_id && (
+                  <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary">
+                    <Zap className="h-2.5 w-2.5" /> {t("dash.closed_by")} AI
+                  </div>
+                )}
               </Link>
             ))}
           </div>
