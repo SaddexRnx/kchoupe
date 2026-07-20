@@ -280,12 +280,12 @@ export function Products() {
         <Modal open onClose={() => setViewing(null)} title={viewing.name} description={`SKU ${viewing.sku} · ${viewing.category}`}
           footer={<><GhostButton onClick={() => { setViewing(null); setEditing(viewing); }}><Edit3 className="h-3.5 w-3.5" /> Edit</GhostButton><PrimaryButton onClick={() => setViewing(null)}>Close</PrimaryButton></>}>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 text-6xl">{viewing.image}</div>
+            <div className="flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 text-6xl">{viewing.image_emoji}</div>
             <div className="md:col-span-2 grid grid-cols-2 gap-3 text-sm">
-              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Price</div><div className="mt-1 font-display text-lg font-bold">{fmt(viewing.price, viewing.currency)}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Price</div><div className="mt-1 font-display text-lg font-bold">{fmt(Number(viewing.price), viewing.currency)}</div></div>
               <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Stock</div><div className="mt-1 font-display text-lg font-bold">{viewing.stock}</div></div>
-              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold 30d</div><div className="mt-1 font-display text-lg font-bold">{viewing.sold30}</div></div>
-              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold by AI</div><div className="mt-1 font-display text-lg font-bold text-primary">{viewing.aiSold}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold 30d</div><div className="mt-1 font-display text-lg font-bold">{viewing.sold_30}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold by AI</div><div className="mt-1 font-display text-lg font-bold text-primary">{viewing.ai_sold}</div></div>
             </div>
           </div>
         </Modal>
