@@ -13,6 +13,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const navigate = useNavigate();
   const toast = useToast();
   const activate = useServerFn(activatePlan);
+  const checkAdmin = useServerFn(amIAdmin);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
