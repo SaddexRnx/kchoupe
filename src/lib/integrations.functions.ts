@@ -26,9 +26,10 @@ const SECRET_KEYS = new Set([
 
 const MASK = "__saved__";
 
-function sanitize(creds: Record<string, any> | null | undefined): Record<string, string> {
+function sanitize(creds: any): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(creds ?? {})) {
+  const obj = creds && typeof creds === "object" && !Array.isArray(creds) ? creds : {};
+  for (const [k, v] of Object.entries(obj)) {
     if (typeof v !== "string" || v === "") continue;
     out[k] = SECRET_KEYS.has(k) ? MASK : v;
   }
@@ -37,8 +38,9 @@ function sanitize(creds: Record<string, any> | null | undefined): Record<string,
 
 // Merge incoming credentials with the stored ones; keep existing secret when
 // the client sends back the placeholder mask (i.e. left the field untouched).
-function mergeCreds(existing: Record<string, any>, incoming: Record<string, string>): Record<string, string> {
-  const merged: Record<string, string> = { ...(existing || {}) };
+function mergeCreds(existing: any, incoming: Record<string, string>): Record<string, string> {
+  const base = existing && typeof existing === "object" && !Array.isArray(existing) ? existing : {};
+  const merged: Record<string, string> = { ...base } as Record<string, string>;
   for (const [k, v] of Object.entries(incoming || {})) {
     if (v === MASK) continue; // untouched secret
     if (v == null || v === "") { delete merged[k]; continue; }
