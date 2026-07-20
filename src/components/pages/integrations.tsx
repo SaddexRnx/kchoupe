@@ -689,39 +689,45 @@ type ReauthState =
 function IntegrationDrawer({
   integration,
   categoryId,
-  selected,
-  onToggle,
+  row,
+  employees,
   onClose,
 }: {
   integration: Integration;
   categoryId: string;
-  selected: string[];
-  onToggle: (employee: string) => void;
+  row: IntegrationRow | null;
+  employees: AiEmployeeRow[];
   onClose: () => void;
 }) {
   const t = useT();
-  const [test, setTest] = useState<TestState>({ phase: "idle" });
+  const toast = useToast();
+  const qc = useQueryClient();
+  const saveFn = useServerFn(saveIntegration);
+  const assignFn = useServerFn(setIntegrationAssignments);
+  const testFn = useServerFn(testIntegrationFn);
+  const reauthFn = useServerFn(reauthIntegration);
+  const disconnectFn = useServerFn(disconnectIntegration);
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["integrations"] });
+
+  const [test, setTest] = useState<TestState>(
+    row?.last_test_status === "ok" && row.last_test_at
+      ? { phase: "ok", latency: row.last_test_latency_ms ?? 0, at: new Date(row.last_test_at).toLocaleTimeString() }
+      : row?.last_test_status === "fail" && row.last_test_at
+      ? { phase: "fail", message: row.last_test_message ?? "Failed", at: new Date(row.last_test_at).toLocaleTimeString() }
+      : { phase: "idle" }
+  );
   const fields = CATEGORY_FIELDS[categoryId] ?? [
     { key: "apiKey", label: "API key", placeholder: "sk_live_…", secret: true, required: true },
   ];
   const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      fields.map((f) => [
-        f.key,
-        integration.status === "connected" || integration.status === "reauth"
-          ? f.secret
-            ? "••••••••••••" + integration.initials
-            : f.key === "storeUrl"
-            ? "https://" + integration.name.toLowerCase().replace(/\s+/g, "-") + ".example.com"
-            : "atlas-" + integration.initials.toLowerCase()
-          : "",
-      ])
-    )
+    Object.fromEntries(fields.map((f) => [f.key, row?.credentials?.[f.key] ?? ""]))
   );
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [dirty, setDirty] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [reauth, setReauth] = useState<ReauthState>({ phase: "idle" });
+  const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>(row?.assigned_employees ?? []);
   const [statusOverride, setStatusOverride] = useState<Status | null>(null);
   const status = statusOverride ?? integration.status;
 
@@ -733,33 +739,83 @@ function IntegrationDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const runTest = () => {
+  const runTest = async () => {
     setTest({ phase: "running" });
-    // Mock latency 700-1800ms; reauth cards deterministically fail.
-    const latency = Math.round(700 + Math.random() * 1100);
-    window.setTimeout(() => {
-      const at = new Date().toLocaleTimeString();
-      if (status === "reauth") {
-        setTest({ phase: "fail", message: t("int.test_expired"), at });
-      } else if (status === "available") {
-        setTest({ phase: "fail", message: t("int.test_notconn"), at });
-      } else {
-        setTest({ phase: "ok", latency, at });
-      }
-    }, latency);
+    try {
+      const r = await testFn({ data: { integration_key: integration.name, category_id: categoryId } });
+      const at = r.last_test_at ? new Date(r.last_test_at).toLocaleTimeString() : new Date().toLocaleTimeString();
+      if (r.last_test_status === "ok") setTest({ phase: "ok", latency: r.last_test_latency_ms ?? 0, at });
+      else setTest({ phase: "fail", message: r.last_test_message ?? t("int.test_fail"), at });
+      invalidate();
+    } catch (e: any) {
+      setTest({ phase: "fail", message: e?.message ?? "Failed", at: new Date().toLocaleTimeString() });
+    }
   };
 
-  const runReauth = () => {
+  const runReauth = async () => {
     setReauth({ phase: "running" });
-    window.setTimeout(() => {
+    try {
+      await reauthFn({ data: { integration_key: integration.name, category_id: categoryId } });
       setReauth({ phase: "done", at: new Date().toLocaleTimeString() });
       setStatusOverride("connected");
-    }, 1400);
+      invalidate();
+      toast.push({ kind: "success", title: t("int.reauthorized", { t: new Date().toLocaleTimeString() }) });
+    } catch (e: any) {
+      setReauth({ phase: "idle" });
+      toast.push({ kind: "error", title: "Re-auth failed", body: e?.message });
+    }
   };
 
-  const saveSettings = () => {
-    setSavedAt(new Date().toLocaleTimeString());
-    setDirty(false);
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      await saveFn({
+        data: {
+          integration_key: integration.name,
+          category_id: categoryId,
+          status: "connected",
+          credentials: values,
+          assigned_employees: selected,
+        },
+      });
+      setSavedAt(new Date().toLocaleTimeString());
+      setDirty(false);
+      setStatusOverride("connected");
+      invalidate();
+      toast.push({ kind: "success", title: t("common.save") + " ✓", body: integration.name });
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Save failed", body: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEmployee = async (employeeId: string) => {
+    const next = selected.includes(employeeId) ? selected.filter((i) => i !== employeeId) : [...selected, employeeId];
+    setSelected(next);
+    try {
+      await assignFn({ data: { integration_key: integration.name, category_id: categoryId, assigned_employees: next } });
+      invalidate();
+    } catch (e: any) {
+      setSelected(selected); // rollback
+      toast.push({ kind: "error", title: "Could not update", body: e?.message });
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnectFn({ data: { integration_key: integration.name } });
+      invalidate();
+      toast.push({ kind: "success", title: t("int.disconnect") + " ✓", body: integration.name });
+      onClose();
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Failed", body: e?.message });
+    }
+  };
+
+  const handleConnect = async () => {
+    // "Connect" from an available card = save current field values (may be empty).
+    await saveSettings();
   };
 
   const missingRequired = fields.some((f) => f.required && !values[f.key]?.trim());
