@@ -201,8 +201,9 @@ function Nav() {
       </Link>
       <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
         <a href="#features" className="transition hover:text-foreground">Features</a>
+        <a href="#integrations" className="transition hover:text-foreground">Integrations</a>
         <a href="#pricing" className="transition hover:text-foreground">Pricing</a>
-        <Link to="/dashboard" className="transition hover:text-foreground">Product tour</Link>
+        <a href="#how-it-works" className="transition hover:text-foreground">How it works</a>
       </nav>
       <div className="flex items-center gap-2">
         <Link to="/login" className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:text-foreground">Sign in</Link>
@@ -310,14 +311,14 @@ function Footer() {
           </div>
         </div>
         {[
-          { h: "Product", l: ["Features", "Integrations", "Pricing", "Changelog"] },
-          { h: "Company", l: ["About", "Careers", "Contact", "Blog"] },
-          { h: "Resources", l: ["Docs", "API", "Community", "Status"] },
+          { h: "Product", l: [["Features", "#features"], ["Integrations", "#integrations"], ["Pricing", "#pricing"], ["How it works", "#how-it-works"]] },
+          { h: "Company", l: [["About", "#"], ["Contact", "mailto:hello@atlas.ai"], ["Sign in", "/login"], ["Get started", "/signup"]] },
+          { h: "Legal", l: [["Terms", "#"], ["Privacy", "#"], ["Security", "#"], ["Status", "#"]] },
         ].map((col) => (
           <div key={col.h}>
             <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{col.h}</div>
             <ul className="space-y-2 text-sm">
-              {col.l.map((x) => <li key={x}><a href="#" className="text-muted-foreground transition hover:text-foreground">{x}</a></li>)}
+              {col.l.map(([label, href]) => <li key={label}><a href={href} className="text-muted-foreground transition hover:text-foreground">{label}</a></li>)}
             </ul>
           </div>
         ))}
