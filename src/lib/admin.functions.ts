@@ -53,7 +53,7 @@ export const listAllEmployees = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("ai_employees")
-      .select("id,name,role,status,language,workspace_id,created_at")
+      .select("id,name,role,status,model,avatar_emoji,workspace_id,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
