@@ -196,6 +196,15 @@ export function Dashboard() {
 
 function Header() {
   const t = useT();
+  const [name, setName] = useState<string>("");
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const dn = ((u.user_metadata as any)?.full_name as string) || ((u.user_metadata as any)?.name as string) || u.email?.split("@")[0] || "";
+      setName(dn);
+    });
+  }, []);
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -203,7 +212,7 @@ function Header() {
           {t("dash.weekday")}
         </div>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          {t("dash.welcome")} <span className="aurora-gradient-text">Khalid</span>
+          {t("dash.welcome")} <span className="aurora-gradient-text">{name || "there"}</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("dash.subtitle")}
