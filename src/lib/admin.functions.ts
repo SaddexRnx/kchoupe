@@ -23,6 +23,15 @@ export const getPlatformStats = createServerFn({ method: "GET" })
     return data as Record<string, any>;
   });
 
+export const getPlatformTimeseries = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase.rpc("admin_timeseries");
+    if (error) throw new Error(error.message);
+    return data as Record<string, any>;
+  });
+
 export const listAllUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
