@@ -1037,12 +1037,17 @@ function IntegrationDrawer({
           <section>
             <SectionTitle icon={Users}>{t("int.employees_using")}</SectionTitle>
             <div className="mt-2 space-y-1.5">
-              {EMPLOYEES.map((e) => {
-                const on = selected.includes(e.name);
+              {employees.length === 0 && (
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-center text-xs text-muted-foreground">
+                  No AI employees yet — create one first.
+                </div>
+              )}
+              {employees.map((e) => {
+                const on = selected.includes(e.id);
                 return (
                   <button
-                    key={e.name}
-                    onClick={() => onToggle(e.name)}
+                    key={e.id}
+                    onClick={() => toggleEmployee(e.id)}
                     className={
                       "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition " +
                       (on
@@ -1051,7 +1056,7 @@ function IntegrationDrawer({
                     }
                   >
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">
-                      {e.emoji}
+                      {e.avatar_emoji}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold">{e.name}</div>
@@ -1072,7 +1077,7 @@ function IntegrationDrawer({
               })}
             </div>
             <div className="mt-2 text-[11px] text-muted-foreground">
-              {t("int.n_of_m", { n: selected.length, m: EMPLOYEES.length })}
+              {t("int.n_of_m", { n: selected.length, m: employees.length })}
             </div>
           </section>
 
@@ -1082,6 +1087,8 @@ function IntegrationDrawer({
               <ExternalLink className="h-3.5 w-3.5" /> {t("int.read_docs")}
             </button>
             <button
+              onClick={isConnected ? handleDisconnect : handleConnect}
+              disabled={saving}
               className={
                 "rounded-lg px-4 py-2 text-xs font-semibold transition " +
                 (isConnected
@@ -1089,7 +1096,7 @@ function IntegrationDrawer({
                   : "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md shadow-primary/20")
               }
             >
-              {isConnected
+              {saving ? "…" : isConnected
                 ? t("int.disconnect")
                 : integration.status === "reauth"
                 ? t("common.reconnect")
