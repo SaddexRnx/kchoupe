@@ -51,6 +51,8 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <Header />
+      <TrialBanner />
+
 
       {/* Bento grid */}
       <div className="grid grid-cols-12 gap-4">
