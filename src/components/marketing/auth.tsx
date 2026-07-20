@@ -66,8 +66,8 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         }
         // Route admins to the admin panel
         try {
-          const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: data.user!.id, _role: "admin" });
-          navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+          const r = await checkAdmin();
+          navigate({ to: r?.isAdmin ? "/admin" : "/dashboard" });
         } catch {
           navigate({ to: "/dashboard" });
         }
