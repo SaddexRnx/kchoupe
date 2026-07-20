@@ -134,18 +134,18 @@ export function Products() {
         }
       />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
         {[
           { l: t("prod.title"), v: totals.products, sub: t("prod.in_catalog") },
           { l: t("common.active"),   v: totals.active,   sub: t("prod.live_on_store") },
           { l: t("prod.total_stock"), v: totals.stock, sub: t("prod.units") },
           { l: t("prod.sold_ai"), v: totals.ai, sub: t("prod.auto_fulfilled") },
         ].map((s) => (
-          <Panel key={s.l} className="animate-fade-up">
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{s.l}</div>
-            <div className="mt-1 font-display text-2xl font-bold">{s.v.toLocaleString()}</div>
-            <div className="text-[11px] text-muted-foreground">{s.sub}</div>
-          </Panel>
+          <div key={s.l} className="glass-panel animate-fade-up rounded-xl px-3 py-2.5">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.l}</div>
+            <div className="mt-0.5 font-display text-lg font-bold leading-tight">{s.v.toLocaleString()}</div>
+            <div className="text-[10px] text-muted-foreground">{s.sub}</div>
+          </div>
         ))}
       </div>
 
