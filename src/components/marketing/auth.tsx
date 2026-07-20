@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useServerFn } from "@tanstack/react-start";
 import { activatePlan } from "@/lib/workspace.functions";
+import { amIAdmin } from "@/lib/admin.functions";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
