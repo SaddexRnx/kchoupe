@@ -113,7 +113,8 @@ export function Orders() {
       </div>
 
       <Panel className="p-0">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
           <thead className="border-b border-white/5 text-left text-xs uppercase tracking-widest text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-medium">{t("ord.col.order")}</th>
@@ -127,15 +128,15 @@ export function Orders() {
           <tbody className="divide-y divide-white/5">
             {orders.map((o) => (
               <tr key={o.id} onClick={() => setViewing(o)} className="cursor-pointer transition hover:bg-white/5">
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground">
                   {o.order_no}
                   {o.confirmed_by_ai && <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-primary"><Zap className="h-2.5 w-2.5" /> AI</span>}
                 </td>
                 <td className="px-4 py-3 font-medium">{o.customer_name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{o.product_summary}</td>
-                <td className="px-4 py-3 text-right font-display font-semibold">{fmt(Number(o.amount), o.currency)}</td>
+                <td className="max-w-[240px] truncate px-4 py-3 text-muted-foreground">{o.product_summary}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-right font-display font-semibold">{fmt(Number(o.amount), o.currency)}</td>
                 <td className="px-4 py-3"><Chip tone={tones[o.status as keyof typeof tones]}>{t(statusKey[o.status as keyof typeof statusKey])}</Chip></td>
-                <td className="px-4 py-3 text-right text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
               </tr>
             ))}
             {orders.length === 0 && !isLoading && (
@@ -146,6 +147,7 @@ export function Orders() {
             )}
           </tbody>
         </table>
+        </div>
       </Panel>
 
       {viewing && (

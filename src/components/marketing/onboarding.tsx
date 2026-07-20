@@ -88,10 +88,13 @@ export function Onboarding() {
             </div>
           ))}
         </div>
-        <div className="mt-3 grid grid-cols-5 gap-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mt-3 hidden grid-cols-5 gap-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground sm:grid">
           {STEPS.map((s, i) => (
             <div key={s} className={i === step ? "font-semibold text-foreground" : ""}>{s}</div>
           ))}
+        </div>
+        <div className="mt-3 text-center text-[10px] uppercase tracking-widest text-foreground sm:hidden">
+          Step {step + 1} / {STEPS.length} · {STEPS[step]}
         </div>
       </div>
 

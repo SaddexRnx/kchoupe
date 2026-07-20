@@ -162,7 +162,8 @@ export function Products() {
       </Panel>
 
       <Panel className="overflow-hidden p-0">
-        <div className="hidden grid-cols-[minmax(260px,2fr)_1fr_120px_100px_140px_140px_60px] items-center gap-3 border-b border-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-muted-foreground md:grid">
+        <div className="overflow-x-auto">
+        <div className="hidden min-w-[820px] grid-cols-[minmax(240px,2fr)_1fr_110px_90px_120px_120px_60px] items-center gap-3 border-b border-white/5 px-4 py-3 text-[11px] uppercase tracking-widest text-muted-foreground md:grid">
           <div>{t("prod.col.product")}</div>
           <div>{t("prod.col.category")}</div>
           <div className="text-right">{t("prod.col.price")}</div>
@@ -175,16 +176,16 @@ export function Products() {
           {rows.map((r, i) => (
             <li key={r.id}
                 style={{ animationDelay: `${Math.min(i, 12) * 30}ms` }}
-                className="animate-fade-up grid grid-cols-1 items-center gap-3 px-4 py-3 text-sm transition hover:bg-white/5 md:grid-cols-[minmax(260px,2fr)_1fr_120px_100px_140px_140px_60px]">
+                className="animate-fade-up grid grid-cols-1 items-center gap-3 px-4 py-3 text-sm transition hover:bg-white/5 md:min-w-[820px] md:grid-cols-[minmax(240px,2fr)_1fr_110px_90px_120px_120px_60px]">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-lg">{r.image_emoji}</div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-medium">{r.name}</span>
                     {r.status === "draft" && <Chip tone="amber">{t("common.draft")}</Chip>}
                     {r.status === "out" && <Chip tone="rose">{t("common.out_of_stock")}</Chip>}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="font-mono">{r.sku}</span>
                     {r.ai_sold > 0 && (
                       <span className="inline-flex items-center gap-1 text-primary">
@@ -194,8 +195,8 @@ export function Products() {
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground md:text-sm">{r.category}</div>
-              <div className="text-right font-display font-semibold">{fmt(Number(r.price), r.currency)}</div>
+              <div className="truncate text-xs text-muted-foreground md:text-sm">{r.category}</div>
+              <div className="text-right font-display font-semibold whitespace-nowrap">{fmt(Number(r.price), r.currency)}</div>
               <div className={"text-right text-xs md:text-sm " + (r.stock === 0 ? "text-rose-300" : r.stock < 20 ? "text-amber-300" : "text-foreground")}>{r.stock}</div>
               <div className="text-right text-xs text-muted-foreground md:text-sm">{r.sold_30}</div>
               <div className="text-right text-xs md:text-sm">
@@ -232,6 +233,7 @@ export function Products() {
             </li>
           )}
         </ul>
+        </div>
       </Panel>
 
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">

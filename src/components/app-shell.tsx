@@ -67,7 +67,7 @@ export function AppShell({ active, children }: { active: NavKey; children: React
   if (!checked) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading…</div>;
   return (
     <div className="min-h-screen text-foreground">
-      <div className="mx-auto flex max-w-[1600px] gap-6 px-4 py-6 lg:px-8">
+      <div className="mx-auto flex max-w-[1600px] gap-4 px-3 py-4 sm:px-4 sm:py-6 lg:gap-6 lg:px-8">
         <Sidebar active={active} />
         <main className="min-w-0 flex-1">
           <TopBar />
@@ -211,15 +211,15 @@ function TopBar() {
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="glass-panel relative flex flex-1 items-center gap-2 rounded-xl px-3.5 py-2.5">
-        <Search className="h-4 w-4 text-muted-foreground" />
+    <div className="flex items-center gap-2 sm:gap-3">
+      <div className="glass-panel relative flex min-w-0 flex-1 items-center gap-2 rounded-xl px-3 py-2.5 sm:px-3.5">
+        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onSearchKey}
           placeholder={t("top.search")}
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <kbd className="hidden rounded border border-border bg-white/5 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline">
           ⌘K
@@ -236,14 +236,14 @@ function TopBar() {
           </div>
         )}
       </div>
-      <LangSwitcher lang={lang} onChange={setLang} />
-      <div ref={bellRef} className="relative">
+      <div className="hidden sm:block"><LangSwitcher lang={lang} onChange={setLang} /></div>
+      <div ref={bellRef} className="relative shrink-0">
         <button onClick={() => setBellOpen((v) => !v)} className="glass-panel relative flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
           <Bell className="h-4 w-4" />
           {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" />}
         </button>
         {bellOpen && (
-          <div className="glass-panel absolute right-0 z-50 mt-2 w-80 rounded-xl p-2">
+          <div className="glass-panel absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl p-2">
             <div className="mb-1 flex items-center justify-between px-2 py-1 text-[11px] uppercase tracking-widest text-muted-foreground">
               <span>Notifications {unread > 0 && <span className="ml-1 rounded bg-accent/20 px-1.5 text-accent">{unread}</span>}</span>
               <button onClick={() => { markMut.mutate({ all: true }); toast.push({ kind: "success", title: "All caught up" }); }} className="text-[11px] normal-case text-muted-foreground hover:text-foreground">Mark all read</button>
@@ -270,7 +270,7 @@ function TopBar() {
           </div>
         )}
       </div>
-      <button onClick={createNew} className="flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:shadow-primary/50">
+      <button onClick={createNew} className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:shadow-primary/50 sm:px-4">
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">{t("top.new_employee")}</span>
       </button>
