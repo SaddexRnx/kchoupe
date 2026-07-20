@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Package, Plus, Search, Upload, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp } from "lucide-react";
-import { PageHeader, Panel, Chip } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import { useT } from "@/lib/i18n";
 
 // User's OWN products — sold on their store. Shown as a compact list, not big cards.
@@ -37,24 +37,82 @@ function fmt(v: number, cur: Row["currency"]) {
 
 export function Products() {
   const t = useT();
+  const toast = useToast();
+  const { ask, node: confirmNode } = useConfirm();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [rowsState, setRowsState] = useState<Row[]>(seed);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [addOpen, setAddOpen] = useState(false);
+  const [viewing, setViewing] = useState<Row | null>(null);
+  const [editing, setEditing] = useState<Row | null>(null);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ name: "", category: "Beauty", price: "", stock: "", image: "📦" });
 
-  const categories = useMemo(() => ["all", ...Array.from(new Set(seed.map(r => r.category)))], []);
+  const categories = useMemo(() => ["all", ...Array.from(new Set(rowsState.map(r => r.category)))], [rowsState]);
 
-  const rows = useMemo(() => seed.filter(r =>
+  const rows = useMemo(() => rowsState.filter(r =>
     (cat === "all" || r.category === cat) &&
     (status === "all" || r.status === status) &&
     (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.sku.toLowerCase().includes(q.toLowerCase()))
-  ), [q, cat, status]);
+  ), [q, cat, status, rowsState]);
 
   const totals = useMemo(() => ({
-    products: seed.length,
-    active: seed.filter(r => r.status === "active").length,
-    stock: seed.reduce((s, r) => s + r.stock, 0),
-    ai: seed.reduce((s, r) => s + r.aiSold, 0),
-  }), []);
+    products: rowsState.length,
+    active: rowsState.filter(r => r.status === "active").length,
+    stock: rowsState.reduce((s, r) => s + r.stock, 0),
+    ai: rowsState.reduce((s, r) => s + r.aiSold, 0),
+  }), [rowsState]);
+
+  const create = () => {
+    const price = parseInt(draft.price || "0", 10);
+    const stock = parseInt(draft.stock || "0", 10);
+    if (!draft.name.trim() || !price) {
+      toast.push({ kind: "warn", title: "Missing details", body: "Product needs a name and price." });
+      return;
+    }
+    const sku = "AT-" + Math.floor(1000 + Math.random() * 9000);
+    const row: Row = { sku, name: draft.name.trim(), category: draft.category, price, currency: "DZD", stock, status: stock > 0 ? "active" : "draft", sold30: 0, aiSold: 0, image: draft.image };
+    setRowsState((r) => [row, ...r]);
+    setAddOpen(false);
+    setDraft({ name: "", category: "Beauty", price: "", stock: "", image: "📦" });
+    toast.push({ kind: "success", title: "Product added", body: `${row.name} is now in your catalog.` });
+  };
+
+  const saveEdit = () => {
+    if (!editing) return;
+    setRowsState((rs) => rs.map((r) => r.sku === editing.sku ? editing : r));
+    setEditing(null);
+    toast.push({ kind: "success", title: "Product updated" });
+  };
+
+  const remove = async (r: Row) => {
+    setMenuFor(null);
+    const ok = await ask({ title: `Delete ${r.name}?`, danger: true });
+    if (!ok) return;
+    setRowsState((rs) => rs.filter((x) => x.sku !== r.sku));
+    toast.push({ kind: "success", title: "Product removed" });
+  };
+
+  const duplicate = (r: Row) => {
+    setMenuFor(null);
+    const copy: Row = { ...r, sku: r.sku + "-COPY-" + Math.floor(Math.random() * 99), name: r.name + " (copy)", status: "draft", sold30: 0, aiSold: 0 };
+    setRowsState((rs) => [copy, ...rs]);
+    toast.push({ kind: "success", title: "Duplicated", body: copy.name });
+  };
+
+  const handleImport = (file: File) => {
+    toast.push({ kind: "info", title: "Importing…", body: file.name });
+    setTimeout(() => {
+      const extra: Row[] = [
+        { sku: "AT-9001", name: "Imported — Olive oil 500ml", category: "Grocery", price: 780, currency: "DZD", stock: 40, status: "active", sold30: 0, aiSold: 0, image: "🫒" },
+        { sku: "AT-9002", name: "Imported — Amber perfume",  category: "Beauty",  price: 5400, currency: "DZD", stock: 12, status: "active", sold30: 0, aiSold: 0, image: "💎" },
+      ];
+      setRowsState((rs) => [...extra, ...rs]);
+      toast.push({ kind: "success", title: "Import complete", body: `${extra.length} products added from ${file.name}.` });
+    }, 900);
+  };
 
   return (
     <div>
@@ -64,12 +122,14 @@ export function Products() {
         description={t("prod.desc")}
         actions={
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
+            <input ref={fileRef} type="file" accept=".csv,.xlsx,.json" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = ""; }} />
+            <GhostButton onClick={() => fileRef.current?.click()}>
               <Upload className="h-4 w-4" /> {t("common.import")}
-            </button>
-            <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110">
+            </GhostButton>
+            <PrimaryButton onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" /> {t("prod.new")}
-            </button>
+            </PrimaryButton>
           </div>
         }
       />
@@ -151,9 +211,21 @@ export function Products() {
                 <span className="rounded-md bg-primary/10 px-2 py-0.5 text-primary">{r.aiSold}</span>
               </div>
               <div className="flex justify-end gap-1 text-muted-foreground">
-                <button title={t("common.view")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
-                <button title={t("common.edit")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
-                <button title={t("common.more")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setViewing(r)} title={t("common.view")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setEditing(r)} title={t("common.edit")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
+                <div className="relative">
+                  <button onClick={() => setMenuFor(menuFor === r.sku ? null : r.sku)} title={t("common.more")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
+                  {menuFor === r.sku && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setMenuFor(null)} />
+                      <div className="glass-panel absolute right-0 z-30 mt-1 w-40 overflow-hidden rounded-lg text-left text-xs">
+                        <button onClick={() => duplicate(r)} className="block w-full px-3 py-2 hover:bg-white/10">Duplicate</button>
+                        <button onClick={() => { setMenuFor(null); toast.push({ kind: "info", title: "Share link copied" }); }} className="block w-full px-3 py-2 hover:bg-white/10">Copy share link</button>
+                        <button onClick={() => remove(r)} className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10">Delete</button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </li>
           ))}
@@ -169,6 +241,80 @@ export function Products() {
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Trash2 className="h-3 w-3" /> {t("prod.bulk")}
       </div>
+
+      <Modal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add product"
+        description="Add a product to your catalog. AI employees will use it in conversations."
+        footer={<>
+          <GhostButton onClick={() => setAddOpen(false)}>Cancel</GhostButton>
+          <PrimaryButton onClick={create}><Plus className="h-4 w-4" /> Add product</PrimaryButton>
+        </>}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <TextField label="Name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Argan hair oil 60ml" />
+          <label className="block">
+            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Category</div>
+            <select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none">
+              {["Beauty", "Grocery", "Home", "Fashion", "Accessories", "Other"].map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </label>
+          <TextField label="Price (DZD)" value={draft.price} onChange={(v) => setDraft({ ...draft, price: v })} placeholder="1490" type="number" />
+          <TextField label="Stock" value={draft.stock} onChange={(v) => setDraft({ ...draft, stock: v })} placeholder="100" type="number" />
+          <label className="block md:col-span-2">
+            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Icon</div>
+            <div className="flex flex-wrap gap-1.5">
+              {["📦","💧","🌾","🍲","🧣","🍵","🌴","☕","🌹","👗","👛","🫒","💎"].map((e) => (
+                <button key={e} type="button" onClick={() => setDraft({ ...draft, image: e })}
+                  className={"flex h-9 w-9 items-center justify-center rounded-lg border text-lg transition " +
+                    (draft.image === e ? "border-primary/60 bg-primary/10 scale-110" : "border-white/10 bg-white/5 hover:bg-white/10")}>
+                  {e}
+                </button>
+              ))}
+            </div>
+          </label>
+        </div>
+      </Modal>
+
+      {viewing && (
+        <Modal open onClose={() => setViewing(null)} title={viewing.name} description={`SKU ${viewing.sku} · ${viewing.category}`}
+          footer={<><GhostButton onClick={() => { setViewing(null); setEditing(viewing); }}><Edit3 className="h-3.5 w-3.5" /> Edit</GhostButton><PrimaryButton onClick={() => setViewing(null)}>Close</PrimaryButton></>}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 text-6xl">{viewing.image}</div>
+            <div className="md:col-span-2 grid grid-cols-2 gap-3 text-sm">
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Price</div><div className="mt-1 font-display text-lg font-bold">{fmt(viewing.price, viewing.currency)}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Stock</div><div className="mt-1 font-display text-lg font-bold">{viewing.stock}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold 30d</div><div className="mt-1 font-display text-lg font-bold">{viewing.sold30}</div></div>
+              <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Sold by AI</div><div className="mt-1 font-display text-lg font-bold text-primary">{viewing.aiSold}</div></div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {editing && (
+        <Modal open onClose={() => setEditing(null)} title={`Edit ${editing.name}`}
+          footer={<><GhostButton onClick={() => setEditing(null)}>Cancel</GhostButton><PrimaryButton onClick={saveEdit}>Save</PrimaryButton></>}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
+            <TextField label="Category" value={editing.category} onChange={(v) => setEditing({ ...editing, category: v })} />
+            <TextField label="Price" value={String(editing.price)} onChange={(v) => setEditing({ ...editing, price: parseInt(v || "0", 10) })} type="number" />
+            <TextField label="Stock" value={String(editing.stock)} onChange={(v) => setEditing({ ...editing, stock: parseInt(v || "0", 10) })} type="number" />
+            <label className="block md:col-span-2">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Status</div>
+              <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as Row["status"] })}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none">
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="out">Out of stock</option>
+              </select>
+            </label>
+          </div>
+        </Modal>
+      )}
+
+      {confirmNode}
     </div>
   );
 }

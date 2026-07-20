@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "./_shared";
 import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff } from "lucide-react";
 import { PageHeader, Panel, Chip } from "./_shared";
 import { useT } from "@/lib/i18n";
@@ -13,6 +14,7 @@ const seed: Msg[] = [
 
 export function Playground() {
   const t = useT();
+  const toast = useToast();
   const [messages, setMessages] = useState<Msg[]>(seed);
   const [input, setInput] = useState("");
   const [customModels, setCustomModels] = useState<{ id: string; label: string; base: string; model: string; key: string; revealed: boolean }[]>([
@@ -23,10 +25,11 @@ export function Playground() {
   const [draft, setDraft] = useState({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
 
   const addModel = () => {
-    if (!draft.label.trim() || !draft.model.trim()) return;
+    if (!draft.label.trim() || !draft.model.trim()) { toast.push({ kind: "warn", title: "Name and model id required" }); return; }
     setCustomModels((m) => [...m, { id: Math.random().toString(36).slice(2), ...draft, revealed: false }]);
     setDraft({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
     setShowAdd(false);
+    toast.push({ kind: "success", title: "Model added", body: "Available for selection." });
   };
 
   const send = () => {
@@ -39,6 +42,8 @@ export function Playground() {
     setInput("");
   };
 
+  const resetChat = () => { setMessages(seed); toast.push({ kind: "info", title: "Conversation reset" }); };
+
   return (
     <div>
       <PageHeader
@@ -46,7 +51,7 @@ export function Playground() {
         title={t("pg.title")}
         description={t("pg.desc")}
         actions={
-          <button className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5">
+          <button onClick={resetChat} className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:bg-white/5">
             <RotateCcw className="h-4 w-4" /> {t("common.reset")}
           </button>
         }
