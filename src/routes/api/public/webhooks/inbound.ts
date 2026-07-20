@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/public/webhooks/inbound")({
         }
 
         const { error: mErr } = await supabaseAdmin.from("inbox_messages").insert({
-          conversation_id: convoId, role: "user", sender: external_user, body,
+          workspace_id: integ.workspace_id, conversation_id: convoId, role: "user", sender: external_user, body,
         });
         if (mErr) return json({ error: mErr.message }, 500);
 

@@ -22,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -88,6 +89,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksInboundRoute =
+  ApiPublicWebhooksInboundRouteImport.update({
+    id: '/api/public/webhooks/inbound',
+    path: '/api/public/webhooks/inbound',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   '/products': typeof ProductsRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/signup'
+    | '/api/public/webhooks/inbound'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/signup'
+    | '/api/public/webhooks/inbound'
   id:
     | '__root__'
     | '/'
@@ -181,6 +193,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/signup'
+    | '/api/public/webhooks/inbound'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +210,7 @@ export interface RootRouteChildren {
   ProductsRoute: typeof ProductsRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/inbound': {
+      id: '/api/public/webhooks/inbound'
+      path: '/api/public/webhooks/inbound'
+      fullPath: '/api/public/webhooks/inbound'
+      preLoaderRoute: typeof ApiPublicWebhooksInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsRoute: ProductsRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
