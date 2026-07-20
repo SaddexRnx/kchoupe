@@ -402,3 +402,74 @@ function Sparkline({ data }: { data: number[] }) {
     </svg>
   );
 }
+function TrialBanner() {
+  const getWs = useServerFn(getMyWorkspace);
+  const activate = useServerFn(activatePlan);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [busy, setBusy] = useState<string | null>(null);
+  const { data: ws } = useQuery({ queryKey: ["my_workspace"], queryFn: () => getWs() });
+
+  if (!ws) return null;
+  const trialEnd = new Date(ws.trial_ends_at).getTime();
+  const now = Date.now();
+  const msDay = 86400000;
+  const daysLeft = Math.ceil((trialEnd - now) / msDay);
+  const onPaidPlan = ws.plan === "growth" || ws.plan === "scale";
+  const trialExpired = ws.plan === "trial" && daysLeft <= 0;
+  const trialEndingSoon = ws.plan === "trial" && daysLeft > 0 && daysLeft <= 5;
+
+  if (onPaidPlan || (!trialExpired && !trialEndingSoon && ws.plan !== "starter" && ws.plan !== "trial")) return null;
+  if (ws.plan === "trial" && daysLeft > 5) return null;
+
+  const upgrade = async (plan: "growth" | "scale") => {
+    setBusy(plan);
+    try {
+      await activate({ data: { plan } });
+      toast.push({ kind: "success", title: `${plan[0].toUpperCase() + plan.slice(1)} plan activated`, body: "Enjoy every feature — no interruption." });
+      qc.invalidateQueries({ queryKey: ["my_workspace"] });
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Couldn't activate plan", body: e?.message ?? "Try again." });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const title = trialExpired
+    ? "Your free trial has ended"
+    : `Trial ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`;
+  const body = trialExpired
+    ? "Pick a plan to keep your AI employees on shift."
+    : "Upgrade now to keep things running without interruption.";
+  const tone = trialExpired ? "from-rose-500/20 to-primary/10 border-rose-400/40" : "from-primary/15 to-accent/10 border-primary/30";
+
+  return (
+    <div className={"glass-panel flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-gradient-to-r p-5 " + tone}>
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
+          <Sparkles className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="font-display text-base font-bold">{title}</div>
+          <div className="text-xs text-muted-foreground">{body}</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => upgrade("growth")}
+          disabled={busy !== null}
+          className="rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+        >
+          {busy === "growth" ? "Activating…" : "Upgrade to Growth"}
+        </button>
+        <button
+          onClick={() => upgrade("scale")}
+          disabled={busy !== null}
+          className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium transition hover:bg-white/10 disabled:opacity-60"
+        >
+          {busy === "scale" ? "Activating…" : "Get Scale"}
+        </button>
+      </div>
+    </div>
+  );
+}
