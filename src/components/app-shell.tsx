@@ -127,6 +127,42 @@ function Sidebar({ active }: { active: NavKey }) {
   );
 }
 
+function UserChip() {
+  const t = useT();
+  const navigate = useNavigate();
+  const [name, setName] = useState<string>("");
+  const [initials, setInitials] = useState<string>("··");
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const dn = ((u.user_metadata as any)?.full_name as string) || ((u.user_metadata as any)?.name as string) || u.email?.split("@")[0] || "You";
+      setName(dn);
+      setInitials(dn.split(/\s+/).map((p: string) => p[0]).join("").slice(0, 2).toUpperCase());
+    });
+  }, []);
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/login" });
+  };
+  return (
+    <div className="glass-panel mt-6 rounded-xl p-3">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-primary text-sm font-semibold text-primary-foreground">
+          {initials}
+        </div>
+        <div className="min-w-0 leading-tight">
+          <div className="truncate text-sm font-semibold">{name || "You"}</div>
+          <div className="truncate text-xs text-muted-foreground">{t("nav.pro_plan")}</div>
+        </div>
+        <button onClick={signOut} className="ml-auto rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-muted-foreground hover:bg-white/10 hover:text-foreground">
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TopBar() {
   const t = useT();
   const { lang, setLang } = usePrefs();
