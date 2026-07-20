@@ -14,16 +14,16 @@ export function PageHeader({
 }) {
   return (
     <div className="animate-fade-up mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
+      <div className="min-w-0 flex-1">
         <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {eyebrow}
         </div>
-        <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
           <span className="aurora-gradient-text animate-gradient">{title}</span>
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function MarketingPage({
       </section>
       <section className="relative mx-auto max-w-3xl px-6 pb-24">
         <div className="animate-fade-up glass-panel rounded-3xl p-6 md:p-10" style={{ animationDelay: "120ms" }}>
-          <div className="prose prose-invert max-w-none prose-headings:font-display prose-headings:tracking-tight prose-h2:mt-8 prose-h2:text-xl prose-h2:font-bold prose-p:text-sm prose-p:text-muted-foreground prose-li:text-sm prose-li:text-muted-foreground prose-a:text-primary">
+          <div className="prose prose-invert max-w-none prose-headings:font-display prose-headings:tracking-tight prose-h2:mt-8 prose-h2:text-xl prose-h2:font-bold prose-h3:mt-6 prose-h3:text-base prose-h3:font-semibold prose-h4:mt-5 prose-h4:text-sm prose-h4:font-semibold prose-p:text-sm prose-p:text-muted-foreground prose-li:text-sm prose-li:text-muted-foreground prose-a:text-primary prose-a:break-words">
             {children}
           </div>
         </div>

@@ -294,6 +294,9 @@ a[href*="lovable.dev"][target="_blank"] {
 
   html, body {
     font-family: var(--font-sans);
+    /* Safety net: never allow horizontal scroll from a stray overflowing child. */
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   body {
@@ -306,6 +309,9 @@ a[href*="lovable.dev"][target="_blank"] {
     background-attachment: fixed;
     min-height: 100vh;
   }
+
+  /* Prevent long unbroken tokens (URLs, IDs, emails) from bursting cards. */
+  p, li, dd, dt, blockquote, h1, h2, h3, h4, h5, h6 { overflow-wrap: anywhere; }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
