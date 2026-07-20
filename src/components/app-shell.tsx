@@ -22,6 +22,9 @@ import { usePrefs, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
 import { useToast } from "@/components/pages/_shared";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listNotifications, markNotificationsRead } from "@/lib/notifications.functions";
 
 type NavKey =
   | "dashboard"
