@@ -6,12 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useServerFn } from "@tanstack/react-start";
 import { activatePlan } from "@/lib/workspace.functions";
+import { amIAdmin } from "@/lib/admin.functions";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
   const navigate = useNavigate();
   const toast = useToast();
   const activate = useServerFn(activatePlan);
+  const checkAdmin = useServerFn(amIAdmin);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -64,8 +66,8 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         }
         // Route admins to the admin panel
         try {
-          const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: data.user!.id, _role: "admin" });
-          navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+          const r = await checkAdmin();
+          navigate({ to: r?.isAdmin ? "/admin" : "/dashboard" });
         } catch {
           navigate({ to: "/dashboard" });
         }
