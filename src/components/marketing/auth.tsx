@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff, Check, ShieldCheck, Zap, Bot } from "lucide-react";
 import { useToast } from "@/components/pages/_shared";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
@@ -13,7 +15,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !pw || (isSignup && !name)) {
       toast.push({ kind: "warn", title: "Almost there", body: "Fill in every field to continue." });
@@ -24,11 +26,39 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
+    try {
+      if (isSignup) {
+        const { error } = await supabase.auth.signUp({
+          email, password: pw,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: name },
+          },
+        });
+        if (error) throw error;
+        toast.push({ kind: "success", title: "Workspace created", body: "Let's set things up." });
+        navigate({ to: "/onboarding" });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        if (error) throw error;
+        toast.push({ kind: "success", title: "Welcome back" });
+        navigate({ to: "/dashboard" });
+      }
+    } catch (err: any) {
+      toast.push({ kind: "error", title: "Sign-in failed", body: err?.message ?? "Please try again." });
+    } finally {
       setLoading(false);
-      toast.push({ kind: "success", title: isSignup ? "Workspace created" : "Welcome back", body: isSignup ? "Let's set things up." : "Redirecting to your dashboard…" });
-      navigate({ to: isSignup ? "/onboarding" : "/dashboard" });
-    }, 900);
+    }
+  };
+
+  const google = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) {
+      toast.push({ kind: "error", title: "Google sign-in failed", body: (result.error as any)?.message ?? "Please try again." });
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: isSignup ? "/onboarding" : "/dashboard" });
   };
 
   return (
@@ -103,16 +133,11 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
 
           {/* OAuth */}
           <div className="grid gap-2">
-            {[
-              { l: "Continue with Google",   ico: "🇬" },
-              { l: "Continue with Facebook", ico: "f" },
-            ].map((p) => (
-              <button key={p.l} onClick={() => toast.push({ kind: "info", title: "Coming soon", body: `${p.l.replace("Continue with ", "")} sign-in is on the way.` })}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium transition hover:bg-white/10">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-white text-xs font-black text-black">{p.ico}</span>
-                {p.l}
-              </button>
-            ))}
+            <button onClick={google}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium transition hover:bg-white/10">
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-white text-xs font-black text-black">G</span>
+              Continue with Google
+            </button>
           </div>
 
           <div className="my-5 flex items-center gap-3 text-[11px] text-muted-foreground">
@@ -154,7 +179,12 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
                   <input type="checkbox" className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 accent-[color:var(--color-primary)]" />
                   Remember me
                 </label>
-                <button type="button" onClick={() => toast.push({ kind: "info", title: "Reset link sent", body: "Check your inbox for instructions." })}
+                <button type="button" onClick={async () => {
+                  if (!email) { toast.push({ kind: "warn", title: "Enter your email first" }); return; }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                  if (error) toast.push({ kind: "error", title: "Reset failed", body: error.message });
+                  else toast.push({ kind: "success", title: "Reset link sent", body: "Check your inbox." });
+                }}
                   className="text-primary hover:underline">Forgot password?</button>
               </div>
             )}
