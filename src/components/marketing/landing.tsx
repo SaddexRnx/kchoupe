@@ -123,26 +123,43 @@ export function Landing() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
-        <SectionHeader eyebrow="Real stores, real revenue" title="Shopkeepers who never sleep, thanks to Atlas." />
+      {/* PRICING */}
+      <section id="pricing" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
+        <SectionHeader eyebrow="Pricing" title="Local prices for local shops." />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { q: "Nova closed 41 orders overnight. I woke up to a full delivery route.", n: "Yasmine B.", r: "Kasbah Beauty · Algiers" },
-            { q: "Arabic replies feel like our team wrote them. Customers can't tell.", n: "Karim H.", r: "Medina Coffee · Casablanca" },
-            { q: "Cut our reply time from 4 hours to 12 seconds. Sales up 3.2×.", n: "Sofia M.", r: "Tanger Textiles · Tunis" },
-          ].map((t, i) => (
-            <div key={t.n} className="glass-panel animate-fade-up rounded-2xl p-6" style={{ animationDelay: `${i * 100}ms` }}>
-              <div className="flex gap-0.5 text-amber-300">
-                {Array.from({ length: 5 }).map((_, k) => <Star key={k} className="h-3.5 w-3.5 fill-current" />)}
+            { n: "Starter", plan: "starter", p: "0", sub: "14-day trial", f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
+            { n: "Growth", plan: "growth", p: "4,900", sub: "DZD / month", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
+            { n: "Scale", plan: "scale", p: "14,900", sub: "DZD / month", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
+          ].map((t) => (
+            <div key={t.n}
+              className={"glass-panel animate-fade-up relative rounded-2xl p-6 " +
+                (t.featured ? "border-primary/40 shadow-lg shadow-primary/20" : "")}>
+              {t.featured && (
+                <div className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">Most popular</div>
+              )}
+              <div className="font-display text-lg font-bold">{t.n}</div>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="font-display text-4xl font-black">{t.p}</span>
+                <span className="text-xs text-muted-foreground">{t.sub}</span>
               </div>
-              <p className="mt-3 font-display text-base leading-relaxed">"{t.q}"</p>
-              <div className="mt-4 text-sm font-semibold">{t.n}</div>
-              <div className="text-xs text-muted-foreground">{t.r}</div>
+              <ul className="mt-5 space-y-2 text-sm">
+                {t.f.map((x) => (
+                  <li key={x} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {x}</li>
+                ))}
+              </ul>
+              <Link
+                to="/signup"
+                search={{ plan: t.plan }}
+                className={"mt-6 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition " +
+                  (t.featured
+                    ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110"
+                    : "border border-white/10 bg-white/5 hover:bg-white/10")}>{t.cta}</Link>
             </div>
           ))}
         </div>
       </section>
+
 
       {/* PRICING */}
       <section className="relative mx-auto max-w-6xl px-6 py-20">
