@@ -17,7 +17,6 @@ import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
-import { Route as IndexRouteImport } from './routes/index'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -59,14 +58,8 @@ const AiEmployeesRoute = AiEmployeesRouteImport.update({
   path: '/ai-employees',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
   '/integrations': typeof IntegrationsRoute
@@ -77,7 +70,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
   '/integrations': typeof IntegrationsRoute
@@ -89,7 +81,6 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/ai-employees': typeof AiEmployeesRoute
   '/conversations': typeof ConversationsRoute
   '/integrations': typeof IntegrationsRoute
@@ -102,7 +93,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/ai-employees'
     | '/conversations'
     | '/integrations'
@@ -113,7 +103,6 @@ export interface FileRouteTypes {
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/ai-employees'
     | '/conversations'
     | '/integrations'
@@ -124,7 +113,6 @@ export interface FileRouteTypes {
     | '/settings'
   id:
     | '__root__'
-    | '/'
     | '/ai-employees'
     | '/conversations'
     | '/integrations'
@@ -136,7 +124,6 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AiEmployeesRoute: typeof AiEmployeesRoute
   ConversationsRoute: typeof ConversationsRoute
   IntegrationsRoute: typeof IntegrationsRoute
@@ -205,18 +192,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiEmployeesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AiEmployeesRoute: AiEmployeesRoute,
   ConversationsRoute: ConversationsRoute,
   IntegrationsRoute: IntegrationsRoute,
