@@ -7,6 +7,7 @@ import {
   Sparkles,
   Zap,
   TrendingUp,
+  Circle,
   CheckCircle2,
   Clock,
 } from "lucide-react";
