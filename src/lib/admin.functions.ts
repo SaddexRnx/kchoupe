@@ -130,7 +130,7 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
     if (data.extendDays && data.extendDays > 0) {
       patch.trial_ends_at = new Date(Date.now() + data.extendDays * 86400_000).toISOString();
     }
-    const { error } = await context.supabase.from("workspaces").update(patch).eq("id", data.workspaceId);
+    const { error } = await (context.supabase.from("workspaces") as any).update(patch).eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
