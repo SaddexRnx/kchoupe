@@ -200,7 +200,7 @@ function UsersTab() {
   const deleteFn = useServerFn(deleteUser);
   const qc = useQueryClient();
   const toast = useToast();
-  const confirm = useConfirm();
+  const { ask: confirm, node: confirmNode } = useConfirm();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => listFn() });
   const { q, setQ, filtered } = useSearch(data ?? [], ["email", "display_name"]);
 
@@ -260,7 +260,7 @@ function UsersTab() {
                       </button>
                       <button
                         onClick={async () => {
-                          const ok = await confirm({ title: "Delete user?", body: `${u.email} will be permanently removed.`, confirmLabel: "Delete", danger: true });
+                          const ok = await confirm({ title: "Delete user?", body: `${u.email} will be permanently removed.`, danger: true });
                           if (ok) del.mutate(u.id);
                         }}
                         className="inline-flex items-center gap-1 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-300 transition hover:bg-red-500/20"
@@ -285,7 +285,7 @@ function WorkspacesTab() {
   const deleteFn = useServerFn(deleteWorkspace);
   const qc = useQueryClient();
   const toast = useToast();
-  const confirm = useConfirm();
+  const { ask: confirm, node: confirmNode } = useConfirm();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "workspaces"], queryFn: () => listFn() });
   const { q, setQ, filtered } = useSearch(data ?? [], ["name", "plan", "country"]);
   const [editing, setEditing] = useState<any | null>(null);
@@ -342,7 +342,7 @@ function WorkspacesTab() {
                         <button onClick={() => setEditing(w)} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs transition hover:bg-white/10">Edit</button>
                         <button
                           onClick={async () => {
-                            const ok = await confirm({ title: "Delete workspace?", body: `${w.name} and all its data will be permanently removed.`, confirmLabel: "Delete", danger: true });
+                            const ok = await confirm({ title: "Delete workspace?", body: `${w.name} and all its data will be permanently removed.`, danger: true });
                             if (ok) del.mutate(w.id);
                           }}
                           className="inline-flex items-center gap-1 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-300 transition hover:bg-red-500/20"
