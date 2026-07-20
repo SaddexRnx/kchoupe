@@ -365,6 +365,7 @@ function WorkspacesTab() {
           <EditWorkspaceForm workspace={editing} onSubmit={(v) => upd.mutate({ workspaceId: editing.id, ...v })} loading={upd.isPending} />
         </Modal>
       )}
+      {confirmNode}
     </div>
   );
 }
