@@ -16,19 +16,35 @@ import { ToastProvider } from "../components/pages/_shared";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* Aurora orbs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="animate-float absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
+        <div className="animate-float absolute -right-20 bottom-10 h-80 w-80 rounded-full bg-accent/25 blur-3xl" style={{ animationDelay: "1.4s" }} />
+        <div className="animate-float absolute left-1/3 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-primary/20 blur-3xl" style={{ animationDelay: "0.7s" }} />
+      </div>
+      <div className="glass-panel animate-scale-in relative z-10 w-full max-w-lg rounded-3xl p-10 text-center">
+        <div className="animate-fade-up font-display text-[8rem] font-black leading-none tracking-tighter">
+          <span className="aurora-gradient-text animate-gradient">404</span>
+        </div>
+        <h2 className="animate-fade-up mt-2 font-display text-2xl font-bold" style={{ animationDelay: "80ms" }}>
+          You've drifted off the map
+        </h2>
+        <p className="animate-fade-up mt-3 text-sm text-muted-foreground" style={{ animationDelay: "160ms" }}>
+          The page you're looking for doesn't exist, was renamed, or your AI employee is still learning that route.
         </p>
-        <div className="mt-6">
+        <div className="animate-fade-up mt-8 flex flex-wrap justify-center gap-2" style={{ animationDelay: "240ms" }}>
+          <button
+            onClick={() => history.back()}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium transition hover:bg-white/10 active:scale-[0.98]"
+          >
+            ← Go back
+          </button>
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="animate-glow inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98]"
           >
-            Go home
+            Take me home
           </Link>
         </div>
       </div>
