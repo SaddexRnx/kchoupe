@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Search,
   Plug,
@@ -28,8 +30,18 @@ import {
   RefreshCw,
   Save,
 } from "lucide-react";
-import { PageHeader, Panel, Chip } from "./_shared";
+import { PageHeader, Panel, Chip, useToast } from "./_shared";
 import { useT } from "@/lib/i18n";
+import {
+  listIntegrations,
+  saveIntegration,
+  setIntegrationAssignments,
+  testIntegration as testIntegrationFn,
+  reauthIntegration,
+  disconnectIntegration,
+  type IntegrationRow,
+} from "@/lib/integrations.functions";
+import { listAiEmployees, type AiEmployeeRow } from "@/lib/ai-employees.functions";
 
 type Status = "connected" | "available" | "reauth" | "beta";
 
