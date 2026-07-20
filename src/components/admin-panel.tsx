@@ -7,10 +7,14 @@ import {
   Plug, Bell, TrendingUp, Search, Trash2, Crown, UserMinus, Send, LogOut, Sparkles, ArrowUpRight,
 } from "lucide-react";
 import {
-  getPlatformStats, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
+  getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
   deleteWorkspace, deleteUser, broadcastNotification,
 } from "@/lib/admin.functions";
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line,
+  PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
 
