@@ -275,6 +275,7 @@ function UsersTab() {
           </table>
         </div>
       </div>
+      {confirmNode}
     </div>
   );
 }
