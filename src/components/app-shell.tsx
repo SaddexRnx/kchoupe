@@ -21,6 +21,7 @@ import {
 import { usePrefs, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
 import { useToast } from "@/components/pages/_shared";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavKey =
   | "dashboard"
@@ -34,7 +35,7 @@ type NavKey =
   | "settings";
 
 const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
-  { key: "dashboard", icon: LayoutDashboard, to: "/" },
+  { key: "dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { key: "ai-employees", icon: Bot, to: "/ai-employees" },
   { key: "playground", icon: Play, to: "/playground" },
   { key: "knowledge", icon: BookOpen, to: "/knowledge" },
@@ -46,6 +47,21 @@ const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
 ];
 
 export function AppShell({ active, children }: { active: NavKey; children: ReactNode }) {
+  const navigate = useNavigate();
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!mounted) return;
+      if (!data.user) navigate({ to: "/login" });
+      else setChecked(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") navigate({ to: "/login" });
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, [navigate]);
+  if (!checked) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading…</div>;
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto flex max-w-[1600px] gap-6 px-4 py-6 lg:px-8">
