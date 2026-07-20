@@ -62,7 +62,13 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             toast.push({ kind: "success", title: `${requestedPlan[0].toUpperCase() + requestedPlan.slice(1)} plan activated` });
           } catch { /* non-fatal */ }
         }
-        navigate({ to: "/dashboard" });
+        // Route admins to the admin panel
+        try {
+          const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: data.user!.id, _role: "admin" });
+          navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+        } catch {
+          navigate({ to: "/dashboard" });
+        }
       }
     } catch (err: any) {
       toast.push({ kind: "error", title: "Sign-in failed", body: err?.message ?? "Please try again." });

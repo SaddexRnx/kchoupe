@@ -721,6 +721,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_users: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          is_admin: boolean
+          last_sign_in_at: string
+          workspace_count: number
+        }[]
+      }
+      admin_list_workspaces: {
+        Args: never
+        Returns: {
+          country: string
+          created_at: string
+          currency: string
+          employee_count: number
+          id: string
+          member_count: number
+          name: string
+          order_count: number
+          plan: string
+          revenue: number
+          trial_ends_at: string
+        }[]
+      }
+      admin_platform_stats: { Args: never; Returns: Json }
       ensure_default_workspace: { Args: { _user_id?: string }; Returns: string }
       has_role: {
         Args: {
