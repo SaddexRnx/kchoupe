@@ -184,11 +184,20 @@ function TopBar() {
   ];
   const matches = query.trim() ? SEARCH_MAP.filter((s) => s.label.toLowerCase().includes(query.toLowerCase()) || s.kw.some((k) => k.includes(query.toLowerCase()))) : [];
 
-  const notifications = [
-    { icon: CheckCircle2, tone: "text-emerald-300", title: "Nova closed 12 orders today", time: "just now" },
-    { icon: Zap,          tone: "text-primary",    title: "Atlas answered 42 conversations", time: "2m ago" },
-    { icon: AlertTriangle,tone: "text-amber-300",   title: "Product ‘Leather wallet’ is out of stock", time: "1h ago" },
-  ];
+  const listFn = useServerFn(listNotifications);
+  const markFn = useServerFn(markNotificationsRead);
+  const qc = useQueryClient();
+  const notifQ = useQuery({ queryKey: ["notifications"], queryFn: () => listFn(), refetchInterval: 60000 });
+  const markMut = useMutation({ mutationFn: (v: { id?: string; all?: boolean }) => markFn({ data: v }), onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }) });
+  const iconFor = (kind: string) => kind === "success" ? { Icon: CheckCircle2, tone: "text-emerald-300" } : kind === "warning" ? { Icon: AlertTriangle, tone: "text-amber-300" } : { Icon: Zap, tone: "text-primary" };
+  const timeAgo = (iso: string) => {
+    const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+    if (s < 60) return `${s}s ago`; const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`; return `${Math.floor(h / 24)}d ago`;
+  };
+  const notifications = notifQ.data?.items ?? [];
+  const unread = notifQ.data?.unread ?? 0;
 
   const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && matches[0]) { navigate({ to: matches[0].to }); setQuery(""); }
