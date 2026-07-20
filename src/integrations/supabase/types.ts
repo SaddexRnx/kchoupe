@@ -14,6 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_employees: {
+        Row: {
+          avatar_emoji: string
+          created_at: string
+          created_by: string
+          id: string
+          model: string
+          name: string
+          role: string
+          status: string
+          system_prompt: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          avatar_emoji?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          model?: string
+          name: string
+          role: string
+          status?: string
+          system_prompt?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          avatar_emoji?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          model?: string
+          name?: string
+          role?: string
+          status?: string
+          system_prompt?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_employees_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playground_conversations: {
+        Row: {
+          ai_employee_id: string | null
+          created_at: string
+          id: string
+          model: string
+          system_prompt: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_employee_id?: string | null
+          created_at?: string
+          id?: string
+          model?: string
+          system_prompt?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_employee_id?: string | null
+          created_at?: string
+          id?: string
+          model?: string
+          system_prompt?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playground_conversations_ai_employee_id_fkey"
+            columns: ["ai_employee_id"]
+            isOneToOne: false
+            referencedRelation: "ai_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playground_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playground_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "playground_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -138,6 +261,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_default_workspace: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
