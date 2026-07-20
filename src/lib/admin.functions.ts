@@ -92,7 +92,7 @@ export const listAllIntegrations = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("integrations")
-      .select("id,provider,status,workspace_id,created_at")
+      .select("id,integration_key,category_id,status,workspace_id,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
