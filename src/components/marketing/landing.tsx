@@ -1,8 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight, Bot, Sparkles, ShoppingBag, MessageSquare, Zap, Globe, Shield, Check,
-  Instagram, Facebook, MessageCircle, Store, Package, BarChart3, Star, PlayCircle,
+  Instagram, Facebook, MessageCircle, Store, Package, BarChart3, PlayCircle,
 } from "lucide-react";
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export function Landing() {
   return (
@@ -35,8 +40,8 @@ export function Landing() {
           <Link to="/signup" className="animate-glow inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98]">
             Start free — no card needed <ArrowRight className="h-4 w-4" />
           </Link>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium backdrop-blur transition hover:bg-white/10">
-            <PlayCircle className="h-4 w-4" /> Watch 90-sec demo
+          <button onClick={() => scrollToId("how-it-works")} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium backdrop-blur transition hover:bg-white/10">
+            <PlayCircle className="h-4 w-4" /> See how it works
           </button>
         </div>
         <div className="animate-fade-up mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground" style={{ animationDelay: "320ms" }}>
@@ -48,18 +53,8 @@ export function Landing() {
         <HeroPreview />
       </section>
 
-      {/* LOGOS / SOCIAL PROOF */}
-      <section className="relative mx-auto max-w-6xl px-6 pb-16">
-        <div className="text-center text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Powering 2,400+ stores across MENA</div>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-70">
-          {["Batik Store", "Kasbah Beauty", "Djezzy Kids", "Sahara Home", "Medina Coffee", "Tanger Textiles"].map((n) => (
-            <div key={n} className="font-display text-sm font-semibold tracking-wide text-muted-foreground/80">{n}</div>
-          ))}
-        </div>
-      </section>
-
       {/* FEATURES BENTO */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="features" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Built to sell" title="Everything your store needs, in one command center." />
         <div className="mt-10 grid gap-3 md:grid-cols-6 md:grid-rows-2">
           <BentoCard className="md:col-span-4 md:row-span-2" icon={Bot} title="AI employees with roles"
@@ -90,7 +85,7 @@ export function Landing() {
       </section>
 
       {/* INTEGRATIONS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="integrations" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
         <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-6">
           {[
@@ -111,7 +106,7 @@ export function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section id="how-it-works" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Live in 5 minutes" title="Three steps to your first AI sale." />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
