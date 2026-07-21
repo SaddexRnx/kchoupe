@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Package, Plus, Search, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp, Loader2 } from "lucide-react";
+import { Package, Plus, Search, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp, Loader2, AlertTriangle, ChevronLeft, ChevronRight, Sparkles, Download } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm, HelpNote } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
@@ -33,6 +33,18 @@ export function Products() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [ageFilter, setAgeFilter] = useState<"all" | "day" | "week" | "month">("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "in" | "low" | "out">("all");
+  const [sort, setSort] = useState<"new" | "old" | "stock_asc" | "sold_desc" | "price_desc" | "price_asc">("new");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState<number>(() => {
+    if (typeof window === "undefined") return 8;
+    const v = Number(window.localStorage.getItem("prod_per_page") || 8);
+    return [8, 12, 24, 48, 96].includes(v) ? v : 8;
+  });
+  useEffect(() => { try { window.localStorage.setItem("prod_per_page", String(perPage)); } catch {} }, [perPage]);
+  useEffect(() => { setPage(1); }, [q, cat, status, ageFilter, stockFilter, sort, perPage]);
+
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [editing, setEditing] = useState<Row | null>(null);
@@ -42,18 +54,65 @@ export function Products() {
 
   const categories = useMemo(() => ["all", ...Array.from(new Set(rowsState.map(r => r.category)))], [rowsState]);
 
-  const rows = useMemo(() => rowsState.filter(r =>
-    (cat === "all" || r.category === cat) &&
-    (status === "all" || r.status === status) &&
-    (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.sku.toLowerCase().includes(q.toLowerCase()))
-  ), [q, cat, status, rowsState]);
+  const now = Date.now();
+  const ageCutoff = ageFilter === "day" ? 864e5 : ageFilter === "week" ? 7 * 864e5 : ageFilter === "month" ? 30 * 864e5 : Infinity;
 
-  const totals = useMemo(() => ({
-    products: rowsState.length,
-    active: rowsState.filter(r => r.status === "active").length,
-    stock: rowsState.reduce((s, r) => s + r.stock, 0),
-    ai: rowsState.reduce((s, r) => s + r.ai_sold, 0),
-  }), [rowsState]);
+  const filtered = useMemo(() => {
+    const arr = rowsState.filter(r =>
+      (cat === "all" || r.category === cat) &&
+      (status === "all" || r.status === status) &&
+      (stockFilter === "all" ||
+        (stockFilter === "in" && r.stock >= 20) ||
+        (stockFilter === "low" && r.stock > 0 && r.stock < 20) ||
+        (stockFilter === "out" && r.stock === 0)) &&
+      (ageFilter === "all" || (now - new Date(r.created_at).getTime()) <= ageCutoff) &&
+      (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.sku.toLowerCase().includes(q.toLowerCase()))
+    );
+    const sorted = [...arr];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "new": return +new Date(b.created_at) - +new Date(a.created_at);
+        case "old": return +new Date(a.created_at) - +new Date(b.created_at);
+        case "stock_asc": return a.stock - b.stock;
+        case "sold_desc": return b.sold_30 - a.sold_30;
+        case "price_desc": return Number(b.price) - Number(a.price);
+        case "price_asc": return Number(a.price) - Number(b.price);
+      }
+    });
+    return sorted;
+  }, [q, cat, status, ageFilter, stockFilter, sort, rowsState, now, ageCutoff]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const pageSafe = Math.min(page, totalPages);
+  const rows = useMemo(() => filtered.slice((pageSafe - 1) * perPage, pageSafe * perPage), [filtered, pageSafe, perPage]);
+
+  const totals = useMemo(() => {
+    const outStock = rowsState.filter(r => r.stock === 0).length;
+    const lowStock = rowsState.filter(r => r.stock > 0 && r.stock < 20).length;
+    const newThisWeek = rowsState.filter(r => (now - new Date(r.created_at).getTime()) <= 7 * 864e5).length;
+    const revenue30 = rowsState.reduce((s, r) => s + Number(r.price) * r.sold_30, 0);
+    const currency = rowsState[0]?.currency || "DZD";
+    return {
+      products: rowsState.length,
+      active: rowsState.filter(r => r.status === "active").length,
+      stock: rowsState.reduce((s, r) => s + r.stock, 0),
+      ai: rowsState.reduce((s, r) => s + r.ai_sold, 0),
+      outStock, lowStock, newThisWeek,
+      revenue30, currency,
+    };
+  }, [rowsState, now]);
+
+  const exportCsv = () => {
+    const head = ["sku","name","category","price","currency","stock","status","sold_30","ai_sold","created_at"];
+    const escape = (s: any) => `"${String(s ?? "").replace(/"/g,'""')}"`;
+    const csv = [head.join(","), ...filtered.map(r => head.map(h => escape((r as any)[h])).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `products-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.push({ kind: "success", title: "Exported", body: `${filtered.length} products` });
+  };
 
   const handleCreate = async () => {
     const price = parseInt(draft.price || "0", 10);
@@ -119,6 +178,7 @@ export function Products() {
         description={t("prod.desc")}
         actions={
           <div className="flex gap-2">
+            <GhostButton onClick={exportCsv}><Download className="h-3.5 w-3.5" /> Export CSV</GhostButton>
             <PrimaryButton onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" /> {t("prod.new")}
             </PrimaryButton>
@@ -132,28 +192,54 @@ export function Products() {
         current — Atlas will only confirm orders for items it can see here.
       </HelpNote>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+      {(totals.outStock > 0 || totals.lowStock > 0) && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm animate-fade-up">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-300" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">Stock attention needed</div>
+            <div className="text-xs text-muted-foreground">
+              {totals.outStock > 0 && <><b className="text-rose-300">{totals.outStock}</b> out of stock · </>}
+              {totals.lowStock > 0 && <><b className="text-amber-300">{totals.lowStock}</b> low stock (under 20 units) · </>}
+              Restock or mark as draft so Atlas doesn't offer them.
+            </div>
+          </div>
+          {totals.outStock > 0 && (
+            <button onClick={() => { setStockFilter("out"); setStatus("all"); }} className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-200 hover:bg-rose-500/20">See out of stock</button>
+          )}
+          {totals.lowStock > 0 && (
+            <button onClick={() => { setStockFilter("low"); setStatus("all"); }} className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-200 hover:bg-amber-500/20">See low stock</button>
+          )}
+        </div>
+      )}
+
+      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
         {[
-          { l: t("prod.title"), v: totals.products, sub: t("prod.in_catalog") },
-          { l: t("common.active"),   v: totals.active,   sub: t("prod.live_on_store") },
-          { l: t("prod.total_stock"), v: totals.stock, sub: t("prod.units") },
-          { l: t("prod.sold_ai"), v: totals.ai, sub: t("prod.auto_fulfilled") },
+          { l: t("prod.title"), v: totals.products.toLocaleString(), sub: t("prod.in_catalog") },
+          { l: t("common.active"), v: totals.active.toLocaleString(), sub: t("prod.live_on_store") },
+          { l: "New (7d)", v: totals.newThisWeek.toLocaleString(), sub: "recently added", tone: "emerald" as const },
+          { l: t("prod.total_stock"), v: totals.stock.toLocaleString(), sub: t("prod.units") },
+          { l: "Out of stock", v: totals.outStock.toLocaleString(), sub: "0 units left", tone: totals.outStock > 0 ? "rose" as const : undefined },
+          { l: t("prod.sold_ai"), v: totals.ai.toLocaleString(), sub: t("prod.auto_fulfilled") },
+          { l: "Revenue 30d", v: fmt(totals.revenue30, totals.currency), sub: "gross", tone: "violet" as const },
         ].map((s) => (
-          <div key={s.l} className="glass-panel animate-fade-up rounded-xl px-3 py-2.5">
+          <div key={s.l} className={"glass-panel animate-fade-up rounded-xl px-3 py-2.5 " +
+            (s.tone === "rose" ? "border-rose-400/30 bg-rose-500/5 " :
+             s.tone === "emerald" ? "border-emerald-400/30 bg-emerald-500/5 " :
+             s.tone === "violet" ? "border-primary/30 bg-primary/5 " : "")}>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.l}</div>
-            <div className="mt-0.5 font-display text-lg font-bold leading-tight">{s.v.toLocaleString()}</div>
+            <div className="mt-0.5 font-display text-lg font-bold leading-tight truncate">{s.v}</div>
             <div className="text-[10px] text-muted-foreground">{s.sub}</div>
           </div>
         ))}
       </div>
 
       <Panel className="mb-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+          <div className="flex flex-1 min-w-[220px] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("prod.search")} className="w-full bg-transparent text-sm outline-none" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select value={cat} onChange={(e) => setCat(e.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
               {categories.map(c => <option key={c} value={c}>{c === "all" ? t("common.all_categories") : c}</option>)}
@@ -163,6 +249,26 @@ export function Products() {
               <option value="active">{t("common.active")}</option>
               <option value="draft">{t("common.draft")}</option>
               <option value="out">{t("common.out_of_stock")}</option>
+            </select>
+            <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="all">All stock</option>
+              <option value="in">In stock (20+)</option>
+              <option value="low">Low (&lt;20)</option>
+              <option value="out">Out of stock</option>
+            </select>
+            <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="all">Any age</option>
+              <option value="day">Added today</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+            </select>
+            <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+              <option value="stock_asc">Lowest stock</option>
+              <option value="sold_desc">Best sellers</option>
+              <option value="price_desc">Price ↓</option>
+              <option value="price_asc">Price ↑</option>
             </select>
           </div>
         </div>
@@ -191,6 +297,9 @@ export function Products() {
                     <span className="truncate font-medium">{r.name}</span>
                     {r.status === "draft" && <Chip tone="amber">{t("common.draft")}</Chip>}
                     {r.status === "out" && <Chip tone="rose">{t("common.out_of_stock")}</Chip>}
+                    {(now - new Date(r.created_at).getTime()) <= 7 * 864e5 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300"><Sparkles className="h-2.5 w-2.5" /> New</span>
+                    )}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="font-mono">{r.sku}</span>
@@ -240,6 +349,26 @@ export function Products() {
         </div>
       </Panel>
 
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span>
+            Showing <b className="text-foreground">{filtered.length === 0 ? 0 : (pageSafe - 1) * perPage + 1}–{Math.min(pageSafe * perPage, filtered.length)}</b> of <b className="text-foreground">{filtered.length}</b>
+          </span>
+          <label className="flex items-center gap-1.5">
+            <span>Per page</span>
+            <select value={perPage} onChange={(e) => setPerPage(Number(e.target.value))} className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs">
+              {[8, 12, 24, 48, 96].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setPage(1)} disabled={pageSafe === 1} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs disabled:opacity-40 hover:bg-white/10">First</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={pageSafe === 1} className="rounded-md border border-white/10 bg-white/5 p-1 disabled:opacity-40 hover:bg-white/10"><ChevronLeft className="h-3.5 w-3.5" /></button>
+          <span className="px-2 text-xs text-muted-foreground">Page <b className="text-foreground">{pageSafe}</b> / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={pageSafe === totalPages} className="rounded-md border border-white/10 bg-white/5 p-1 disabled:opacity-40 hover:bg-white/10"><ChevronRight className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setPage(totalPages)} disabled={pageSafe === totalPages} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs disabled:opacity-40 hover:bg-white/10">Last</button>
+        </div>
+      </div>
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Trash2 className="h-3 w-3" /> {t("prod.bulk")}
       </div>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   User,
   Key,
@@ -23,6 +23,13 @@ import {
   MessageSquare,
   Slack,
   Zap,
+  Keyboard,
+  Database,
+  Download,
+  Activity,
+  Sparkles,
+  Languages,
+  BarChart3,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
@@ -38,6 +45,10 @@ type SectionKey =
   | "billing"
   | "notifications"
   | "security"
+  | "data"
+  | "shortcuts"
+  | "activity"
+  | "labs"
   | "danger";
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "violet" | "emerald" | "amber" | "rose" }[] = [
@@ -50,6 +61,10 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
   { key: "billing", label: "Billing", icon: CreditCard, tone: "amber" },
   { key: "notifications", label: "Notifications", icon: Bell, tone: "violet" },
   { key: "security", label: "Security", icon: Shield, tone: "emerald" },
+  { key: "data", label: "Data & privacy", icon: Database, tone: "emerald" },
+  { key: "shortcuts", label: "Keyboard shortcuts", icon: Keyboard, tone: "violet" },
+  { key: "activity", label: "Activity log", icon: Activity, tone: "amber" },
+  { key: "labs", label: "Labs", icon: Sparkles, tone: "violet" },
   { key: "danger", label: "Danger zone", icon: Trash2, tone: "rose" },
 ];
 
@@ -104,6 +119,10 @@ export function SettingsPage() {
           {active === "billing" && <BillingSection />}
           {active === "notifications" && <NotificationsSection />}
           {active === "security" && <SecuritySection />}
+          {active === "data" && <DataSection />}
+          {active === "shortcuts" && <ShortcutsSection />}
+          {active === "activity" && <ActivitySection />}
+          {active === "labs" && <LabsSection />}
           {active === "danger" && <DangerSection />}
         </div>
       </div>
@@ -761,4 +780,157 @@ function DangerSection() {
 }
 
 // silence unused import warnings for icons kept for future rows
-void Puzzle;
+void Puzzle; void Languages; void BarChart3;
+
+/* ---------- Data & privacy ---------- */
+function DataSection() {
+  const toast = useToast();
+  const { ask, node } = useConfirm();
+  const download = (name: string) => {
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), scope: name, note: "Full export runs in the background and emails when ready." }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `atlas-${name}-${Date.now()}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.push({ kind: "success", title: `${name} export started`, body: "You'll get an email when the full archive is ready." });
+  };
+  return (
+    <SectionShell title="Data & privacy" desc="Export, import, retention and personal-data controls (GDPR-friendly).">
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border border-border bg-white/5 p-4">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><Download className="h-4 w-4 text-primary" /> Export your data</div>
+          <div className="mb-3 text-xs text-muted-foreground">Download JSON archives of every entity in your workspace.</div>
+          <div className="flex flex-wrap gap-2">
+            <GhostBtn onClick={() => download("products")}><Download className="h-3 w-3" /> Products</GhostBtn>
+            <GhostBtn onClick={() => download("orders")}><Download className="h-3 w-3" /> Orders</GhostBtn>
+            <GhostBtn onClick={() => download("conversations")}><Download className="h-3 w-3" /> Conversations</GhostBtn>
+            <GhostBtn onClick={() => download("knowledge")}><Download className="h-3 w-3" /> Knowledge</GhostBtn>
+            <PrimaryBtn onClick={() => download("full-workspace")}><Download className="h-4 w-4" /> Full workspace</PrimaryBtn>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-white/5 p-4">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold"><Upload className="h-4 w-4 text-emerald-300" /> Import</div>
+          <div className="mb-3 text-xs text-muted-foreground">CSV or JSON. We validate before writing anything.</div>
+          <div className="flex flex-wrap gap-2">
+            <GhostBtn onClick={() => toast.push({ kind: "info", title: "Choose a CSV in Integrations → Import" })}>Products CSV</GhostBtn>
+            <GhostBtn onClick={() => toast.push({ kind: "info", title: "Coming soon" })}>Customers CSV</GhostBtn>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {[
+          { label: "Conversation retention", opts: ["Forever", "365 days", "180 days", "90 days", "30 days"] },
+          { label: "Order retention", opts: ["Forever", "365 days", "180 days"] },
+          { label: "Log retention", opts: ["90 days", "30 days", "7 days"] },
+        ].map((r) => (
+          <Field key={r.label} label={r.label} help="Older records are deleted automatically.">
+            <select className={inputCls} defaultValue={r.opts[0]}>{r.opts.map((o) => <option key={o}>{o}</option>)}</select>
+          </Field>
+        ))}
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-500/5 p-4">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">Request data erasure</div>
+          <div className="text-xs text-muted-foreground">Permanently deletes personal data of a specific customer across conversations, orders and logs.</div>
+        </div>
+        <GhostBtn tone="danger" onClick={async () => {
+          const ok = await ask({ title: "Send erasure request?", body: "Our team will confirm and process it within 30 days.", danger: true });
+          if (ok) toast.push({ kind: "success", title: "Erasure request queued" });
+        }}><Trash2 className="h-3.5 w-3.5" /> Start request</GhostBtn>
+      </div>
+      {node}
+    </SectionShell>
+  );
+}
+
+/* ---------- Keyboard shortcuts ---------- */
+function ShortcutsSection() {
+  const rows = [
+    { keys: ["⌘", "K"], label: "Open command palette" },
+    { keys: ["G", "D"], label: "Go to Dashboard" },
+    { keys: ["G", "P"], label: "Go to Products" },
+    { keys: ["G", "O"], label: "Go to Orders" },
+    { keys: ["G", "C"], label: "Go to Conversations" },
+    { keys: ["G", "I"], label: "Go to Integrations" },
+    { keys: ["N", "P"], label: "New product" },
+    { keys: ["N", "E"], label: "New AI employee" },
+    { keys: ["/"], label: "Focus search" },
+    { keys: ["?"], label: "Show this help" },
+    { keys: ["Esc"], label: "Close modal / cancel action" },
+  ];
+  return (
+    <SectionShell title="Keyboard shortcuts" desc="Move faster. Press ? anywhere to open this list.">
+      <div className="grid gap-2 md:grid-cols-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center justify-between rounded-lg border border-border bg-white/5 px-3 py-2 text-sm">
+            <span>{r.label}</span>
+            <span className="flex gap-1">
+              {r.keys.map((k) => <kbd key={k} className="rounded-md border border-border bg-white/10 px-1.5 py-0.5 font-mono text-[11px]">{k}</kbd>)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </SectionShell>
+  );
+}
+
+/* ---------- Activity log ---------- */
+function ActivitySection() {
+  const [filter, setFilter] = useState("all");
+  const events = [
+    { who: "You", what: "signed in", when: "2 min ago", ip: "197.14.0.12", tag: "auth" },
+    { who: "Aurora AI", what: "confirmed order #A-1042 (12,900 DZD)", when: "18 min ago", ip: "—", tag: "ai" },
+    { who: "Sara Idrissi", what: "edited product 'Argan hair oil 60ml'", when: "1h ago", ip: "160.176.42.8", tag: "edit" },
+    { who: "System", what: "Shopify sync ran (312 products)", when: "3h ago", ip: "—", tag: "sync" },
+    { who: "You", what: "invited mehdi@atlas.ai as Editor", when: "yesterday", ip: "197.14.0.12", tag: "team" },
+    { who: "System", what: "webhook telegram.inbound delivered (24 events)", when: "yesterday", ip: "—", tag: "hook" },
+  ];
+  const filtered = filter === "all" ? events : events.filter(e => e.tag === filter);
+  return (
+    <SectionShell title="Activity log" desc="Everything that happens in this workspace, with who did it." actions={
+      <select value={filter} onChange={(e) => setFilter(e.target.value)} className={inputCls + " w-auto"}>
+        {["all", "auth", "ai", "edit", "sync", "team", "hook"].map((v) => <option key={v} value={v}>{v}</option>)}
+      </select>
+    }>
+      <ul className="divide-y divide-border rounded-xl border border-border">
+        {filtered.map((e, i) => (
+          <li key={i} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
+            <Chip tone={e.tag === "auth" ? "emerald" : e.tag === "ai" ? "violet" : e.tag === "team" ? "emerald" : "muted"}>{e.tag}</Chip>
+            <span className="font-medium">{e.who}</span>
+            <span className="text-muted-foreground">{e.what}</span>
+            <span className="ml-auto text-xs text-muted-foreground">{e.when} · <span className="font-mono">{e.ip}</span></span>
+          </li>
+        ))}
+      </ul>
+    </SectionShell>
+  );
+}
+
+/* ---------- Labs ---------- */
+function LabsSection() {
+  const toast = useToast();
+  const flags = [
+    { id: "voice", label: "Voice replies (beta)", desc: "AI answers with a short audio clip on WhatsApp." },
+    { id: "images", label: "Generated product images", desc: "Auto-generate a background for product cards." },
+    { id: "abtest", label: "A/B test prompts", desc: "Run two AI employee prompts side-by-side and pick the winner." },
+    { id: "sentiment", label: "Live sentiment radar", desc: "Real-time mood chart above the inbox." },
+    { id: "translate", label: "On-the-fly reply translation", desc: "Force replies to the customer's detected language." },
+  ];
+  const [on, setOn] = useState<Record<string, boolean>>({ translate: true });
+  return (
+    <SectionShell title="Labs" desc="Experimental features. Great, but may change or disappear.">
+      <div className="grid gap-3">
+        {flags.map((f) => (
+          <div key={f.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white/5 px-4 py-3">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{f.label}</div>
+              <div className="text-xs text-muted-foreground">{f.desc}</div>
+            </div>
+            <Toggle checked={!!on[f.id]} onChange={(v) => { setOn({ ...on, [f.id]: v }); toast.push({ kind: "info", title: `${f.label} ${v ? "enabled" : "disabled"}` }); }} />
+          </div>
+        ))}
+      </div>
+    </SectionShell>
+  );
+}
