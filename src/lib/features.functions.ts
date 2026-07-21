@@ -310,14 +310,14 @@ export const writeAuditEntry = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
-    const { error } = await supabase.from("audit_log").insert({
+    const { error } = await (supabase.from("audit_log") as any).insert({
       workspace_id: data.workspaceId ?? null,
       actor_id: userId,
       actor_email: (claims as any)?.email ?? null,
       action: data.action,
       target_type: data.targetType ?? null,
       target_id: data.targetId ?? null,
-      metadata: data.metadata ?? {},
+      metadata: (data.metadata ?? {}) as any,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
