@@ -24,11 +24,11 @@ export const Route = createFileRoute("/api/public/webhooks/telegram/$integration
 
         const creds: any = integ.credentials || {};
         const secret: string | undefined = creds.webhookSecret;
-        if (secret) {
-          const hdr = request.headers.get("x-telegram-bot-api-secret-token") ?? "";
-          const a = Buffer.from(hdr), b = Buffer.from(secret);
-          if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false }, 401);
-        }
+        // Require a configured secret; unsigned inbound is refused.
+        if (!secret) return json({ ok: false, error: "no_webhook_secret_configured" }, 401);
+        const hdr = request.headers.get("x-telegram-bot-api-secret-token") ?? "";
+        const a = Buffer.from(hdr), b = Buffer.from(secret);
+        if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false }, 401);
 
         // Handle inline "Order" button taps
         const cq = update.callback_query;
