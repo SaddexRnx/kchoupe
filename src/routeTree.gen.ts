@@ -39,6 +39,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as BlogFutureOfAiNorthAfricaRouteImport } from './routes/blog.future-of-ai-north-africa'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPublicWebhooksFulfillmentRouteImport } from './routes/api/public/webhooks/fulfillment'
 import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
 import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes/api/public/webhooks/meta/$integrationId'
 import { Route as ApiPublicWebhooksTelegramIntegrationIdRouteImport } from './routes/api/public/webhooks/telegram/$integrationId'
@@ -197,6 +198,12 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksFulfillmentRoute =
+  ApiPublicWebhooksFulfillmentRouteImport.update({
+    id: '/api/public/webhooks/fulfillment',
+    path: '/api/public/webhooks/fulfillment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksInboundRoute =
   ApiPublicWebhooksInboundRouteImport.update({
     id: '/api/public/webhooks/inbound',
@@ -247,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -282,6 +290,7 @@ export interface FileRoutesByTo {
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -318,6 +327,7 @@ export interface FileRoutesById {
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/blog/future-of-ai-north-africa'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/blog/future-of-ai-north-africa'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -425,6 +437,7 @@ export interface FileRouteTypes {
     | '/blog/future-of-ai-north-africa'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -461,6 +474,7 @@ export interface RootRouteChildren {
   BlogFutureOfAiNorthAfricaRoute: typeof BlogFutureOfAiNorthAfricaRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicWebhooksFulfillmentRoute: typeof ApiPublicWebhooksFulfillmentRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
   ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
   ApiPublicWebhooksTelegramIntegrationIdRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -678,6 +692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/fulfillment': {
+      id: '/api/public/webhooks/fulfillment'
+      path: '/api/public/webhooks/fulfillment'
+      fullPath: '/api/public/webhooks/fulfillment'
+      preLoaderRoute: typeof ApiPublicWebhooksFulfillmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/inbound': {
       id: '/api/public/webhooks/inbound'
       path: '/api/public/webhooks/inbound'
@@ -734,6 +755,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogFutureOfAiNorthAfricaRoute: BlogFutureOfAiNorthAfricaRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicWebhooksFulfillmentRoute: ApiPublicWebhooksFulfillmentRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
   ApiPublicWebhooksMetaIntegrationIdRoute:
     ApiPublicWebhooksMetaIntegrationIdRoute,
