@@ -573,7 +573,6 @@ function UsersTab() {
     onSuccess: () => { toast.push({ kind: "success", title: "User deleted" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
     onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
   });
-  });
 
   return (
     <div className="animate-fade-up space-y-4">
