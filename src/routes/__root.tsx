@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PreferencesProvider } from "../lib/preferences";
 import { ToastProvider } from "../components/pages/_shared";
 import { AutoTranslateProvider } from "../lib/auto-translate";
+import { PwaInstallPrompt } from "../components/pwa-prompt";
 
 function NotFoundComponent() {
   return (
