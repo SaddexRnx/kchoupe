@@ -400,7 +400,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     .eq("id", convoId);
 
   // 9) Dispatch reply back to the originating platform
-  const mentioned = !createdOrder ? findMentionedProducts(reply, prodRes.data ?? []) : [];
+  const mentioned = (!createdOrder && !msg.suppressProductCards) ? findMentionedProducts(reply, prodRes.data ?? []) : [];
   try {
     const threadId = msg.platformThreadId ?? msg.externalId;
     if (msg.channel === "telegram") {
