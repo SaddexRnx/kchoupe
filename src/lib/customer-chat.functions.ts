@@ -70,12 +70,12 @@ export const askCustomerAssistant = createServerFn({ method: "POST" })
       model = gw(data.fallbackModel || "google/gemini-2.5-flash");
     }
 
-    const messages: any[] = [{ role: "system", content: system }];
+    const messages: any[] = [];
     for (const m of (data.history || []).slice(-16)) messages.push({ role: m.role, content: m.content });
     messages.push({ role: "user", content: data.message });
 
     try {
-      const res = await generateText({ model, messages });
+      const res = await generateText({ model, system, messages });
       return { reply: res.text, catalog_size: products?.length ?? 0 };
     } catch (e: any) {
       const msg = e?.message || String(e);
