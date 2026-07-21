@@ -591,20 +591,21 @@ const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/
 
 async function fetchText(url: string, timeoutMs = 12000): Promise<{ ok: boolean; status: number; body: string | null }> {
   try {
-    const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), timeoutMs);
-    const r = await fetch(url, {
-      redirect: "follow",
-      signal: ctl.signal,
-      headers: {
-        "User-Agent": BROWSER_UA,
-        "Accept": "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
-    clearTimeout(t);
-    if (!r.ok) return { ok: false, status: r.status, body: null };
-    return { ok: true, status: r.status, body: await r.text() };
+    const { safeFetch, SsrfBlockedError } = await import("./ssrf-guard.server");
+    try {
+      const r = await safeFetch(url, {
+        headers: {
+          "User-Agent": BROWSER_UA,
+          "Accept": "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      }, { timeoutMs });
+      if (!r.ok) return { ok: false, status: r.status, body: null };
+      return { ok: true, status: r.status, body: await r.text() };
+    } catch (e) {
+      if (e instanceof SsrfBlockedError) return { ok: false, status: 0, body: null };
+      throw e;
+    }
   } catch { return { ok: false, status: 0, body: null }; }
 }
 
