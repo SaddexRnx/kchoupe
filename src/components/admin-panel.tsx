@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,12 +6,15 @@ import {
   Shield, Users, Building2, Bot, ShoppingCart, MessageSquare, BookOpen,
   Plug, Bell, Search, Trash2, Crown, UserMinus, Send, LogOut, Sparkles, ArrowUpRight,
   DollarSign, Command, ChevronRight, TrendingUp, TrendingDown, Radio, Layers, Gauge, ArrowRight,
+  LifeBuoy, Ban, ShieldOff,
 } from "lucide-react";
 import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
   deleteWorkspace, deleteUser, broadcastNotification,
+  adminSetBan, adminListBanStatus, adminReplyToTicket,
 } from "@/lib/admin.functions";
+import { listAllTickets, listTicketMessages, closeTicket } from "@/lib/support.functions";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell,
@@ -19,7 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
 
-type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "system";
+type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "system";
 
 const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "overview",      label: "Overview",      icon: Gauge,         hint: "Pulse" },
@@ -29,6 +32,7 @@ const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "orders",        label: "Orders",        icon: ShoppingCart,  hint: "Commerce" },
   { key: "conversations", label: "Conversations", icon: MessageSquare, hint: "Inbox" },
   { key: "integrations",  label: "Integrations",  icon: Plug,          hint: "Wiring" },
+  { key: "support",       label: "Support",       icon: LifeBuoy,      hint: "Tickets" },
   { key: "system",        label: "System",        icon: Radio,         hint: "Ops" },
 ];
 
@@ -157,6 +161,7 @@ export function AdminPanel() {
           {tab === "orders" && <SimpleListTab kind="orders" />}
           {tab === "conversations" && <SimpleListTab kind="conversations" />}
           {tab === "integrations" && <SimpleListTab kind="integrations" />}
+          {tab === "support" && <AdminSupportTab />}
           {tab === "system" && <SystemTab />}
         </main>
       </div>
@@ -543,15 +548,24 @@ function UsersTab() {
   const listFn = useServerFn(listAllUsers);
   const setAdminFn = useServerFn(setUserAdmin);
   const deleteFn = useServerFn(deleteUser);
+  const banFn = useServerFn(adminSetBan);
+  const banStatusFn = useServerFn(adminListBanStatus);
   const qc = useQueryClient();
   const toast = useToast();
   const { ask: confirm, node: confirmNode } = useConfirm();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => listFn() });
+  const { data: bans = [] } = useQuery({ queryKey: ["admin", "bans"], queryFn: () => banStatusFn() });
+  const banMap = new Map(bans.map((b: any) => [b.id, b]));
   const { q, setQ, filtered } = useSearch(data ?? [], ["email", "display_name"]);
 
   const toggleAdmin = useMutation({
     mutationFn: (v: { userId: string; makeAdmin: boolean }) => setAdminFn({ data: v }),
     onSuccess: () => { toast.push({ kind: "success", title: "Role updated" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
+    onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
+  });
+  const setBan = useMutation({
+    mutationFn: (v: { userId: string; banned: boolean; reason?: string }) => banFn({ data: v }),
+    onSuccess: (_r, v) => { toast.push({ kind: "success", title: v.banned ? "User banned" : "User unbanned" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
     onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
   });
   const del = useMutation({
@@ -603,11 +617,28 @@ function UsersTab() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">
+                    {banMap.get(u.id)?.banned_at && (
+                      <span title={banMap.get(u.id)?.ban_reason ?? "Banned"} className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-300">
+                        <Ban className="h-3 w-3" /> Banned
+                      </span>
+                    )}
                     <button
                       onClick={() => toggleAdmin.mutate({ userId: u.id, makeAdmin: !u.is_admin })}
                       className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] transition hover:-translate-y-0.5 hover:bg-white/[0.08]"
                     >
                       {u.is_admin ? <><UserMinus className="h-3 w-3" /> Demote</> : <><Crown className="h-3 w-3" /> Promote</>}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const isBanned = !!banMap.get(u.id)?.banned_at;
+                        if (isBanned) { setBan.mutate({ userId: u.id, banned: false }); return; }
+                        const reason = window.prompt(`Ban ${u.email}?\nOptional reason:`);
+                        if (reason === null) return;
+                        setBan.mutate({ userId: u.id, banned: true, reason: reason || undefined });
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-300 transition hover:-translate-y-0.5 hover:bg-amber-500/20"
+                    >
+                      {banMap.get(u.id)?.banned_at ? <><ShieldOff className="h-3 w-3" /> Unban</> : <><Ban className="h-3 w-3" /> Ban</>}
                     </button>
                     <button
                       onClick={async () => {
@@ -838,3 +869,102 @@ function SystemTab() {
     </div>
   );
 }
+
+function AdminSupportTab() {
+  const listFn = useServerFn(listAllTickets);
+  const msgFn = useServerFn(listTicketMessages);
+  const replyFn = useServerFn(adminReplyToTicket);
+  const closeFn = useServerFn(closeTicket);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const { data: tickets = [], isLoading } = useQuery({ queryKey: ["admin", "tickets"], queryFn: () => listFn() });
+  const [selected, setSelected] = useState<string | null>(null);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-support")
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, () => qc.invalidateQueries({ queryKey: ["admin", "tickets"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_messages" }, () => { qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); qc.invalidateQueries({ queryKey: ["admin", "ticket-thread"] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
+  const { data: thread = [] } = useQuery({
+    queryKey: ["admin", "ticket-thread", selected],
+    queryFn: () => msgFn({ data: { ticketId: selected! } }),
+    enabled: !!selected,
+    refetchInterval: 4000,
+  });
+
+  const reply = useMutation({
+    mutationFn: () => replyFn({ data: { ticketId: selected!, body: text } }),
+    onSuccess: () => { setText(""); qc.invalidateQueries({ queryKey: ["admin", "ticket-thread", selected] }); qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); },
+    onError: (e: any) => toast.push({ kind: "error", title: "Send failed", body: e?.message }),
+  });
+  const close = useMutation({
+    mutationFn: (status: "open" | "closed") => closeFn({ data: { ticketId: selected!, status } }),
+    onSuccess: () => { toast.push({ kind: "success", title: "Updated" }); qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); },
+  });
+
+  return (
+    <div className="animate-fade-up grid gap-4 lg:grid-cols-[340px,1fr]">
+      <div className="rounded-2xl border border-white/[0.06] bg-card/40 p-3 backdrop-blur-xl">
+        <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">All tickets</div>
+        {isLoading && <div className="p-4 text-center text-xs text-muted-foreground">Loading…</div>}
+        {!isLoading && tickets.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">No tickets yet.</div>}
+        <ul className="space-y-1">
+          {tickets.map((t: any) => (
+            <li key={t.id}>
+              <button
+                onClick={() => setSelected(t.id)}
+                className={"w-full rounded-xl border px-3 py-2.5 text-left transition " + (selected === t.id ? "border-primary/40 bg-primary/[0.06]" : "border-transparent hover:bg-white/[0.04]")}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate text-sm font-semibold">{t.subject}</span>
+                  {t.unread_for_admin && <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span className={t.priority === "urgent" ? "text-red-300" : t.priority === "high" ? "text-amber-300" : ""}>{t.priority}</span>
+                  <span>{t.status}</span>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-xl">
+        {!selected ? (
+          <div className="flex h-full min-h-[400px] items-center justify-center text-sm text-muted-foreground">Select a ticket.</div>
+        ) : (
+          <div className="flex h-[560px] flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <div className="text-xs text-muted-foreground">Replying as Atlas team</div>
+              <button onClick={() => close.mutate("closed")} className="text-[11px] text-muted-foreground hover:text-foreground">Close ticket</button>
+            </div>
+            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              {thread.map((m: any) => (
+                <div key={m.id} className={"flex " + (m.sender_role === "admin" ? "justify-end" : "justify-start")}>
+                  <div className={"max-w-[78%] rounded-2xl px-3 py-2 text-sm " + (m.sender_role === "admin" ? "bg-primary/15" : "bg-white/5")}>
+                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{m.sender_role === "admin" ? "Atlas team" : "User"}</div>
+                    <div className="whitespace-pre-wrap">{m.body}</div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-white/[0.06] p-3">
+              <div className="flex items-end gap-2">
+                <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Reply to the user…" className="min-h-[44px] flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                <button onClick={() => text.trim() && reply.mutate()} disabled={reply.isPending || !text.trim()} className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-sm font-semibold text-background disabled:opacity-60">
+                  <Send className="h-4 w-4" /> Send
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

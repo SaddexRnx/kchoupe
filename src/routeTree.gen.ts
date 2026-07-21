@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -37,6 +38,11 @@ import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusRoute = StatusRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/status'
+    | '/support'
     | '/terms'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/status'
+    | '/support'
     | '/terms'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/status'
+    | '/support'
     | '/terms'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   StatusRoute: typeof StatusRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
   ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status': {
@@ -539,6 +559,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   StatusRoute: StatusRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
   ApiPublicWebhooksMetaIntegrationIdRoute:

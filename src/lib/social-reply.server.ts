@@ -345,6 +345,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
         status: "pending",
         confirmed_by_ai: true,
         ai_employee_id: aiEmployeeId,
+        channel: msg.channel,
         notes: `Channel: ${msg.channel}\nPhone: ${orderTag.phone}\nAddress: ${orderTag.address}\nCustomer: ${externalUserLabel}`,
       }).select("id,order_no").single();
       if (ord) createdOrder = ord as any;

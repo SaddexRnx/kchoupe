@@ -17,10 +17,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { dashboardStats } from "@/lib/orders.functions";
+import { channelSummary, type ChannelRow } from "@/lib/channels.functions";
 import { getMyWorkspace, activatePlan } from "@/lib/workspace.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/pages/_shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { Send as SendIcon, LifeBuoy, AlertTriangle } from "lucide-react";
+import { Link as RouterLink } from "@tanstack/react-router";
 
 function ago(iso: string) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -40,9 +43,11 @@ const PERIODS: { key: "1D" | "7D" | "30D" | "90D"; days: number; label: string }
 export function Dashboard() {
   const t = useT();
   const stats = useServerFn(dashboardStats);
+  const chFn = useServerFn(channelSummary);
   const [period, setPeriod] = useState<"1D" | "7D" | "30D" | "90D">("30D");
   const periodDays = PERIODS.find((p) => p.key === period)!.days;
   const { data } = useQuery({ queryKey: ["dashboard_stats", periodDays], queryFn: () => stats({ data: { periodDays } }) });
+  const { data: chData } = useQuery({ queryKey: ["channel_summary"], queryFn: () => chFn() });
 
   const statDefs = [
     { key: "dash.stat.ai_employees", value: data?.aiEmployees ?? 0, delta: t("dash.stat.thisweek"), icon: Bot, tone: "violet" as const, to: "/ai-employees" },
@@ -59,6 +64,9 @@ export function Dashboard() {
     <div className="space-y-6">
       <Header />
       <TrialBanner />
+      <SinceYouWereAway channels={chData?.channels ?? []} escalations={chData?.escalations ?? 0} />
+
+
 
 
       {/* Bento grid */}
@@ -483,3 +491,76 @@ function TrialBanner() {
     </div>
   );
 }
+
+function channelMeta(ch: string): { label: string; emoji: string; tone: string } {
+  switch (ch) {
+    case "telegram":  return { label: "Telegram",  emoji: "✈️", tone: "from-sky-400/20 to-sky-400/0 text-sky-300" };
+    case "facebook":  return { label: "Facebook",  emoji: "📘", tone: "from-blue-400/20 to-blue-400/0 text-blue-300" };
+    case "instagram": return { label: "Instagram", emoji: "📸", tone: "from-pink-400/20 to-pink-400/0 text-pink-300" };
+    case "whatsapp":  return { label: "WhatsApp",  emoji: "🟢", tone: "from-emerald-400/20 to-emerald-400/0 text-emerald-300" };
+    default:          return { label: "Web / Playground", emoji: "💬", tone: "from-primary/20 to-primary/0 text-primary" };
+  }
+}
+
+function SinceYouWereAway({ channels, escalations }: { channels: ChannelRow[]; escalations: number }) {
+  const total = channels.reduce(
+    (acc, c) => ({
+      conversations: acc.conversations + Number(c.conversations || 0),
+      messages: acc.messages + Number(c.messages || 0),
+      orders: acc.orders + Number(c.orders || 0),
+      revenue: acc.revenue + Number(c.revenue || 0),
+    }),
+    { conversations: 0, messages: 0, orders: 0, revenue: 0 }
+  );
+  const rows = channels.filter((c) => Number(c.conversations || 0) + Number(c.orders || 0) + Number(c.messages || 0) > 0);
+  if (total.conversations + total.orders + total.messages === 0) return null;
+  return (
+    <div className="glass-panel rounded-2xl p-5">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Since you were away</div>
+          <div className="mt-1 font-display text-xl font-bold tracking-tight">
+            {total.conversations.toLocaleString()} conversations · {total.orders.toLocaleString()} orders · {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "DZD", maximumFractionDigits: 0 }).format(total.revenue)}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">Multi-channel activity across Telegram, Facebook, Instagram, WhatsApp and Web.</div>
+        </div>
+        {escalations > 0 && (
+          <RouterLink to="/conversations" className="inline-flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-200 transition hover:-translate-y-0.5">
+            <AlertTriangle className="h-3.5 w-3.5" /> {escalations} need a human
+          </RouterLink>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {rows.length === 0 && (
+          <div className="col-span-full rounded-xl border border-dashed border-white/10 p-4 text-center text-xs text-muted-foreground">No channel activity yet — connect Telegram, WhatsApp or Meta in Integrations.</div>
+        )}
+        {rows.map((c) => {
+          const meta = channelMeta(c.channel);
+          return (
+            <RouterLink key={c.channel} to="/conversations" className={"group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40"}>
+              <div className={"pointer-events-none absolute inset-0 bg-gradient-to-br " + meta.tone} />
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{meta.emoji}</span>
+                  <span className="text-sm font-semibold">{meta.label}</span>
+                </div>
+                {Number(c.unread || 0) > 0 && <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">{c.unread} new</span>}
+              </div>
+              <div className="relative mt-3 grid grid-cols-3 gap-1 text-center">
+                <div><div className="font-display text-base font-bold tabular-nums">{Number(c.conversations || 0).toLocaleString()}</div><div className="text-[9px] uppercase tracking-widest text-muted-foreground">Convos</div></div>
+                <div><div className="font-display text-base font-bold tabular-nums">{Number(c.messages || 0).toLocaleString()}</div><div className="text-[9px] uppercase tracking-widest text-muted-foreground">Msgs</div></div>
+                <div><div className="font-display text-base font-bold tabular-nums">{Number(c.orders || 0).toLocaleString()}</div><div className="text-[9px] uppercase tracking-widest text-muted-foreground">Orders</div></div>
+              </div>
+              {Number(c.escalations || 0) > 0 && (
+                <div className="relative mt-2 inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-200">
+                  <AlertTriangle className="h-2.5 w-2.5" /> {c.escalations} need help
+                </div>
+              )}
+            </RouterLink>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
