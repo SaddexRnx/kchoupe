@@ -116,7 +116,7 @@ export function SecurityDashboard() {
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {session.data.verified
-                    ? `Verified until ${new Date(session.data.verifiedUntil).toLocaleString()}`
+                    ? `Verified until ${new Date(session.data.verifiedUntil ?? Date.now()).toLocaleString()}`
                     : session.data.enabled
                       ? "Destructive admin actions are blocked until you verify."
                       : "Enable 2FA in Settings → Advanced to unlock privileged actions."}
