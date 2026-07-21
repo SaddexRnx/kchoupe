@@ -45,6 +45,12 @@ export function IntegrationsPage() {
         description="Everything you need in one place — Shopify, WooCommerce, any website, WhatsApp, Facebook, Instagram, Telegram, plus your own AI model endpoints. Every save runs a real handshake so you know it works."
       />
 
+      <HelpNote>
+        The <b>Integrations hub</b> is where you plug Atlas into the tools you already use. Connect a shop to sync products,
+        add messaging channels so Atlas can reply to customers, add your own AI model endpoint (OpenAI-compatible), or
+        scrape a website into your knowledge base. Every save runs a live handshake so you know it works before going live.
+      </HelpNote>
+
       <ProviderPicker
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}
         title="Sales channels"

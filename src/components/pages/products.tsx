@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Package, Plus, Search, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp, Loader2 } from "lucide-react";
-import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm, HelpNote } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
   listProducts, createProduct, updateProduct, deleteProduct, duplicateProduct,
@@ -125,6 +125,12 @@ export function Products() {
           </div>
         }
       />
+
+      <HelpNote>
+        Your <b>product catalog</b> is what AI employees offer, recommend, and sell inside conversations. Add products
+        manually, import from Shopify/WooCommerce/YouCan in Integrations, or scrape any storefront. Keep stock &amp; prices
+        current — Atlas will only confirm orders for items it can see here.
+      </HelpNote>
 
       <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
         {[
