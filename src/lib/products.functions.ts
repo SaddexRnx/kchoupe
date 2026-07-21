@@ -13,6 +13,7 @@ export type ProductRow = {
   image_emoji: string;
   sold_30: number;
   ai_sold: number;
+  description: string | null;
   created_at: string;
 };
 
