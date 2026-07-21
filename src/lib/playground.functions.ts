@@ -95,6 +95,7 @@ export const sendPlaygroundMessage = createServerFn({ method: "POST" })
     try {
       const result = await generateText({
         model: gateway(data.model),
+        system: combinedSystem || undefined,
         messages,
       });
       assistantText = result.text;
