@@ -9,6 +9,7 @@ export const Route = createFileRoute("/login")({
       { property: "og:title", content: "Sign in — Atlas AI" },
       { property: "og:description", content: "Sign in to your Atlas AI workspace." },
       { property: "og:url", content: "https://kchoupe.lovable.app/login" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/login" }],
   }),
