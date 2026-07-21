@@ -26,21 +26,44 @@ type ProductLite = {
   stock: number; image_emoji: string; status?: string;
 };
 
+function normalize(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/[\u2018\u2019\u02bc]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[*_`~]/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function findProductMatches(text: string, products: ProductLite[]): ProductLite[] {
   if (!text || !products.length) return [];
-  const lower = text.toLowerCase();
+  const norm = normalize(text);
   const seen = new Set<string>();
-  const out: ProductLite[] = [];
+  const out: { p: ProductLite; score: number }[] = [];
   for (const p of products) {
-    const skuHit = p.sku && lower.includes(p.sku.toLowerCase());
-    const nameHit = p.name && p.name.length >= 4 && lower.includes(p.name.toLowerCase());
-    if ((skuHit || nameHit) && !seen.has(p.id)) {
+    const nName = normalize(p.name || "");
+    const nSku = normalize(p.sku || "");
+    let score = 0;
+    if (nSku && nSku.length >= 3 && norm.includes(nSku)) score = 1000;
+    else if (nName && nName.length >= 4 && norm.includes(nName)) score = 500 + nName.length;
+    else if (nName) {
+      const tokens = nName.split(" ").filter((w) => w.length >= 3);
+      if (tokens.length >= 2) {
+        const hits = tokens.filter((w) => norm.includes(w)).length;
+        const ratio = hits / tokens.length;
+        if (hits >= 2 && ratio >= 0.6) score = 100 + hits * 10;
+      }
+    }
+    if (score > 0 && !seen.has(p.id)) {
       seen.add(p.id);
-      out.push(p);
-      if (out.length >= 4) break;
+      out.push({ p, score });
     }
   }
-  return out;
+  out.sort((a, b) => b.score - a.score);
+  return out.slice(0, 4).map((x) => x.p);
 }
 
 export function Conversations() {
