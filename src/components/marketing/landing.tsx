@@ -87,26 +87,71 @@ export function Landing() {
         </div>
       </section>
 
-      {/* INTEGRATIONS */}
-      <section id="integrations" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
-        <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
-        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-6">
-          {[
-            { i: Store, l: "Shopify" }, { i: Store, l: "WooCommerce" }, { i: Package, l: "YouCan" },
-            { i: MessageCircle, l: "WhatsApp" }, { i: Instagram, l: "Instagram" }, { i: Facebook, l: "Facebook" },
-            { i: Globe, l: "Your website" }, { i: BarChart3, l: "GA4" }, { i: Bot, l: "OpenAI" },
-            { i: Bot, l: "Claude" }, { i: Bot, l: "Mistral" }, { i: Sparkles, l: "+150 more" },
-          ].map(({ i: Icon, l }, idx) => (
-            <div key={l} className="glass-panel animate-fade-up group flex items-center gap-2 rounded-xl px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30"
-              style={{ animationDelay: `${idx * 30}ms` }}>
-              <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary/20 to-accent/10">
-                <Icon className="h-3.5 w-3.5 text-primary" />
+      {/* INTEGRATIONS — infinite marquee */}
+      <section id="integrations" className="relative py-20 scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
+        </div>
+        <div className="relative mt-10 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+          <div className="flex w-max animate-marquee gap-3">
+            {[...INTEGRATIONS, ...INTEGRATIONS].map(({ i: Icon, l }, idx) => (
+              <div key={`${l}-${idx}`} className="glass-panel flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30">
+                <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary/20 to-accent/10">
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="whitespace-nowrap text-xs font-medium">{l}</span>
               </div>
-              <span className="truncate text-xs font-medium">{l}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+        <div className="relative mt-4 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+          <div className="flex w-max animate-marquee gap-3" style={{ animationDirection: "reverse", animationDuration: "55s" }}>
+            {[...INTEGRATIONS_2, ...INTEGRATIONS_2].map(({ i: Icon, l }, idx) => (
+              <div key={`${l}-${idx}`} className="glass-panel flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30">
+                <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-accent/20 to-primary/10">
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="whitespace-nowrap text-xs font-medium">{l}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* COMPARISON */}
+      <section id="compare" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
+        <SectionHeader eyebrow="Why Atlas AI" title="Built for North Africa. Priced for local shops." />
+        <div className="mt-10 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-left">
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Feature</th>
+                <th className="px-4 py-4 text-xs font-bold uppercase tracking-widest">
+                  <span className="aurora-gradient-text animate-gradient">Atlas AI</span>
+                </th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Intercom Fin</th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tidio Lyro</th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Manychat</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {COMPARE.map((row) => (
+                <tr key={row.f} className="transition hover:bg-white/5">
+                  <td className="px-4 py-3 text-foreground">{row.f}</td>
+                  <Cell v={row.us} highlight />
+                  <Cell v={row.a} />
+                  <Cell v={row.b} />
+                  <Cell v={row.c} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Comparison based on publicly documented features (July 2026). Trademarks belong to their owners.
+        </p>
+      </section>
+
 
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
