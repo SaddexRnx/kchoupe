@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Send, Bot, Loader2, MessageCircle, RefreshCw, Trash2, CheckCircle2, AlertTriangle,
-  Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag,
+  Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag, Pencil,
   ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
   FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
@@ -375,21 +375,33 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
   const test = useServerFn(testCustomModel);
   const del = useServerFn(deleteCustomModel);
   const [addOpen, setAddOpen] = useState(false);
-  const [draft, setDraft] = useState({ label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" });
+  const [editId, setEditId] = useState<string | null>(null);
+  const emptyDraft = { label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" };
+  const [draft, setDraft] = useState(emptyDraft);
   const [reveal, setReveal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["custom_models"] });
 
+  const openAdd = () => { setEditId(null); setDraft(emptyDraft); setAddOpen(true); };
+  const openEdit = (m: CustomModelRow) => {
+    setEditId(m.id);
+    setDraft({ label: m.label, base_url: m.base_url, model_id: m.model_id, api_key: "" });
+    setAddOpen(true);
+  };
+  const closeForm = () => { setAddOpen(false); setEditId(null); setDraft(emptyDraft); };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const row = await save({ data: draft });
+      const payload: any = { label: draft.label, base_url: draft.base_url, model_id: draft.model_id };
+      if (editId) payload.id = editId;
+      if (draft.api_key) payload.api_key = draft.api_key;
+      const row = await save({ data: payload });
       const ok = row.last_test_status === "ok";
-      toast.push({ kind: ok ? "success" : "error", title: ok ? "Model saved & verified" : "Saved but handshake failed", body: row.last_test_message ?? "" });
-      setAddOpen(false);
-      setDraft({ label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" });
+      toast.push({ kind: ok ? "success" : "error", title: editId ? (ok ? "Model updated & verified" : "Updated but handshake failed") : (ok ? "Model saved & verified" : "Saved but handshake failed"), body: row.last_test_message ?? "" });
+      closeForm();
       invalidate();
     } catch (e: any) { toast.push({ kind: "error", title: "Save failed", body: e?.message }); }
     finally { setSaving(false); }
@@ -421,32 +433,33 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
             Any OpenAI-compatible endpoint — OpenRouter, Gemini's OpenAI proxy, Groq, Together, self-hosted vLLM. We ping <code className="font-mono text-[11px]">/chat/completions</code> to verify.
           </p>
         </div>
-        <PrimaryButton onClick={() => setAddOpen((v) => !v)}>
+        <PrimaryButton onClick={() => (addOpen ? closeForm() : openAdd())}>
           <Plus className="h-4 w-4" /> {addOpen ? "Close" : "Add model"}
         </PrimaryButton>
       </div>
 
       {addOpen && (
         <Panel className="mb-4">
+          <div className="mb-3 text-sm font-medium">{editId ? "Edit model" : "Add a new model"}</div>
           <div className="grid gap-3 md:grid-cols-2">
             <TextField label="Display name" value={draft.label} onChange={(v) => setDraft({ ...draft, label: v })} placeholder="OpenRouter · gpt-4o-mini" />
             <TextField label="Base URL" value={draft.base_url} onChange={(v) => setDraft({ ...draft, base_url: v })} placeholder="https://openrouter.ai/api/v1" />
             <TextField label="Model id" value={draft.model_id} onChange={(v) => setDraft({ ...draft, model_id: v })} placeholder="openai/gpt-4o-mini" />
             <label className="block">
               <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                <span>API key</span>
+                <span>API key {editId && <span className="text-muted-foreground/70">(leave blank to keep current)</span>}</span>
                 <button type="button" onClick={() => setReveal((r) => !r)} className="rounded p-0.5 hover:bg-white/10">
                   {reveal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                 </button>
               </div>
               <input type={reveal ? "text" : "password"} value={draft.api_key} onChange={(e) => setDraft({ ...draft, api_key: e.target.value })}
-                placeholder="sk-…" className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
+                placeholder={editId ? "•••• keep existing ••••" : "sk-…"} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
             </label>
           </div>
           <div className="mt-3 flex items-center justify-between">
             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Keys stay server-side and are shown masked.</div>
             <PrimaryButton onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />} Save & verify
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />} {editId ? "Update & verify" : "Save & verify"}
             </PrimaryButton>
           </div>
         </Panel>
@@ -473,10 +486,11 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
                     {m.last_test_message && <div className={"mt-2 text-[11px] " + (ok ? "text-emerald-300" : "text-rose-300")}>{m.last_test_message}</div>}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <GhostButton onClick={() => handleTest(m.id)}>
                     {testing === m.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube2 className="h-4 w-4" />} Test
                   </GhostButton>
+                  <GhostButton onClick={() => openEdit(m)}><Pencil className="h-4 w-4" /> Edit</GhostButton>
                   <GhostButton onClick={() => handleDelete(m)} tone="danger"><Trash2 className="h-4 w-4" /> Delete</GhostButton>
                 </div>
               </Panel>
