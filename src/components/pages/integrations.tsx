@@ -301,10 +301,11 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
     setBusy("scrape");
     try {
       const r = await scrape({ data: {} as any });
+      const logLine = (r as any).log?.length ? ` · ${(r as any).log.join(" · ")}` : "";
       if (r.found === 0) {
-        toast.push({ kind: "error", title: "No products found", body: `Scanned ${r.pages_scanned} page(s). The site may not expose product data (JSON-LD / OG / Shopify).` });
+        toast.push({ kind: "error", title: "No products found", body: `Scanned ${r.pages_scanned} page(s).${logLine}` });
       } else {
-        toast.push({ kind: "success", title: `Imported ${r.inserted} product${r.inserted === 1 ? "" : "s"}`, body: `Found ${r.found} across ${r.pages_scanned} page(s)${r.sample.length ? ` · ${r.sample.slice(0, 3).join(", ")}${r.sample.length > 3 ? "…" : ""}` : ""}` });
+        toast.push({ kind: "success", title: `Imported ${r.inserted} product${r.inserted === 1 ? "" : "s"}`, body: `Found ${r.found} across ${r.pages_scanned} page(s)${r.sample.length ? ` · ${r.sample.slice(0, 3).join(", ")}${r.sample.length > 3 ? "…" : ""}` : ""}${logLine}` });
       }
     } catch (e: any) {
       toast.push({ kind: "error", title: "Scrape failed", body: e?.message });
