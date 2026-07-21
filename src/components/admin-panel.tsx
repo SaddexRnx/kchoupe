@@ -12,7 +12,7 @@ import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
   deleteWorkspace, deleteUser, broadcastNotification,
-  adminSetBan, adminListBanStatus, adminReplyToTicket,
+  adminSetBan, adminListBanStatus, adminReplyToTicket, getUserDetails,
 } from "@/lib/admin.functions";
 import { listAllTickets, listTicketMessages, closeTicket } from "@/lib/support.functions";
 import {
