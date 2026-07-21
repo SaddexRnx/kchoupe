@@ -51,11 +51,11 @@ async function pingChatCompletions(baseUrl: string, apiKey: string, model: strin
   const url = baseUrl.replace(/\/+$/, "") + "/chat/completions";
   const started = Date.now();
   try {
-    const r = await fetch(url, {
+    const r = await safeFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
       body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }], max_tokens: 5 }),
-    });
+    }, { timeoutMs: 15000 });
     const text = await r.text();
     if (!r.ok) {
       let msg = `HTTP ${r.status}`;
@@ -64,6 +64,9 @@ async function pingChatCompletions(baseUrl: string, apiKey: string, model: strin
     }
     return { ok: true, message: `Handshake ok (${Date.now() - started}ms)`, latency: Date.now() - started };
   } catch (e: any) {
+    if (e instanceof SsrfBlockedError) {
+      return { ok: false, message: `Blocked: ${e.message}`, latency: Date.now() - started };
+    }
     return { ok: false, message: e?.message || "Network error", latency: Date.now() - started };
   }
 }
