@@ -246,7 +246,7 @@ export const updateStorefront = createServerFn({ method: "POST" })
       if (clean.length < 3) throw new Error("Slug must be at least 3 characters");
       patch.slug = clean;
     }
-    const { data: row, error } = await supabase.from("workspaces")
+    const { data: row, error } = await (supabase.from("workspaces") as any)
       .update(patch).eq("id", data.workspaceId)
       .select("id,slug,storefront_enabled,storefront_tagline,logo_url").single();
     if (error) throw new Error(error.message);
