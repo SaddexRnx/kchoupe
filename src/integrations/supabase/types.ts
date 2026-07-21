@@ -975,6 +975,7 @@ export type Database = {
           totp_backup_codes: string[] | null
           totp_enabled: boolean
           totp_secret: string | null
+          totp_verified_until: string | null
           updated_at: string
         }
         Insert: {
@@ -992,6 +993,7 @@ export type Database = {
           totp_backup_codes?: string[] | null
           totp_enabled?: boolean
           totp_secret?: string | null
+          totp_verified_until?: string | null
           updated_at?: string
         }
         Update: {
@@ -1009,7 +1011,29 @@ export type Database = {
           totp_backup_codes?: string[] | null
           totp_enabled?: boolean
           totp_secret?: string | null
+          totp_verified_until?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -1043,6 +1067,39 @@ export type Database = {
           reward_applied?: boolean
           reward_applied_at?: string | null
           reward_days?: number
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: string
+          ip: string | null
+          kind: string
+          severity: string
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          ip?: string | null
+          kind: string
+          severity?: string
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          ip?: string | null
+          kind?: string
+          severity?: string
+          user_id?: string | null
+          workspace_id?: string | null
         }
         Relationships: []
       }
@@ -1506,6 +1563,7 @@ export type Database = {
         }[]
       }
       admin_platform_stats: { Args: never; Returns: Json }
+      admin_security_stats: { Args: never; Returns: Json }
       admin_set_ban: {
         Args: { _banned: boolean; _reason?: string; _user_id: string }
         Returns: undefined
@@ -1534,6 +1592,11 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      log_security_event: {
+        Args: { _detail?: Json; _kind: string; _severity?: string }
+        Returns: undefined
+      }
+      mark_2fa_verified: { Args: { _minutes?: number }; Returns: string }
       match_knowledge_chunks: {
         Args: {
           _workspace_id: string
@@ -1546,6 +1609,10 @@ export type Database = {
           similarity: number
           source_id: string
         }[]
+      }
+      rate_limit_hit: {
+        Args: { _bucket: string; _limit: number; _window_seconds: number }
+        Returns: Json
       }
       slugify: { Args: { _input: string }; Returns: string }
       touch_presence: { Args: never; Returns: undefined }

@@ -1,10 +1,29 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceRateLimit } from "@/lib/rate-limit.server";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
+}
+
+// Ensures the admin has a fresh 2FA verification before a destructive action.
+async function assert2FAFresh(supabase: any, userId: string) {
+  const { data: p } = await supabase
+    .from("profiles").select("totp_enabled, totp_verified_until")
+    .eq("id", userId).maybeSingle();
+  if (!p?.totp_enabled) throw new Error("2FA_REQUIRED: enable two-factor auth in Settings → Advanced first");
+  const until = p.totp_verified_until ? new Date(p.totp_verified_until).getTime() : 0;
+  if (until < Date.now()) throw new Error("2FA_CHALLENGE: verify your authenticator code to continue");
+}
+
+async function logAdmin(supabase: any, kind: string, detail: Record<string, unknown>) {
+  try {
+    await supabase.rpc("log_security_event", {
+      _kind: kind, _severity: "info", _detail: detail as any,
+    });
+  } catch { /* non-fatal */ }
 }
 
 export const amIAdmin = createServerFn({ method: "GET" })
@@ -128,6 +147,8 @@ export const setUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string; makeAdmin: boolean }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 20, windowSeconds: 300 });
     if (data.makeAdmin) {
       const { error } = await context.supabase
         .from("user_roles")
@@ -142,6 +163,7 @@ export const setUserAdmin = createServerFn({ method: "POST" })
         .eq("role", "admin");
       if (error) throw new Error(error.message);
     }
+    await logAdmin(context.supabase, "admin_action", { action: "setUserAdmin", target: data.userId, makeAdmin: data.makeAdmin });
     return { ok: true };
   });
 
@@ -150,12 +172,14 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
   .inputValidator((i: { workspaceId: string; plan: string; extendDays?: number }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
     const patch: Record<string, any> = { plan: data.plan };
     if (data.extendDays && data.extendDays > 0) {
       patch.trial_ends_at = new Date(Date.now() + data.extendDays * 86400_000).toISOString();
     }
     const { error } = await (context.supabase.from("workspaces") as any).update(patch).eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "updateWorkspacePlan", target: data.workspaceId, plan: data.plan });
     return { ok: true };
   });
 
@@ -164,8 +188,11 @@ export const deleteWorkspace = createServerFn({ method: "POST" })
   .inputValidator((i: { workspaceId: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 10, windowSeconds: 300 });
     const { error } = await context.supabase.from("workspaces").delete().eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "deleteWorkspace", target: data.workspaceId });
     return { ok: true };
   });
 
@@ -174,10 +201,13 @@ export const deleteUser = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 10, windowSeconds: 300 });
     if (data.userId === context.userId) throw new Error("You cannot delete yourself");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "deleteUser", target: data.userId });
     return { ok: true };
   });
 
@@ -186,11 +216,11 @@ export const broadcastNotification = createServerFn({ method: "POST" })
   .inputValidator((i: { title: string; body?: string; kind?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "broadcast", { limit: 5, windowSeconds: 300 });
     const { data: ws, error: wsErr } = await context.supabase.from("workspaces").select("id");
     if (wsErr) throw new Error(wsErr.message);
     const requested = (data.kind ?? "broadcast").toLowerCase();
-    // Admin broadcasts must always surface as a popup — never plain "info"
-    // (which only shows in the notifications tray).
     const popupKinds = new Set(["broadcast", "announcement", "warn", "warning", "error", "critical", "success"]);
     const kind = popupKinds.has(requested) ? requested : "broadcast";
     const rows = (ws ?? []).map((w: any) => ({
@@ -203,6 +233,7 @@ export const broadcastNotification = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("notifications").insert(rows);
       if (error) throw new Error(error.message);
     }
+    await logAdmin(context.supabase, "admin_action", { action: "broadcast", count: rows.length, title: data.title });
     return { ok: true, count: rows.length };
   });
 
@@ -211,12 +242,15 @@ export const adminSetBan = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string; banned: boolean; reason?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 30, windowSeconds: 300 });
     const { error } = await context.supabase.rpc("admin_set_ban", {
       _user_id: data.userId,
       _banned: data.banned,
       _reason: data.reason ?? undefined,
     });
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "setBan", target: data.userId, banned: data.banned });
     return { ok: true };
   });
 

@@ -8,6 +8,7 @@ import {
   DollarSign, Command, ChevronRight, TrendingUp, TrendingDown, Radio, Layers, Gauge, ArrowRight,
   LifeBuoy, Ban, ShieldOff,
 } from "lucide-react";
+import { SecurityDashboard } from "@/components/pages/security-dashboard";
 import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
@@ -22,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
 
-type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "system";
+type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "security" | "system";
 
 const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "overview",      label: "Overview",      icon: Gauge,         hint: "Pulse" },
@@ -33,6 +34,7 @@ const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "conversations", label: "Conversations", icon: MessageSquare, hint: "Inbox" },
   { key: "integrations",  label: "Integrations",  icon: Plug,          hint: "Wiring" },
   { key: "support",       label: "Support",       icon: LifeBuoy,      hint: "Tickets" },
+  { key: "security",      label: "Security",      icon: Shield,        hint: "Trust" },
   { key: "system",        label: "System",        icon: Radio,         hint: "Ops" },
 ];
 
@@ -162,6 +164,7 @@ export function AdminPanel() {
           {tab === "conversations" && <SimpleListTab kind="conversations" />}
           {tab === "integrations" && <SimpleListTab kind="integrations" />}
           {tab === "support" && <AdminSupportTab />}
+          {tab === "security" && <SecurityDashboard />}
           {tab === "system" && <SystemTab />}
         </main>
       </div>
