@@ -44,8 +44,9 @@ export function AdminAlertPopup() {
   const [index, setIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
+  const POPUP_KINDS = new Set(["admin", "broadcast", "announcement", "warn", "warning", "error", "critical", "success"]);
   const queue: NotificationRow[] = useMemo(() => {
-    const items = (data?.items ?? []).filter((n) => !n.read_at && !dismissed.has(n.id));
+    const items = (data?.items ?? []).filter((n) => !n.read_at && !dismissed.has(n.id) && POPUP_KINDS.has((n.kind || "").toLowerCase()));
     return items.slice().reverse(); // oldest first so newest are shown last, feels natural
   }, [data, dismissed]);
 
