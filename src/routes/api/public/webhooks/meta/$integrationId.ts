@@ -30,13 +30,12 @@ export const Route = createFileRoute("/api/public/webhooks/meta/$integrationId")
         if (!integ) return json({ ok: true });
 
         const creds: any = integ.credentials || {};
-        // Signature check (optional if appSecret not configured — but recommended).
-        if (creds.appSecret) {
-          const sig = request.headers.get("x-hub-signature-256") ?? "";
-          const expected = "sha256=" + createHmac("sha256", creds.appSecret).update(raw).digest("hex");
-          const a = Buffer.from(sig), b = Buffer.from(expected);
-          if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false }, 401);
-        }
+        // Require a configured appSecret and a valid X-Hub-Signature-256 header.
+        if (!creds.appSecret) return json({ ok: false, error: "no_app_secret_configured" }, 401);
+        const sig = request.headers.get("x-hub-signature-256") ?? "";
+        const expected = "sha256=" + createHmac("sha256", creds.appSecret).update(raw).digest("hex");
+        const a = Buffer.from(sig), b = Buffer.from(expected);
+        if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false }, 401);
 
         let payload: any;
         try { payload = JSON.parse(raw); } catch { return json({ ok: false, error: "invalid_json" }, 400); }
