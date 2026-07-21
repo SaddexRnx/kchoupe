@@ -55,10 +55,11 @@ while (queue.length && seen.size < MAX_PAGES) {
 
   const path = new URL(url).pathname;
 
-  if (isPrivate(path)) {
+  if (isAuthenticated(path)) {
     publicLeaks.push({ url, from });
-    continue; // don't recurse into private pages via link discovery
+    continue;
   }
+  if (isPrivate(path)) continue; // auth flow: linkable, don't recurse
   if (depth >= MAX_DEPTH) continue;
 
   for (const m of res.text.matchAll(HREF_RE)) {
