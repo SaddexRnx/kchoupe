@@ -459,8 +459,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
         for (const p of mentioned) {
           const img = extractImageUrl(p.description);
           const price = `${p.price} ${p.currency}`;
-          const caption = `🛍️ ${p.name}\n💰 ${price}${p.category ? `\n📂 ${p.category}` : ""}`;
-          const kb = { inline_keyboard: [[{ text: `🛒 Order — ${price}`, callback_data: `order:${p.sku}` }]] };
+          const caption = `🛍️ *${p.name}*\n💰 ${price}${p.category ? `  ·  ${p.category}` : ""}\n\nTap below to order in one click 👇`;
+          const kb = { inline_keyboard: [[{ text: `🛒 Order now — ${price}`, callback_data: `order:${p.sku}` }]] };
           if (img) await sendTelegramPhoto(token, threadId, img, caption, { reply_markup: kb });
           else await sendTelegram(token, threadId, caption, { reply_markup: kb });
         }
