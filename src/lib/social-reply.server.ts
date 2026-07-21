@@ -24,27 +24,34 @@ export type InboundMessage = {
 const SYSTEM_GUARDRAIL = `You are the customer-support assistant for ONE specific online store, replying inside a chat app (Telegram / Instagram / Messenger / WhatsApp).
 
 ABSOLUTE SCOPE — you may ONLY discuss:
-  • Products listed in the PRODUCT CATALOG below (name, price, stock, description, category).
-  • Order status, shipping, delivery times, returns, refunds, payment for THIS store.
+  • Products listed in the PRODUCT CATALOG below.
+  • Order status, shipping, delivery, returns, refunds, payment for THIS store.
 
-HARD REFUSAL — for any other topic reply EXACTLY (translated to the customer's language):
+HARD REFUSAL — for any other topic reply EXACTLY (translated to customer's language):
   "I can only help with our store's products and orders. Would you like me to suggest something from our catalog?"
 
+TONE: warm, human, concise. 1–3 short sentences max. Use the customer's name once when known. Never repeat yourself. Never dump long bullet lists unless explicitly asked. Max 1 emoji per message.
+
+GREETINGS & SHORT MESSAGES — read RECENT ORDERS memory first, then:
+  • Just "hi/hello/salam/bonjour/hey" AND no active order → ONE warm welcome using their name + ONE open question ("What are you looking for today?"). Do NOT list products. Do NOT re-ask for anything from earlier.
+  • Has ACTIVE ORDER in RECENT ORDERS → greet + reference status ("Your order #ORD-XXXX is being prepared — anything else I can help with?"). Do NOT restart order flow.
+  • Returning customer, no active order → warm comeback: "Welcome back, {name}! 👋 Good to see you again."
+
 CATALOG RULES:
-  1. Recommend ONLY items in the PRODUCT CATALOG. Never invent SKUs, names, prices or stock.
-  2. When you name a product, ALWAYS include its SKU in square brackets like [SKU123] on the same line — the app renders a product card with photo + Order button underneath your reply.
-  3. Availability: "in stock" → available; "availability: check website" → available to order; "OUT OF STOCK" → out.
+  1. Recommend ONLY items in the PRODUCT CATALOG. Never invent SKUs, names, prices, stock.
+  2. When you name a specific product, include [SKU] on the same line — app renders a rich card with photo + Order button.
+  3. Mention at most 2 products per reply.
+  4. Availability: "in stock" → available; "check website" → available to order; "OUT OF STOCK" → out.
 
-ORDER FLOW (CRITICAL — no loops):
-  Step 1 — Intent to buy: in ONE short message confirm the product [SKU] + price and ask for "Full name, phone, delivery address" in a single reply.
-  Step 2 — Once the customer has provided name AND phone AND address for a known SKU, CONFIRM the order and emit this tag on its own line at the END of your reply (the app parses it, creates the real order, and strips it before sending):
+ORDER FLOW (no loops, no re-asking):
+  Step 1 — Intent to buy: confirm the product [SKU] + price in ONE short line, then ask for missing fields only (name / phone / address). Use CUSTOMER MEMORY — if phone/address are already known, use them.
+  Step 2 — Once name AND phone AND address are known for a SKU, emit this tag on its own line at the END of your reply. The app parses it, creates the real order, then strips both the tag and any confirmation text you write and appends its own "Order #XXXX confirmed" line — so DO NOT also write "Got it, order placed" yourself:
        [[ORDER sku="SKU123" qty=1 name="Full Name" phone="+123..." address="Street, City"]]
-     • Emit the tag EXACTLY ONCE per order.
-     • If a previous assistant message already emitted [[ORDER ...]] for the same item, the order is ALREADY placed — do not re-ask for details, just answer follow-ups.
-     • If a field is missing, ask ONLY for the missing field.
-  Step 3 — After the tag, keep the visible reply to a short confirmation like: "✅ Got it, {name} — order placed. We'll contact you shortly on {phone}."
+     • Emit EXACTLY ONCE.
+     • If RECENT ORDERS shows the same SKU ordered in the last 24h, DO NOT recreate — confirm the existing order and ask if they want anything else.
+  Step 3 — After a confirmed order, "hi" later = greet + reference the order. Do NOT restart order flow.
 
-STYLE: short, warm, direct. Reply in the customer's language. Never redirect to external websites unless the item isn't listed.`;
+STYLE: short, warm, direct. Reply in the customer's language.`;
 
 function buildCatalog(products: any[]): string {
   if (!products.length) return "PRODUCT CATALOG: (empty)";
@@ -58,19 +65,33 @@ function buildCatalog(products: any[]): string {
   }).join("\n");
 }
 
-function buildCustomerMemory(customer: any | null): string {
-  if (!customer) return "";
+function buildCustomerMemory(customer: any | null, recentOrders: any[]): string {
   const parts: string[] = [];
-  const name = customer.display_name || customer.name || "";
-  if (name) parts.push(`Name: ${name}`);
-  if (customer.phone) parts.push(`Phone: ${customer.phone}`);
-  if (customer.email) parts.push(`Email: ${customer.email}`);
-  if (customer.metadata?.address) parts.push(`Delivery address: ${customer.metadata.address}`);
-  if (typeof customer.message_count === "number" && customer.message_count > 0) {
-    parts.push(`Prior messages: ${customer.message_count} (returning customer)`);
+  if (customer) {
+    const name = customer.display_name || customer.name || "";
+    if (name) parts.push(`Name: ${name}`);
+    if (customer.phone) parts.push(`Phone: ${customer.phone}`);
+    if (customer.email) parts.push(`Email: ${customer.email}`);
+    if (customer.metadata?.address) parts.push(`Delivery address: ${customer.metadata.address}`);
+    if (typeof customer.message_count === "number" && customer.message_count > 3) {
+      parts.push(`Returning customer (${customer.message_count} prior messages)`);
+    }
+    if (customer.notes) parts.push(`Notes: ${String(customer.notes).slice(0, 400)}`);
   }
-  if (customer.notes) parts.push(`Notes: ${customer.notes.slice(0, 600)}`);
-  return parts.length ? `\n\nCUSTOMER MEMORY (use to personalize; don't ask for info you already have):\n${parts.join("\n")}` : "";
+  let block = parts.length ? `\n\nCUSTOMER MEMORY (already known — do NOT re-ask):\n${parts.join("\n")}` : "";
+  if (recentOrders.length) {
+    block += `\n\nRECENT ORDERS for this customer (do NOT recreate — reference by number):\n` +
+      recentOrders.map((o) => `• #${o.order_no} — ${o.product_summary} — ${o.amount} ${o.currency} — status: ${o.status} — placed ${new Date(o.created_at).toLocaleString()}`).join("\n");
+  }
+  return block;
+}
+
+const GREETING_RE = /^\s*(hi+|hey+|hello+|yo|salam|salaam|assalam|bonjour|salut|hola|ola|ciao|good\s*(morning|afternoon|evening)|howdy|sup|مرحبا|السلام|اهلا|أهلا)[\s!.,?👋🙂😀]*$/i;
+function isGreeting(text: string): boolean {
+  if (!text) return false;
+  const t = text.trim();
+  if (t.length > 40) return false;
+  return GREETING_RE.test(t);
 }
 
 // ── Platform senders ────────────────────────────────────────────────────────
@@ -278,8 +299,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     workspace_id: wsId, conversation_id: convoId, role: "user", sender: externalUserLabel, body: msg.body,
   });
 
-  // 6) Build AI context: catalog + history + memory + prior learnings
-  const [prodRes, histRes, learnRes] = await Promise.all([
+  // 6) Build AI context: catalog + history + memory + prior learnings + recent orders
+  const [prodRes, histRes, learnRes, recentOrdersRes] = await Promise.all([
     supabaseAdmin.from("products")
       .select("sku,name,category,price,currency,stock,status,description")
       .eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(200),
@@ -288,7 +309,14 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       .eq("conversation_id", convoId).order("created_at", { ascending: true }).limit(20),
     supabaseAdmin.from("workspace_learnings")
       .select("lesson").eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(8),
+    supabaseAdmin.from("orders")
+      .select("order_no,product_summary,amount,currency,status,created_at,notes")
+      .eq("workspace_id", wsId)
+      .ilike("notes", `%Customer: ${externalUserLabel}%`)
+      .order("created_at", { ascending: false }).limit(5),
   ]);
+
+  const recentOrders = (recentOrdersRes.data ?? []) as any[];
 
   const learningsBlock = (learnRes.data ?? []).length
     ? "\n\nLEARNED PLAYBOOK (from past confirmed orders — reuse these tactics when relevant):\n" +
@@ -298,8 +326,9 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
   const system = SYSTEM_GUARDRAIL
     + (empPrompt ? `\n\nEMPLOYEE INSTRUCTIONS:\n${empPrompt}` : "")
     + "\n\n" + buildCatalog(prodRes.data ?? [])
-    + buildCustomerMemory(customer)
+    + buildCustomerMemory(customer, recentOrders)
     + learningsBlock;
+
 
 
   const messages: any[] = ((histRes.data ?? []) as any[])
@@ -358,7 +387,15 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     }
     reply = reply.replace(ORDER_TAG_RE, "").trim();
     if (createdOrder) {
-      reply = (reply || `✅ Order confirmed, ${orderTag.name}!`) + `\n\n🧾 Order #${createdOrder.order_no} — we'll contact you on ${orderTag.phone}.`;
+      // Strip any AI-written confirmation lines to avoid duplicate "Got it, order placed" text.
+      const dupPatterns = [
+        /(?:got it|great|perfect|awesome|thanks|thank you|merci|super|parfait|شكرا|رائع)[^.!\n]*[,!.]?\s*[^.\n]*(?:order (?:placed|confirmed)|placed your order|confirmed your order|commande (?:passée|confirmée))[^.\n]*\.?/gi,
+        /(?:we[’']?ll|we will|nous vous|سنتواصل)[^.\n]*(?:contact|call|reach|appellerons|نتصل)[^.\n]*\.?/gi,
+      ];
+      let shortReply = reply;
+      for (const re of dupPatterns) shortReply = shortReply.replace(re, "").trim();
+      shortReply = shortReply.replace(/\s{2,}/g, " ").trim();
+      reply = `✅ Order confirmed, ${orderTag.name}! Your order **#${createdOrder.order_no}** is placed.\nWe'll contact you shortly on ${orderTag.phone} to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
     }
   }
 
@@ -400,8 +437,17 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     .update({ last_message: visibleReply, unread_count: 0, updated_at: new Date().toISOString() })
     .eq("id", convoId);
 
-  // 9) Dispatch reply back to the originating platform
-  const mentioned = (!createdOrder && !msg.suppressProductCards) ? findMentionedProducts(reply, prodRes.data ?? []) : [];
+  // 9) Dispatch reply back to the originating platform.
+  // Only send product cards when the current user message shows product intent
+  // (not on greetings, not on confirmations, not right after an order was placed).
+  const userAsksProducts =
+    !isGreeting(msg.body) &&
+    !msg.suppressProductCards &&
+    !createdOrder &&
+    // reply must EXPLICITLY tag a SKU — prevents cards from surfacing on
+    // "hi" replies that only reference a name from catalog memory.
+    /\[[A-Z0-9\-_]{3,}\]/.test(reply);
+  const mentioned = userAsksProducts ? findMentionedProducts(reply, prodRes.data ?? []).slice(0, 2) : [];
   try {
     const threadId = msg.platformThreadId ?? msg.externalId;
     if (msg.channel === "telegram") {
