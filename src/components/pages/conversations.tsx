@@ -382,6 +382,44 @@ export function Conversations() {
           </label>
         </div>
       </Modal>
+
+      <Modal open={!!orderProduct} onClose={() => setOrderProduct(null)}
+        title={orderProduct ? `Order — ${orderProduct.name}` : "Place order"}
+        description="Confirm the customer details to record this order."
+        footer={<>
+          <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
+          <PrimaryButton onClick={submitOrder} disabled={placing}>
+            {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
+          </PrimaryButton>
+        </>}>
+        {orderProduct && (
+          <div className="grid gap-3">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{orderProduct.image_emoji}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{orderProduct.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{orderProduct.sku}</div>
+              </div>
+              <div className="text-right"><div className="font-display text-sm font-bold">{Number(orderProduct.price).toLocaleString()} <span className="text-[10px] text-muted-foreground">{orderProduct.currency}</span></div></div>
+            </div>
+            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" />
+            <TextField label="Customer email" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" />
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
+              <textarea value={orderForm.notes} onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2 text-xs text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">{(Number(orderProduct.price) * Math.max(1, Number(orderForm.qty) || 1)).toLocaleString()} {orderProduct.currency}</span>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
