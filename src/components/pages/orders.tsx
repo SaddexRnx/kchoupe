@@ -492,7 +492,7 @@ function ShipmentBlock({ order, onSaved }: { order: any; onSaved: () => void }) 
         </div>
         <TextField label="Tracking number" value={tracking} onChange={setTracking} placeholder="YAL-123456789" />
         <div className="flex flex-wrap justify-end gap-2 pt-1">
-          <GhostButton onClick={copyTrackingMsg} disabled={!tracking}>Copy tracking message</GhostButton>
+          <GhostButton onClick={copyTrackingMsg}>Copy tracking message</GhostButton>
           <PrimaryButton onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save shipment</PrimaryButton>
         </div>
       </div>
