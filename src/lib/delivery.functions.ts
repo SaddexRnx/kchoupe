@@ -163,8 +163,8 @@ export const assignShipment = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase.rpc("assign_shipment", {
-      _order_id: data.order_id, _carrier_id: data.carrier_id ?? null,
-      _tracking: data.tracking_number ?? null, _status: data.shipping_status ?? null,
+      _order_id: data.order_id, _carrier_id: (data.carrier_id ?? null) as any,
+      _tracking: (data.tracking_number ?? null) as any, _status: (data.shipping_status ?? null) as any,
     });
     if (error) throw new Error(error.message);
     return row;
@@ -192,7 +192,7 @@ export const updateOrderDelivery = createServerFn({ method: "POST" })
     for (const k of ["wilaya_code","commune","address","customer_phone","delivery_type","delivery_fee","cod_amount"] as const) {
       if ((data as any)[k] !== undefined) patch[k] = (data as any)[k];
     }
-    const { data: row, error } = await context.supabase.from("orders").update(patch).eq("id", data.id).select("*").single();
+    const { data: row, error } = await context.supabase.from("orders").update(patch as any).eq("id", data.id).select("*").single();
     if (error) throw new Error(error.message);
     return row;
   });
