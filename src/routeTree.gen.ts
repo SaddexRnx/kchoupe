@@ -19,6 +19,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PlaygroundRouteImport } from './routes/playground'
@@ -32,7 +33,11 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as BlogFutureOfAiNorthAfricaRouteImport } from './routes/blog.future-of-ai-north-africa'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
 import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes/api/public/webhooks/meta/$integrationId'
 import { Route as ApiPublicWebhooksTelegramIntegrationIdRouteImport } from './routes/api/public/webhooks/telegram/$integrationId'
@@ -85,6 +90,11 @@ const KnowledgeRoute = KnowledgeRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -152,10 +162,33 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BlogFutureOfAiNorthAfricaRoute =
   BlogFutureOfAiNorthAfricaRouteImport.update({
     id: '/blog/future-of-ai-north-africa',
     path: '/blog/future-of-ai-north-africa',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicWebhooksInboundRoute =
@@ -188,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -201,7 +235,11 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -217,6 +255,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -230,7 +269,11 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -247,6 +290,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
   '/playground': typeof PlaygroundRoute
@@ -260,7 +304,11 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -278,6 +326,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/knowledge'
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/orders'
     | '/playground'
@@ -291,7 +340,11 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -307,6 +360,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/knowledge'
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/orders'
     | '/playground'
@@ -320,7 +374,11 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -336,6 +394,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/knowledge'
     | '/login'
+    | '/mcp'
     | '/onboarding'
     | '/orders'
     | '/playground'
@@ -349,7 +408,11 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -366,6 +429,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   KnowledgeRoute: typeof KnowledgeRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   OrdersRoute: typeof OrdersRoute
   PlaygroundRoute: typeof PlaygroundRoute
@@ -379,7 +443,11 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   BlogFutureOfAiNorthAfricaRoute: typeof BlogFutureOfAiNorthAfricaRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
   ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
   ApiPublicWebhooksTelegramIntegrationIdRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -455,6 +523,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -548,11 +623,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/future-of-ai-north-africa': {
       id: '/blog/future-of-ai-north-africa'
       path: '/blog/future-of-ai-north-africa'
       fullPath: '/blog/future-of-ai-north-africa'
       preLoaderRoute: typeof BlogFutureOfAiNorthAfricaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/inbound': {
@@ -590,6 +693,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   KnowledgeRoute: KnowledgeRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   OrdersRoute: OrdersRoute,
   PlaygroundRoute: PlaygroundRoute,
@@ -603,7 +707,12 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   BlogFutureOfAiNorthAfricaRoute: BlogFutureOfAiNorthAfricaRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
   ApiPublicWebhooksMetaIntegrationIdRoute:
     ApiPublicWebhooksMetaIntegrationIdRoute,
