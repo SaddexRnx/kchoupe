@@ -22,7 +22,7 @@ expect_indexable() {
 }
 robots_disallows() {
   local path="$1"
-  if grep -qE "^Disallow:\s*${path}\b" <<<"$ROBOTS"; then pass "robots.txt Disallow: $path"
+  if grep -qE "^Disallow:[[:space:]]*${path}" <<<"$ROBOTS"; then pass "robots.txt Disallow: $path"
   else fail "robots.txt missing Disallow for $path"; fi
 }
 
