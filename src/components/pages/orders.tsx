@@ -373,6 +373,8 @@ export function Orders() {
                 ))}
               </div>
             </div>
+            <ShipmentBlock order={viewing} onSaved={invalidate} />
+
 
             <div>
               <div className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">Private note</div>
@@ -425,6 +427,75 @@ export function Orders() {
           </label>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function ShipmentBlock({ order, onSaved }: { order: any; onSaved: () => void }) {
+  const toast = useToast();
+  const [carriers, setCarriers] = useState<any[]>([]);
+  const [carrierId, setCarrierId] = useState<string>(order.carrier_id ?? "");
+  const [tracking, setTracking] = useState<string>(order.tracking_number ?? "");
+  const [shipStatus, setShipStatus] = useState<string>(order.shipping_status ?? "pending");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { listCarriers, listDeliveryHistory } = await import("@/lib/delivery.functions");
+      try { setCarriers(await listCarriers()); } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
+    setCarrierId(order.carrier_id ?? "");
+    setTracking(order.tracking_number ?? "");
+    setShipStatus(order.shipping_status ?? "pending");
+  }, [order.id]);
+
+  const SHIP_STATUSES = ["pending", "ready_to_ship", "shipped", "in_transit", "out_for_delivery", "delivered", "failed", "returned"];
+
+  async function save() {
+    setSaving(true);
+    try {
+      const { assignShipment } = await import("@/lib/delivery.functions");
+      await assignShipment({ data: { order_id: order.id, carrier_id: carrierId || null, tracking_number: tracking || null, shipping_status: shipStatus } });
+      toast.push({ kind: "success", title: "Shipment saved" });
+      onSaved();
+    } catch (e: any) { toast.push({ kind: "error", title: e.message }); }
+    finally { setSaving(false); }
+  }
+
+  async function copyTrackingMsg() {
+    const carrier = carriers.find((c) => c.id === carrierId);
+    const msg = `Bonjour ${order.customer_name}, votre commande ${order.order_no} a été expédiée via ${carrier?.name || "notre transporteur"}.\nNuméro de suivi: ${tracking || "—"}\nMerci pour votre confiance !`;
+    try { await navigator.clipboard.writeText(msg); toast.push({ kind: "success", title: "Copied to clipboard" }); } catch {}
+  }
+
+  return (
+    <div>
+      <div className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">Shipment</div>
+      <div className="grid gap-2 rounded-lg border border-white/10 bg-white/5 p-3 text-sm">
+        <div className="grid gap-2 md:grid-cols-2">
+          <label className="block">
+            <div className="mb-1 text-xs text-muted-foreground">Carrier</div>
+            <select value={carrierId} onChange={(e) => setCarrierId(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-sm">
+              <option value="">— none —</option>
+              {carriers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <div className="mb-1 text-xs text-muted-foreground">Shipping status</div>
+            <select value={shipStatus} onChange={(e) => setShipStatus(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-sm">
+              {SHIP_STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+            </select>
+          </label>
+        </div>
+        <TextField label="Tracking number" value={tracking} onChange={setTracking} placeholder="YAL-123456789" />
+        <div className="flex flex-wrap justify-end gap-2 pt-1">
+          <GhostButton onClick={copyTrackingMsg} disabled={!tracking}>Copy tracking message</GhostButton>
+          <PrimaryButton onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save shipment</PrimaryButton>
+        </div>
+      </div>
     </div>
   );
 }
