@@ -28,8 +28,7 @@ export function useRealtimeSync() {
   useEffect(() => {
     const channel = supabase.channel("app-realtime");
     for (const table of Object.keys(TABLE_KEYS)) {
-      channel.on(
-        // @ts-expect-error - postgres_changes typed loosely
+      (channel as any).on(
         "postgres_changes",
         { event: "*", schema: "public", table },
         () => {
