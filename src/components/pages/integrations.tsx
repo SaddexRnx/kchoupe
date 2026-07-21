@@ -71,6 +71,32 @@ export function IntegrationsPage() {
         placeholder="Select a messaging channel to connect…"
       />
 
+      <ComingSoonSection
+        icon={<MessageCircle className="h-5 w-5 text-primary" />}
+        title="More channels — coming soon"
+        blurb="We're wiring these next. Vote by opening a support ticket if one is blocking you."
+        items={[
+          { name: "Viber", emoji: "🟣", note: "Business Messages API" },
+          { name: "LINE", emoji: "💚", note: "Official Account" },
+          { name: "Discord", emoji: "🎧", note: "Bot + slash commands" },
+          { name: "WeChat", emoji: "💬", note: "Official Account" },
+          { name: "Snapchat", emoji: "👻", note: "Business Chat" },
+        ]}
+      />
+
+      <ComingSoonSection
+        icon={<ShoppingBag className="h-5 w-5 text-primary" />}
+        title="Payments — coming soon"
+        blurb="Atlas will confirm checkout inside chat once these are enabled. For now, mark orders as paid manually."
+        items={[
+          { name: "CIB (Algeria)", emoji: "💳", note: "Card gateway" },
+          { name: "BaridiMob", emoji: "📱", note: "Wallet + QR" },
+          { name: "Cash on delivery", emoji: "🚚", note: "Default across MENA" },
+          { name: "Stripe", emoji: "🌐", note: "Cards, Apple Pay, Google Pay" },
+          { name: "PayPal", emoji: "🅿️", note: "International" },
+        ]}
+      />
+
       <CustomModelsSection models={customModels} />
 
       <TestChatPanel customModels={customModels} />
