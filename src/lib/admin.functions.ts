@@ -188,8 +188,11 @@ export const deleteWorkspace = createServerFn({ method: "POST" })
   .inputValidator((i: { workspaceId: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 10, windowSeconds: 300 });
     const { error } = await context.supabase.from("workspaces").delete().eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "deleteWorkspace", target: data.workspaceId });
     return { ok: true };
   });
 
@@ -198,10 +201,13 @@ export const deleteUser = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 10, windowSeconds: 300 });
     if (data.userId === context.userId) throw new Error("You cannot delete yourself");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "deleteUser", target: data.userId });
     return { ok: true };
   });
 
@@ -210,11 +216,11 @@ export const broadcastNotification = createServerFn({ method: "POST" })
   .inputValidator((i: { title: string; body?: string; kind?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "broadcast", { limit: 5, windowSeconds: 300 });
     const { data: ws, error: wsErr } = await context.supabase.from("workspaces").select("id");
     if (wsErr) throw new Error(wsErr.message);
     const requested = (data.kind ?? "broadcast").toLowerCase();
-    // Admin broadcasts must always surface as a popup — never plain "info"
-    // (which only shows in the notifications tray).
     const popupKinds = new Set(["broadcast", "announcement", "warn", "warning", "error", "critical", "success"]);
     const kind = popupKinds.has(requested) ? requested : "broadcast";
     const rows = (ws ?? []).map((w: any) => ({
@@ -227,6 +233,7 @@ export const broadcastNotification = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("notifications").insert(rows);
       if (error) throw new Error(error.message);
     }
+    await logAdmin(context.supabase, "admin_action", { action: "broadcast", count: rows.length, title: data.title });
     return { ok: true, count: rows.length };
   });
 
