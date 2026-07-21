@@ -190,7 +190,7 @@ export const restoreBackup = createServerFn({ method: "POST" })
       { _user_id: userId, _workspace_id: data.workspaceId });
     if (!isOwner) throw new Error("Only workspace owners can restore");
     const { data: bkp, error } = await supabase.from("workspace_backups")
-      .select("contents,workspace_id").eq("id", data.backspaceId ?? data.backupId).maybeSingle();
+      .select("contents,workspace_id").eq("id", data.backupId).maybeSingle();
     if (error || !bkp) throw new Error("Backup not found");
     if (bkp.workspace_id !== data.workspaceId) throw new Error("Backup / workspace mismatch");
     const c: any = bkp.contents;
