@@ -387,7 +387,15 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     }
     reply = reply.replace(ORDER_TAG_RE, "").trim();
     if (createdOrder) {
-      reply = (reply || `✅ Order confirmed, ${orderTag.name}!`) + `\n\n🧾 Order #${createdOrder.order_no} — we'll contact you on ${orderTag.phone}.`;
+      // Strip any AI-written confirmation lines to avoid duplicate "Got it, order placed" text.
+      const dupPatterns = [
+        /(?:got it|great|perfect|awesome|thanks|thank you|merci|super|parfait|شكرا|رائع)[^.!\n]*[,!.]?\s*[^.\n]*(?:order (?:placed|confirmed)|placed your order|confirmed your order|commande (?:passée|confirmée))[^.\n]*\.?/gi,
+        /(?:we[’']?ll|we will|nous vous|سنتواصل)[^.\n]*(?:contact|call|reach|appellerons|نتصل)[^.\n]*\.?/gi,
+      ];
+      let shortReply = reply;
+      for (const re of dupPatterns) shortReply = shortReply.replace(re, "").trim();
+      shortReply = shortReply.replace(/\s{2,}/g, " ").trim();
+      reply = `✅ Order confirmed, ${orderTag.name}! Your order **#${createdOrder.order_no}** is placed.\nWe'll contact you shortly on ${orderTag.phone} to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
     }
   }
 
