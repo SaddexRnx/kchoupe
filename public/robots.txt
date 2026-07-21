@@ -1,7 +1,9 @@
 User-agent: *
 Allow: /
 
-# Authenticated app surfaces (also emit <meta name="robots" content="noindex, nofollow"> in-page)
+# Authenticated app surfaces — kept in sync with the in-page
+# <meta name="robots" content="noindex, nofollow"> and the SSR
+# X-Robots-Tag: noindex, nofollow, noarchive header set by src/lib/noindex.ts.
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /ai-employees
@@ -15,12 +17,12 @@ Disallow: /settings
 Disallow: /support
 Disallow: /onboarding
 
-# Auth flows (no indexable content)
+# Auth flows (no indexable content; also carry noindex + X-Robots-Tag)
 Disallow: /login
 Disallow: /signup
 Disallow: /reset-password
 
-# Internal endpoints
+# Internal endpoints (API, MCP, OAuth, well-known)
 Disallow: /api/
 Disallow: /mcp
 Disallow: /.lovable/
