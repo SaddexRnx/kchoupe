@@ -1,10 +1,29 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceRateLimit } from "@/lib/rate-limit.server";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
+}
+
+// Ensures the admin has a fresh 2FA verification before a destructive action.
+async function assert2FAFresh(supabase: any, userId: string) {
+  const { data: p } = await supabase
+    .from("profiles").select("totp_enabled, totp_verified_until")
+    .eq("id", userId).maybeSingle();
+  if (!p?.totp_enabled) throw new Error("2FA_REQUIRED: enable two-factor auth in Settings → Advanced first");
+  const until = p.totp_verified_until ? new Date(p.totp_verified_until).getTime() : 0;
+  if (until < Date.now()) throw new Error("2FA_CHALLENGE: verify your authenticator code to continue");
+}
+
+async function logAdmin(supabase: any, kind: string, detail: Record<string, unknown>) {
+  try {
+    await supabase.rpc("log_security_event", {
+      _kind: kind, _severity: "info", _detail: detail as any,
+    });
+  } catch { /* non-fatal */ }
 }
 
 export const amIAdmin = createServerFn({ method: "GET" })
