@@ -254,9 +254,10 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
   const save = useServerFn(saveProviderConnection);
   const test = useServerFn(testProviderConnection);
   const disc = useServerFn(disconnectProviderConnection);
+  const scrape = useServerFn(scrapeWebsiteProducts);
   const [creds, setCreds] = useState<Record<string, string>>({});
   const [reveal, setReveal] = useState<Record<string, boolean>>({});
-  const [busy, setBusy] = useState<"save" | "test" | "disc" | null>(null);
+  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | null>(null);
 
   const connected = !!initial?.connected;
   const hasCreds = !!initial?.has_credentials;
