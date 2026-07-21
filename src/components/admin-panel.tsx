@@ -69,7 +69,7 @@ export function AdminPanel() {
               <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-card pulse-emerald" />
             </div>
             <div className="min-w-0">
-              <div className="font-display text-[15px] font-bold tracking-tight">Atlas</div>
+              <div className="font-display text-[15px] font-bold tracking-tight">KC</div>
               <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Control · Root</div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function AdminPanel() {
               <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent">
                 <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <div className="font-display text-sm font-bold">Atlas Admin</div>
+              <div className="font-display text-sm font-bold">KC Admin</div>
             </div>
             <button onClick={signOut} className="rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"><LogOut className="h-3.5 w-3.5" /></button>
           </div>
@@ -1206,14 +1206,14 @@ function AdminSupportTab() {
         ) : (
           <div className="flex h-[560px] flex-col">
             <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-              <div className="text-xs text-muted-foreground">Replying as Atlas team</div>
+              <div className="text-xs text-muted-foreground">Replying as KC team</div>
               <button onClick={() => close.mutate("closed")} className="text-[11px] text-muted-foreground hover:text-foreground">Close ticket</button>
             </div>
             <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {thread.map((m: any) => (
                 <div key={m.id} className={"flex " + (m.sender_role === "admin" ? "justify-end" : "justify-start")}>
                   <div className={"max-w-[78%] rounded-2xl px-3 py-2 text-sm " + (m.sender_role === "admin" ? "bg-primary/15" : "bg-white/5")}>
-                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{m.sender_role === "admin" ? "Atlas team" : "User"}</div>
+                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{m.sender_role === "admin" ? "KC team" : "User"}</div>
                     <div className="whitespace-pre-wrap">{m.body}</div>
                     <div className="mt-1 text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString()}</div>
                   </div>

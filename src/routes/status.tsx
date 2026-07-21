@@ -5,10 +5,10 @@ import { MarketingPage } from "@/components/marketing/page-shell";
 export const Route = createFileRoute("/status")({
   head: () => ({
     meta: [
-      { title: "Status — Atlas AI" },
-      { name: "description", content: "Live status of the Atlas AI platform and its integrations." },
-      { property: "og:title", content: "Status — Atlas AI" },
-      { property: "og:description", content: "Live status of the Atlas AI platform and its integrations." },
+      { title: "Status — KC" },
+      { name: "description", content: "Live status of the KC platform and its integrations." },
+      { property: "og:title", content: "Status — KC" },
+      { property: "og:description", content: "Live status of the KC platform and its integrations." },
       { property: "og:url", content: "https://kchoupe.lovable.app/status" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/status" }],
@@ -108,7 +108,7 @@ function StatusPage() {
     <MarketingPage
       eyebrow="Live status"
       title={headline}
-      intro="Real-time health of the Atlas AI platform. This page runs actual HTTP checks against each surface every 30 seconds from your browser."
+      intro="Real-time health of the KC platform. This page runs actual HTTP checks against each surface every 30 seconds from your browser."
     >
       <div className="not-prose divide-y divide-white/5 rounded-2xl border border-white/10 bg-white/5">
         {rows.map((s) => (
@@ -134,7 +134,7 @@ function StatusPage() {
 
       <h2>Subscribe</h2>
       <p>
-        Want incident emails? Write to <a href="mailto:status@atlas.ai">status@atlas.ai</a> and we'll add
+        Want incident emails? Write to <a href="mailto:status@kc.app">status@kc.app</a> and we'll add
         you to the list.
       </p>
     </MarketingPage>

@@ -5,7 +5,7 @@ type BIPE = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome
 export function PwaInstallPrompt() {
   const [evt, setEvt] = useState<BIPE | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(() =>
-    typeof window !== "undefined" && localStorage.getItem("atlas.pwa.dismissed") === "1",
+    typeof window !== "undefined" && localStorage.getItem("kc.pwa.dismissed") === "1",
   );
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function PwaInstallPrompt() {
       <div className="flex items-center gap-3">
         <div className="text-2xl">📲</div>
         <div className="flex-1">
-          <div className="text-sm font-semibold">Install Atlas AI</div>
+          <div className="text-sm font-semibold">Install KC</div>
           <div className="text-xs opacity-70">One tap for faster access on your device.</div>
         </div>
         <button
@@ -40,7 +40,7 @@ export function PwaInstallPrompt() {
           aria-label="Dismiss"
           className="text-white/50 hover:text-white text-lg px-1"
           onClick={() => {
-            localStorage.setItem("atlas.pwa.dismissed", "1");
+            localStorage.setItem("kc.pwa.dismissed", "1");
             setDismissed(true);
           }}
         >

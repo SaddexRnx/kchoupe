@@ -5,7 +5,7 @@ import { X, Megaphone, AlertTriangle, Info, CheckCircle2, ChevronLeft, ChevronRi
 import { listNotifications, markNotificationsRead, type NotificationRow } from "@/lib/notifications.functions";
 
 const PREVIEW_CHARS = 220;
-const DISMISS_KEY = "atlas.dismissedAlerts.v1";
+const DISMISS_KEY = "kc.dismissedAlerts.v1";
 
 function readDismissed(): Set<string> {
   if (typeof window === "undefined") return new Set();

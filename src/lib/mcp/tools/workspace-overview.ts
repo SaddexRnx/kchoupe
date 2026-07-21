@@ -11,7 +11,7 @@ function sb(ctx: ToolContext) {
 export default defineTool({
   name: "workspace_overview",
   title: "Workspace overview",
-  description: "Return a summary of the signed-in user's Atlas AI workspace: workspace name, plan, and counts of products, orders, conversations, and AI employees.",
+  description: "Return a summary of the signed-in user's KC workspace: workspace name, plan, and counts of products, orders, conversations, and AI employees.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {

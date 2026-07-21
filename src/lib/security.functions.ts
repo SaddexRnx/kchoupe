@@ -33,7 +33,7 @@ export const challenge2FA = createServerFn({ method: "POST" })
     if (!p?.totp_enabled || !p.totp_secret) throw new Error("2FA is not enabled on this account");
     let ok = false;
     const totp = new OTPAuth.TOTP({
-      issuer: "Atlas AI",
+      issuer: "KC",
       secret: OTPAuth.Secret.fromBase32(p.totp_secret),
     });
     if (totp.validate({ token: data.code, window: 1 }) !== null) ok = true;

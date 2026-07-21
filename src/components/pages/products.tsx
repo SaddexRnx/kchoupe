@@ -189,7 +189,7 @@ export function Products() {
       <HelpNote>
         Your <b>product catalog</b> is what AI employees offer, recommend, and sell inside conversations. Add products
         manually, import from Shopify/WooCommerce/YouCan in Integrations, or scrape any storefront. Keep stock &amp; prices
-        current — Atlas will only confirm orders for items it can see here.
+        current — KC will only confirm orders for items it can see here.
       </HelpNote>
 
       {(totals.outStock > 0 || totals.lowStock > 0) && (
@@ -200,7 +200,7 @@ export function Products() {
             <div className="text-xs text-muted-foreground">
               {totals.outStock > 0 && <><b className="text-rose-300">{totals.outStock}</b> out of stock · </>}
               {totals.lowStock > 0 && <><b className="text-amber-300">{totals.lowStock}</b> low stock (under 20 units) · </>}
-              Restock or mark as draft so Atlas doesn't offer them.
+              Restock or mark as draft so KC doesn't offer them.
             </div>
           </div>
           {totals.outStock > 0 && (

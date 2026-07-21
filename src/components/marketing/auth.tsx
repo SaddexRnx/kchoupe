@@ -105,7 +105,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-display text-lg font-black">Atlas AI</span>
+          <span className="font-display text-lg font-black">KC</span>
         </Link>
 
         <div className="animate-fade-up relative">
@@ -141,7 +141,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground">© 2026 Atlas AI — Made in Algiers.</div>
+        <div className="text-xs text-muted-foreground">© 2026 KC — Made in Algiers.</div>
       </aside>
 
       {/* Right panel — form */}
@@ -151,7 +151,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary to-accent">
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-base font-black">Atlas AI</span>
+            <span className="font-display text-base font-black">KC</span>
           </Link>
 
           <div className="mb-6">
@@ -233,7 +233,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             {isSignup ? (
               <>Already have an account? <Link to="/login" className="text-primary hover:underline">Sign in</Link></>
             ) : (
-              <>New to Atlas? <Link to="/signup" className="text-primary hover:underline">Create a workspace</Link></>
+              <>New to KC? <Link to="/signup" className="text-primary hover:underline">Create a workspace</Link></>
             )}
           </div>
 

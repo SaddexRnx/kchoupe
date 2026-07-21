@@ -7,9 +7,9 @@ import { Mail, MessageCircle, MapPin, Send } from "lucide-react";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — Atlas AI" },
-      { name: "description", content: "Talk to the Atlas AI team about your store, integrations or a demo." },
-      { property: "og:title", content: "Contact Atlas AI" },
+      { title: "Contact — KC" },
+      { name: "description", content: "Talk to the KC team about your store, integrations or a demo." },
+      { property: "og:title", content: "Contact KC" },
       { property: "og:description", content: "Reach the team — sales, support, partnerships." },
       { property: "og:url", content: "https://kchoupe.lovable.app/contact" },
     ],
@@ -33,9 +33,9 @@ function ContactPage() {
       return;
     }
     setSending(true);
-    const subject = encodeURIComponent(`Atlas AI — message from ${name}`);
+    const subject = encodeURIComponent(`KC — message from ${name}`);
     const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
-    window.location.href = `mailto:hello@atlas.ai?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:hello@kc.app?subject=${subject}&body=${body}`;
     setTimeout(() => {
       setSending(false);
       toast.push({ kind: "success", title: "Opening your email app" });
@@ -50,7 +50,7 @@ function ContactPage() {
     >
       <div className="not-prose grid gap-3 sm:grid-cols-3">
         {[
-          { i: Mail, t: "Email", d: "hello@atlas.ai", href: "mailto:hello@atlas.ai" },
+          { i: Mail, t: "Email", d: "hello@kc.app", href: "mailto:hello@kc.app" },
           { i: MessageCircle, t: "WhatsApp", d: "+213 555 000 000", href: "https://wa.me/213555000000" },
           { i: MapPin, t: "Office", d: "Algiers, Algeria" },
         ].map(({ i: Icon, t, d, href }) => (

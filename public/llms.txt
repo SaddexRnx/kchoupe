@@ -1,12 +1,12 @@
-# Atlas AI
+# KC
 
 > The AI workforce for North African commerce — trilingual AI employees (Arabic, French, English) that sell, support, and grow your store 24/7 across WhatsApp, Instagram, Facebook and Telegram.
 
-Atlas AI helps shops in Algeria, Tunisia and Morocco run conversational commerce without hiring a bigger team. AI employees answer customers, recommend products from your catalog, take orders, and hand off to humans when needed. Built for local channels, currencies and payment rails (CIB, BaridiMob, Flouci, CMI, COD).
+KC helps shops in Algeria, Tunisia and Morocco run conversational commerce without hiring a bigger team. AI employees answer customers, recommend products from your catalog, take orders, and hand off to humans when needed. Built for local channels, currencies and payment rails (CIB, BaridiMob, Flouci, CMI, COD).
 
 ## Pages
 
-- [Home](/): Overview of Atlas AI, features and pricing.
+- [Home](/): Overview of KC, features and pricing.
 - [About](/about): Team, mission and where we're based.
 - [Contact](/contact): Email, WhatsApp and office for sales, support and partnerships.
 - [Login](/login): Sign in to your workspace.
@@ -14,7 +14,7 @@ Atlas AI helps shops in Algeria, Tunisia and Morocco run conversational commerce
 
 ## Optional
 
-- [Terms of Service](/terms): Terms that govern use of Atlas AI.
-- [Privacy Policy](/privacy): How Atlas AI collects, uses and protects data.
+- [Terms of Service](/terms): Terms that govern use of KC.
+- [Privacy Policy](/privacy): How KC collects, uses and protects data.
 - [Security](/security): Security controls and vulnerability reporting.
 - [Status](/status): Platform status and incident history.

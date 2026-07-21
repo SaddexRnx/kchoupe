@@ -62,7 +62,7 @@ export function SupportPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Support</div>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">Talk to Atlas team</h1>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">Talk to KC team</h1>
           <p className="mt-1 text-sm text-muted-foreground">Open a ticket for anything — bugs, account issues, subscription help. Admin replies show up in real time.</p>
         </div>
         <button onClick={() => setOpenNew(true)} className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:-translate-y-0.5 hover:opacity-90">
@@ -187,7 +187,7 @@ function TicketThread({ ticketId }: { ticketId: string }) {
   return (
     <div className="flex h-[560px] flex-col">
       <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Encrypted · direct line to Atlas team</div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Encrypted · direct line to KC team</div>
         <button onClick={() => close.mutate("closed")} className="text-[11px] text-muted-foreground hover:text-foreground">Close ticket</button>
       </div>
       <div ref={scroller} className="flex-1 space-y-3 overflow-y-auto p-4">
@@ -201,7 +201,7 @@ function TicketThread({ ticketId }: { ticketId: string }) {
                 : m.sender_role === "admin"
                   ? "border border-accent/20 bg-accent/10 text-foreground"
                   : "bg-white/5 text-foreground")}>
-                {m.sender_role === "admin" && !mine && <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-accent">Atlas team</div>}
+                {m.sender_role === "admin" && !mine && <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-accent">KC team</div>}
                 <div className="whitespace-pre-wrap">{m.body}</div>
                 <div className="mt-1 text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString()}</div>
               </div>

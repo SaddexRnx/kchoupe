@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨ Atlas AI
+# ✨ KC
 
 ### The AI workforce for North African commerce.
 
@@ -18,7 +18,7 @@ Trilingual (🇬🇧 English · 🇫🇷 Français · 🇩🇿 العربية) A
 
 ## 📚 Table of contents
 
-- [What is Atlas AI?](#-what-is-atlas-ai)
+- [What is KC?](#-what-is-kc-ai)
 - [Dual theme — dark & light](#-dual-theme--dark--light)
 - [Marketing surfaces](#-marketing-surfaces)
 - [Authentication](#-authentication)
@@ -33,9 +33,9 @@ Trilingual (🇬🇧 English · 🇫🇷 Français · 🇩🇿 العربية) A
 
 ---
 
-## 🌍 What is Atlas AI?
+## 🌍 What is KC?
 
-Atlas AI is an all-in-one commerce cockpit built for shops in **Algeria, Tunisia and Morocco**. It gives every store an AI workforce that:
+KC is an all-in-one commerce cockpit built for shops in **Algeria, Tunisia and Morocco**. It gives every store an AI workforce that:
 
 - **Answers** customer DMs in Arabic, Darija, French and English — round the clock.
 - **Recommends** real products from your catalog, with tap-to-order product cards.
@@ -330,7 +330,7 @@ src/
 
 ## 🚢 One-click publish to GitHub
 
-Atlas is built inside [Lovable](https://lovable.dev), which ships with a native two-way GitHub sync — no CLI, no manual `git push`.
+KC is built inside [Lovable](https://lovable.dev), which ships with a native two-way GitHub sync — no CLI, no manual `git push`.
 
 ### From the Lovable editor
 
@@ -376,4 +376,4 @@ Issues and PRs welcome. Please keep changes scoped and run `bun run typecheck` b
 
 ## 📄 License
 
-MIT © Atlas AI — Built in Algiers, made for Algeria · Tunisia · Morocco. 🌍
+MIT © KC — Built in Algiers, made for Algeria · Tunisia · Morocco. 🌍

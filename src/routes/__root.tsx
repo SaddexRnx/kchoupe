@@ -97,10 +97,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Atlas AI — Your AI Workforce for Commerce" },
+      { title: "KC — Your AI Workforce for Commerce" },
       { name: "description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
-      { name: "author", content: "Atlas AI" },
-      { property: "og:site_name", content: "Atlas AI" },
+      { name: "author", content: "KC" },
+      { property: "og:site_name", content: "KC" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -126,13 +126,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@graph": [
             {
               "@type": "Organization",
-              name: "Atlas AI",
+              name: "KC",
               url: "https://kchoupe.lovable.app",
               description: "AI workforce for North African commerce — trilingual AI employees that sell, support and grow your store 24/7.",
             },
             {
               "@type": "WebSite",
-              name: "Atlas AI",
+              name: "KC",
               url: "https://kchoupe.lovable.app",
             },
           ],

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Authorize access — Atlas AI" },
+      { title: "Authorize access — KC" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -74,11 +74,11 @@ function Consent() {
       <div className="rounded-2xl border bg-card/60 p-8 shadow-xl backdrop-blur">
         <div className="mb-4 flex items-center gap-2 text-primary">
           <Sparkles className="h-5 w-5" />
-          <span className="text-sm font-medium">Atlas AI</span>
+          <span className="text-sm font-medium">KC</span>
         </div>
         <h1 className="mb-2 text-2xl font-semibold">Connect {clientName} to your account</h1>
         <p className="text-sm text-muted-foreground">
-          {clientName} will be able to call Atlas AI's tools while you are signed in — reading products,
+          {clientName} will be able to call KC's tools while you are signed in — reading products,
           orders and conversations, and creating orders in your workspace.
         </p>
         {redirectUri && (
@@ -92,7 +92,7 @@ function Consent() {
           </ul>
         )}
         <p className="mt-4 text-xs text-muted-foreground">
-          This does not bypass Atlas AI's permissions or backend policies.
+          This does not bypass KC's permissions or backend policies.
         </p>
         {error && <p className="mt-4 text-sm text-destructive" role="alert">{error}</p>}
         <div className="mt-6 flex gap-2">

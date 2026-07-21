@@ -1,6 +1,6 @@
 {
-  "name": "Atlas AI — AI Workforce for Commerce",
-  "short_name": "Atlas AI",
+  "name": "KC — AI Workforce for Commerce",
+  "short_name": "KC",
   "description": "Autonomous AI employees that answer, sell and close orders across WhatsApp, Instagram, Messenger and Telegram.",
   "start_url": "/dashboard",
   "scope": "/",

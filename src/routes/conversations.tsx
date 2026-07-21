@@ -7,7 +7,7 @@ export const Route = createFileRoute("/conversations")({
   beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
-      { title: "Conversations — Atlas AI" },
+      { title: "Conversations — KC" },
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/conversations" }],

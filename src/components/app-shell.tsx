@@ -99,7 +99,7 @@ function Sidebar({ active }: { active: NavKey }) {
           <span className="font-display text-lg font-bold text-primary-foreground">A</span>
         </div>
         <div className="leading-tight">
-          <div className="font-display text-base font-bold tracking-tight">Atlas AI</div>
+          <div className="font-display text-base font-bold tracking-tight">KC</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("nav.command_center")}</div>
         </div>
       </Link>
@@ -219,7 +219,7 @@ function TopBar() {
   const createNew = () => {
     navigate({ to: "/ai-employees" });
     // Employees page listens for this to open its Add modal.
-    setTimeout(() => window.dispatchEvent(new CustomEvent("atlas:new-employee")), 60);
+    setTimeout(() => window.dispatchEvent(new CustomEvent("kc:new-employee")), 60);
   };
 
   return (

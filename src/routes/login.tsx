@@ -6,10 +6,10 @@ export const Route = createFileRoute("/login")({
   beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
-      { title: "Sign in — Atlas AI" },
-      { name: "description", content: "Sign in to your Atlas AI workspace to manage AI employees, products and conversations." },
-      { property: "og:title", content: "Sign in — Atlas AI" },
-      { property: "og:description", content: "Sign in to your Atlas AI workspace." },
+      { title: "Sign in — KC" },
+      { name: "description", content: "Sign in to your KC workspace to manage AI employees, products and conversations." },
+      { property: "og:title", content: "Sign in — KC" },
+      { property: "og:description", content: "Sign in to your KC workspace." },
       { property: "og:url", content: "https://kchoupe.lovable.app/login" },
       { name: "robots", content: "noindex, nofollow" },
     ],

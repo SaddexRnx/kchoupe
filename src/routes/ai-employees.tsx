@@ -7,7 +7,7 @@ export const Route = createFileRoute("/ai-employees")({
   beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
-      { title: "AI Employees — Atlas AI" },
+      { title: "AI Employees — KC" },
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/ai-employees" }],

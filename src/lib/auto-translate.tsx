@@ -10,7 +10,7 @@ import { translateBatch } from "./translate.functions";
  */
 
 const CACHE_VERSION = "v1";
-const cacheKey = (lang: Lang) => `atlas.i18n.${lang}.${CACHE_VERSION}`;
+const cacheKey = (lang: Lang) => `kc.i18n.${lang}.${CACHE_VERSION}`;
 
 const SKIP_TAGS = new Set([
   "SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "KBD", "SAMP", "TEXTAREA", "INPUT", "SVG", "PATH", "CANVAS", "IFRAME",

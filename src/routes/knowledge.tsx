@@ -7,7 +7,7 @@ export const Route = createFileRoute("/knowledge")({
   beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
-      { title: "Knowledge — Atlas AI" },
+      { title: "Knowledge — KC" },
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/knowledge" }],

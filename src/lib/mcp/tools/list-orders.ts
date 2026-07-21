@@ -14,7 +14,7 @@ const STATUS = ["pending", "paid", "delivered", "cancelled", "returned", "refund
 export default defineTool({
   name: "list_orders",
   title: "List orders",
-  description: "List orders in the signed-in user's Atlas AI workspace, optionally filtered by status.",
+  description: "List orders in the signed-in user's KC workspace, optionally filtered by status.",
   inputSchema: {
     status: z.enum(STATUS).optional().describe("Filter by order status."),
     limit: z.number().int().min(1).max(100).optional().describe("Maximum rows to return (default 25)."),

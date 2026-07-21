@@ -5,10 +5,10 @@ import { Lock, ShieldCheck, KeyRound, Database, Users, AlertTriangle } from "luc
 export const Route = createFileRoute("/security")({
   head: () => ({
     meta: [
-      { title: "Security — Atlas AI" },
-      { name: "description", content: "How Atlas AI protects your workspace, your data and your customers." },
-      { property: "og:title", content: "Security — Atlas AI" },
-      { property: "og:description", content: "How Atlas AI protects your workspace, your data and your customers." },
+      { title: "Security — KC" },
+      { name: "description", content: "How KC protects your workspace, your data and your customers." },
+      { property: "og:title", content: "Security — KC" },
+      { property: "og:description", content: "How KC protects your workspace, your data and your customers." },
       { property: "og:url", content: "https://kchoupe.lovable.app/security" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/security" }],
@@ -18,12 +18,12 @@ export const Route = createFileRoute("/security")({
 });
 
 const controls = [
-  { i: Lock, t: "Encryption in transit", d: "All traffic to Atlas AI uses HTTPS/TLS." },
+  { i: Lock, t: "Encryption in transit", d: "All traffic to KC uses HTTPS/TLS." },
   { i: Database, t: "Row-level access", d: "Every table enforces workspace-scoped row-level security so data can't cross tenants." },
   { i: KeyRound, t: "Secret handling", d: "Integration credentials are stored server-side and masked in the UI — never returned in plaintext to the browser." },
   { i: Users, t: "Auth & sessions", d: "Email/password and Google sign-in with managed sessions. Password reset requires a verified email link." },
   { i: ShieldCheck, t: "Least-privilege server functions", d: "All privileged actions go through authenticated server functions, never a direct client-to-database write." },
-  { i: AlertTriangle, t: "Report a vulnerability", d: "Found something? Email security@atlas.ai — we respond within one business day." },
+  { i: AlertTriangle, t: "Report a vulnerability", d: "Found something? Email security@kc.app — we respond within one business day." },
 ];
 
 function SecurityPage() {
@@ -31,7 +31,7 @@ function SecurityPage() {
     <MarketingPage
       eyebrow="Security"
       title="Built to keep your store safe."
-      intro="This page is maintained by Atlas AI to describe the security controls we have shipped today. It is not an independent certification."
+      intro="This page is maintained by KC to describe the security controls we have shipped today. It is not an independent certification."
     >
       <div className="not-prose grid gap-3 sm:grid-cols-2">
         {controls.map(({ i: Icon, t, d }) => (
@@ -47,14 +47,14 @@ function SecurityPage() {
 
       <h2>Shared responsibility</h2>
       <p>
-        Atlas AI runs the platform and enforces the controls above. As a workspace owner, you control who
+        KC runs the platform and enforces the controls above. As a workspace owner, you control who
         you invite, which integrations you connect, and which AI providers process your prompts. Keep team
         members and connected accounts up to date from Settings.
       </p>
 
       <h2>Report a vulnerability</h2>
       <p>
-        We welcome responsible disclosure. Please email <a href="mailto:security@atlas.ai">security@atlas.ai</a>{" "}
+        We welcome responsible disclosure. Please email <a href="mailto:security@kc.app">security@kc.app</a>{" "}
         with steps to reproduce. Do not run automated scans against production accounts.
       </p>
     </MarketingPage>
