@@ -31,25 +31,25 @@ export function DeliverySection() {
     try {
       await upsertCarrier({ data: input });
       await qc.invalidateQueries({ queryKey: ["carriers"] });
-      toast({ title: t("delivery.carrierSaved") || "Carrier saved", tone: "success" });
+      toast({ title: t("delivery.carrierSaved") || "Carrier saved", kind: "success" });
       setEditingCarrier(null);
-    } catch (e: any) { toast({ title: e.message, tone: "danger" }); }
+    } catch (e: any) { toast({ title: e.message, kind: "error" }); }
   }
 
   async function removeCarrier(id: string) {
     if (!(await confirm({ title: t("delivery.deleteCarrier") || "Delete carrier?", body: t("common.cannotUndo") || "This cannot be undone." }))) return;
     await deleteCarrier({ data: { id } });
     await qc.invalidateQueries({ queryKey: ["carriers"] });
-    toast({ title: "Deleted", tone: "success" });
+    toast({ title: "Deleted", kind: "success" });
   }
 
   async function saveZone(input: Partial<ShippingZone> & { wilaya_code: number; home_fee: number }) {
     try {
       await upsertShippingZone({ data: input });
       await qc.invalidateQueries({ queryKey: ["shipping-zones"] });
-      toast({ title: "Saved", tone: "success" });
+      toast({ title: "Saved", kind: "success" });
       setEditingZone(null);
-    } catch (e: any) { toast({ title: e.message, tone: "danger" }); }
+    } catch (e: any) { toast({ title: e.message, kind: "error" }); }
   }
 
   async function removeZone(id: string) {
@@ -59,10 +59,10 @@ export function DeliverySection() {
 
   async function applyBulk() {
     const fee = Number(bulkFee); const th = bulkFree ? Number(bulkFree) : null;
-    if (!Number.isFinite(fee)) { toast({ title: "Invalid fee", tone: "danger" }); return; }
+    if (!Number.isFinite(fee)) { toast({ title: "Invalid fee", kind: "error" }); return; }
     await bulkSetShippingZones({ data: { fee, free_shipping_threshold: th } });
     await qc.invalidateQueries({ queryKey: ["shipping-zones"] });
-    toast({ title: t("delivery.bulkApplied") || "Applied to all wilayas", tone: "success" });
+    toast({ title: t("delivery.bulkApplied") || "Applied to all wilayas", kind: "success" });
     setBulkOpen(false);
   }
 
