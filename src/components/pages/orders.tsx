@@ -57,6 +57,31 @@ export function Orders() {
     return { mrr, week, counts, unseen, total: orders.length };
   }, [orders]);
 
+  const chartData = useMemo(() => {
+    const days = 14;
+    const buckets: { key: string; label: string; revenue: number; orders: number }[] = [];
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(start); d.setDate(start.getDate() - i);
+      buckets.push({ key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }), revenue: 0, orders: 0 });
+    }
+    const map = new Map(buckets.map((b) => [b.key, b]));
+    orders.forEach((o) => {
+      const k = new Date(o.created_at).toISOString().slice(0, 10);
+      const b = map.get(k); if (!b) return;
+      b.orders += 1;
+      if (o.status === "paid" || o.status === "delivered") b.revenue += Number(o.amount);
+    });
+    return buckets;
+  }, [orders]);
+
+  const pieData = useMemo(() =>
+    STATUS_ORDER.map((s) => ({ name: STATUS_META[s].label, value: stats.counts[s], status: s })).filter((d) => d.value > 0),
+    [stats.counts]);
+  const PIE_COLORS: Record<OrderStatus, string> = {
+    pending: "#f59e0b", paid: "#10b981", delivered: "#0ea5e9", cancelled: "#6b7280", returned: "#8b5cf6", refunded: "#f43f5e",
+  };
+
   const filtered = useMemo(() => {
     if (filter === "all") return orders;
     if (filter === "unseen") return orders.filter((o) => !o.seen);
