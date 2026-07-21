@@ -27,6 +27,7 @@ export const PUBLIC_INDEXABLE_PATHS: ReadonlySet<string> = new Set([
 /** Prefixes whose subtree is indexable (e.g., blog posts). */
 export const PUBLIC_INDEXABLE_PREFIXES: readonly string[] = [
   "/blog",
+  "/store",
 ];
 
 /** Paths the middleware should ignore entirely (assets, framework internals). */
