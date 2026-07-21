@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type OrderStatus = "pending" | "paid" | "delivered" | "cancelled" | "returned" | "refunded";
 export type OrderRow = {
   id: string;
   order_no: string;
@@ -9,12 +10,14 @@ export type OrderRow = {
   product_summary: string;
   amount: number;
   currency: string;
-  status: "paid" | "pending" | "refunded" | "cancelled";
+  status: OrderStatus;
   confirmed_by_ai: boolean;
   ai_employee_id: string | null;
   notes: string | null;
+  seen: boolean;
   created_at: string;
 };
+
 
 async function workspaceId(ctx: { supabase: any }): Promise<string> {
   const { data, error } = await ctx.supabase.rpc("ensure_default_workspace");
