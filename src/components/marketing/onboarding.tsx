@@ -184,7 +184,7 @@ export function Onboarding() {
   };
 
   // Steps where a skip button makes sense (i.e. not required and not the review).
-  const skippableSteps = new Set([1, 2, 3, 4]);
+  const skippableSteps = new Set([0, 1, 2, 3, 4]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
