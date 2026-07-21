@@ -242,12 +242,15 @@ export const adminSetBan = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string; banned: boolean; reason?: string }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 30, windowSeconds: 300 });
     const { error } = await context.supabase.rpc("admin_set_ban", {
       _user_id: data.userId,
       _banned: data.banned,
       _reason: data.reason ?? undefined,
     });
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "setBan", target: data.userId, banned: data.banned });
     return { ok: true };
   });
 
