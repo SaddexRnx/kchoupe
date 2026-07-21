@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -7,7 +7,7 @@ import {
   ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
   FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
-import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
+import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection,
   disconnectProviderConnection, scrapeWebsiteProducts,
@@ -19,6 +19,8 @@ import {
   type CustomModelRow,
 } from "@/lib/custom-models.functions";
 import { askCustomerAssistant } from "@/lib/customer-chat.functions";
+import { listProducts, type ProductRow } from "@/lib/products.functions";
+import { createOrder } from "@/lib/orders.functions";
 
 // ─────────────────────────────────────────────────────────────
 // Integrations hub — sales + messaging + AI models, all real handshakes.
@@ -533,14 +535,103 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
 
 // ── Scoped customer chat preview ────────────────────────────
 type Msg = { role: "user" | "assistant"; content: string };
+
+function normalizeProductText(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/[\u2018\u2019\u02bc]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[*_`~]/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findProductMatches(text: string, products: ProductRow[]): ProductRow[] {
+  if (!text || !products.length) return [];
+  const norm = normalizeProductText(text);
+  const seen = new Set<string>();
+  const out: { product: ProductRow; score: number }[] = [];
+
+  for (const product of products) {
+    const name = normalizeProductText(product.name || "");
+    const sku = normalizeProductText(product.sku || "");
+    let score = 0;
+
+    if (sku && sku.length >= 3 && norm.includes(sku)) score = 1000;
+    else if (name && name.length >= 4 && norm.includes(name)) score = 500 + name.length;
+    else if (name) {
+      const tokens = name.split(" ").filter((token) => token.length >= 3);
+      const hits = tokens.filter((token) => norm.includes(token)).length;
+      const ratio = tokens.length ? hits / tokens.length : 0;
+      if (hits >= 2 && ratio >= 0.55) score = 100 + hits * 10;
+    }
+
+    if (score > 0 && !seen.has(product.id)) {
+      seen.add(product.id);
+      out.push({ product, score });
+    }
+  }
+
+  return out.sort((a, b) => b.score - a.score).slice(0, 4).map((item) => item.product);
+}
+
 function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
   const toast = useToast();
   const ask = useServerFn(askCustomerAssistant);
+  const listProd = useServerFn(listProducts);
+  const placeOrder = useServerFn(createOrder);
+  const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => listProd() });
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [modelId, setModelId] = useState<string>("");
   const [catalogSize, setCatalogSize] = useState<number | null>(null);
+  const [orderProduct, setOrderProduct] = useState<ProductRow | null>(null);
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [placing, setPlacing] = useState(false);
+
+  const productsByMessage = useMemo(
+    () => messages.map((message) => (message.role === "assistant" ? findProductMatches(message.content, products) : [])),
+    [messages, products],
+  );
+
+  const openOrder = (product: ProductRow) => {
+    setOrderProduct(product);
+    setOrderForm({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  };
+
+  const submitOrder = async () => {
+    if (!orderProduct) return;
+    if (!orderForm.customer_name.trim()) {
+      toast.push({ kind: "warn", title: "Customer name required" });
+      return;
+    }
+    const qty = Math.max(1, Number(orderForm.qty) || 1);
+    setPlacing(true);
+    try {
+      const amount = Number(orderProduct.price) * qty;
+      const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const res = await placeOrder({ data: {
+        customer_name: orderForm.customer_name.trim(),
+        customer_email: orderForm.customer_email.trim() || undefined,
+        product_summary: summary,
+        amount,
+        currency: orderProduct.currency,
+        status: "pending",
+        confirmed_by_ai: true,
+        notes: orderForm.notes.trim() || undefined,
+      }});
+      toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: summary });
+      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** placed: ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}.` }]);
+      setOrderProduct(null);
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Order failed", body: e?.message });
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   const send = async () => {
     if (!input.trim() || busy) return;
@@ -592,16 +683,54 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
               Ask like a customer would: <i>"Do you have argan oil in stock?"</i>, <i>"What's your cheapest hair product?"</i>, <i>"How long does shipping take?"</i>
             </div>
           )}
-          {messages.map((m, i) => (
-            <div key={i} className={"flex gap-2 " + (m.role === "user" ? "flex-row-reverse" : "")}>
-              <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-lg " + (m.role === "user" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary")}>
-                <Bot className="h-3.5 w-3.5" />
+          {messages.map((m, i) => {
+            const matches = productsByMessage[i] ?? [];
+            return (
+              <div key={i} className={"flex gap-2 " + (m.role === "user" ? "flex-row-reverse" : "")}>
+                <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-lg " + (m.role === "user" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary")}>
+                  <Bot className="h-3.5 w-3.5" />
+                </div>
+                <div className={"flex max-w-[80%] flex-col gap-2 " + (m.role === "user" ? "items-end" : "items-start")}>
+                  <div className={"whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm " + (m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white/5")}>
+                    {m.content}
+                  </div>
+                  {matches.length > 0 && (
+                    <div className="flex w-full flex-col gap-2">
+                      {matches.map((product) => {
+                        const unknown = product.status === "draft" || product.stock == null;
+                        const out = !unknown && (product.status === "out" || product.stock === 0);
+                        const label = out ? "Out of stock" : unknown ? "Check website for stock" : `${product.stock} in stock`;
+                        const tone = out ? "text-rose-300" : unknown ? "text-amber-300" : "text-emerald-300";
+                        return (
+                          <div key={product.id} className="flex min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{product.image_emoji}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-semibold">{product.name}</div>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                                <span className="font-mono">{product.sku}</span>
+                                <span>·</span>
+                                <span className={tone}>{label}</span>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <div className="font-display text-sm font-bold">{Number(product.price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{product.currency}</span></div>
+                              <button
+                                onClick={() => openOrder(product)}
+                                disabled={out}
+                                className="mt-1 inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30 hover:brightness-110 disabled:opacity-40"
+                              >
+                                <ShoppingBag className="h-3 w-3" /> Order
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className={"max-w-[80%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm " + (m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white/5")}>
-                {m.content}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {busy && <div className="text-xs text-muted-foreground"><Loader2 className="inline h-3 w-3 animate-spin" /> Thinking…</div>}
         </div>
         <div className="border-t border-white/5 p-3">
@@ -618,6 +747,46 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
           </div>
         </div>
       </Panel>
+      <Modal
+        open={!!orderProduct}
+        onClose={() => setOrderProduct(null)}
+        title={orderProduct ? `Place order — ${orderProduct.name}` : "Place order"}
+        description="Creates a pending order in your Orders page."
+        footer={<>
+          <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
+          <PrimaryButton onClick={submitOrder} disabled={placing}>
+            {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
+          </PrimaryButton>
+        </>}
+      >
+        {orderProduct && (
+          <div className="grid gap-3">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{orderProduct.image_emoji}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{orderProduct.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{orderProduct.sku}</div>
+              </div>
+              <div className="text-right"><div className="font-display text-sm font-bold">{Number(orderProduct.price).toLocaleString()} <span className="text-[10px] text-muted-foreground">{orderProduct.currency}</span></div></div>
+            </div>
+            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" />
+            <TextField label="Customer email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" />
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
+              <textarea value={orderForm.notes} onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2 text-xs text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">{(Number(orderProduct.price) * Math.max(1, Number(orderForm.qty) || 1)).toLocaleString()} {orderProduct.currency}</span>
+            </div>
+          </div>
+        )}
+      </Modal>
     </section>
   );
 }
