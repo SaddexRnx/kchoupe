@@ -34,6 +34,7 @@ import {
 import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
+import { AdvancedSection } from "./settings-advanced";
 
 type SectionKey =
   | "profile"
