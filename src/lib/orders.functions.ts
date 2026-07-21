@@ -128,6 +128,11 @@ export type DashboardStats = {
   conversations: number;
   volume7d: number;
   volume30d: number;
+  periodDays: number;
+  periodRevenue: number;
+  periodOrders: number;
+  periodConversations: number;
+  series: Array<{ date: string; revenue: number; orders: number; conversations: number }>;
   confirmedToday: Array<{
     id: string; order_no: string; customer_name: string; product_summary: string;
     amount: number; currency: string; status: string; ai_employee_id: string | null; created_at: string;
@@ -136,17 +141,20 @@ export type DashboardStats = {
   recentMessages: Array<{ id: string; external_user: string; last_message: string | null; ai_employee_name: string | null; updated_at: string }>;
 };
 
-export const dashboardStats = createServerFn({ method: "GET" })
+export const dashboardStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<DashboardStats> => {
+  .inputValidator((input?: { periodDays?: number }) => ({ periodDays: input?.periodDays ?? 30 }))
+  .handler(async ({ data, context }): Promise<DashboardStats> => {
     const ws = await workspaceId(context);
     const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+    const days = [1, 7, 30, 90].includes(data.periodDays) ? data.periodDays : 30;
+    const periodStart = new Date(Date.now() - days * 86400000);
 
-    const [employeesRes, productsRes, ordersRes, convosRes, confirmedRes, recentRes] = await Promise.all([
+    const [employeesRes, productsRes, ordersRes, convosRes, confirmedRes, recentRes, msgsRes] = await Promise.all([
       context.supabase.from("ai_employees").select("id,name,role,model,status").eq("workspace_id", ws),
       context.supabase.from("products").select("id", { count: "exact", head: true }).eq("workspace_id", ws),
       context.supabase.from("orders").select("amount,currency,status,confirmed_by_ai,created_at,ai_employee_id").eq("workspace_id", ws),
-      context.supabase.from("inbox_conversations").select("id,external_user,last_message,ai_employee_name,ai_employee_id,updated_at,status").eq("workspace_id", ws).order("updated_at", { ascending: false }),
+      context.supabase.from("inbox_conversations").select("id,external_user,last_message,ai_employee_name,ai_employee_id,updated_at,created_at,status").eq("workspace_id", ws).order("updated_at", { ascending: false }),
       context.supabase.from("orders")
         .select("id,order_no,customer_name,product_summary,amount,currency,status,ai_employee_id,created_at")
         .eq("workspace_id", ws).eq("confirmed_by_ai", true)
@@ -155,21 +163,54 @@ export const dashboardStats = createServerFn({ method: "GET" })
       context.supabase.from("inbox_conversations")
         .select("id,external_user,last_message,ai_employee_name,updated_at")
         .eq("workspace_id", ws).order("updated_at", { ascending: false }).limit(4),
+      context.supabase.from("inbox_messages").select("created_at,conversation_id").eq("workspace_id", ws).gte("created_at", periodStart.toISOString()),
     ]);
 
     const orderRows = (ordersRes.data ?? []) as Array<{ amount: number; created_at: string; status: string; ai_employee_id: string | null }>;
     const now = Date.now();
     const w7 = now - 7 * 86400000;
     const w30 = now - 30 * 86400000;
-    const volume7d = orderRows.filter((o) => o.status === "paid" && new Date(o.created_at).getTime() >= w7).reduce((s, o) => s + Number(o.amount), 0);
-    const volume30d = orderRows.filter((o) => o.status === "paid" && new Date(o.created_at).getTime() >= w30).reduce((s, o) => s + Number(o.amount), 0);
+    const paidIn = (rows: typeof orderRows, since: number) => rows.filter((o) => (o.status === "paid" || o.status === "delivered") && new Date(o.created_at).getTime() >= since);
+    const volume7d = paidIn(orderRows, w7).reduce((s, o) => s + Number(o.amount), 0);
+    const volume30d = paidIn(orderRows, w30).reduce((s, o) => s + Number(o.amount), 0);
 
-    const convoRows = (convosRes.data ?? []) as Array<{ ai_employee_id: string | null }>;
+    const convoRows = (convosRes.data ?? []) as Array<{ id: string; ai_employee_id: string | null; created_at: string }>;
     const chatCount = new Map<string, number>();
     convoRows.forEach((c) => { if (c.ai_employee_id) chatCount.set(c.ai_employee_id, (chatCount.get(c.ai_employee_id) ?? 0) + 1); });
 
     const aiAgents = ((employeesRes.data ?? []) as Array<{ id: string; name: string; role: string | null; model: string | null; status: string }>)
       .slice(0, 4).map((e) => ({ ...e, chats: chatCount.get(e.id) ?? 0 }));
+
+    // Build daily buckets over the selected period
+    const buckets = new Map<string, { revenue: number; orders: number; conversations: number }>();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      buckets.set(key, { revenue: 0, orders: 0, conversations: 0 });
+    }
+    const periodStartMs = periodStart.getTime();
+    for (const o of orderRows) {
+      const t = new Date(o.created_at).getTime();
+      if (t < periodStartMs) continue;
+      const key = new Date(o.created_at).toISOString().slice(0, 10);
+      const b = buckets.get(key); if (!b) continue;
+      b.orders += 1;
+      if (o.status === "paid" || o.status === "delivered") b.revenue += Number(o.amount);
+    }
+    const msgRows = (msgsRes.data ?? []) as Array<{ created_at: string; conversation_id: string }>;
+    const seenConvo = new Map<string, Set<string>>();
+    for (const m of msgRows) {
+      const key = new Date(m.created_at).toISOString().slice(0, 10);
+      if (!buckets.has(key)) continue;
+      let s = seenConvo.get(key); if (!s) { s = new Set(); seenConvo.set(key, s); }
+      if (s.has(m.conversation_id)) continue;
+      s.add(m.conversation_id);
+      buckets.get(key)!.conversations += 1;
+    }
+    const series = Array.from(buckets.entries()).map(([date, v]) => ({ date, ...v }));
+    const periodRevenue = series.reduce((s, x) => s + x.revenue, 0);
+    const periodOrders = series.reduce((s, x) => s + x.orders, 0);
+    const periodConversations = series.reduce((s, x) => s + x.conversations, 0);
 
     return {
       aiEmployees: (employeesRes.data ?? []).length,
@@ -177,6 +218,7 @@ export const dashboardStats = createServerFn({ method: "GET" })
       orders: orderRows.length,
       conversations: convoRows.length,
       volume7d, volume30d,
+      periodDays: days, periodRevenue, periodOrders, periodConversations, series,
       confirmedToday: (confirmedRes.data ?? []) as DashboardStats["confirmedToday"],
       aiAgents,
       recentMessages: (recentRes.data ?? []) as DashboardStats["recentMessages"],

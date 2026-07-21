@@ -10,6 +10,7 @@ export type AiEmployeeRow = {
   avatar_emoji: string;
   status: "active" | "training" | "paused";
   created_at: string;
+  convos: number;
 };
 
 export const listAiEmployees = createServerFn({ method: "GET" })
@@ -18,13 +19,23 @@ export const listAiEmployees = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: ws, error: wsErr } = await supabase.rpc("ensure_default_workspace", { _user_id: userId });
     if (wsErr) throw new Error(wsErr.message);
-    const { data, error } = await supabase
-      .from("ai_employees")
-      .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
-      .eq("workspace_id", ws as string)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []) as AiEmployeeRow[];
+    const [emps, convos] = await Promise.all([
+      supabase
+        .from("ai_employees")
+        .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
+        .eq("workspace_id", ws as string)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("inbox_conversations")
+        .select("ai_employee_id")
+        .eq("workspace_id", ws as string),
+    ]);
+    if (emps.error) throw new Error(emps.error.message);
+    const counts = new Map<string, number>();
+    for (const c of (convos.data ?? []) as Array<{ ai_employee_id: string | null }>) {
+      if (c.ai_employee_id) counts.set(c.ai_employee_id, (counts.get(c.ai_employee_id) ?? 0) + 1);
+    }
+    return ((emps.data ?? []) as any[]).map((e) => ({ ...e, convos: counts.get(e.id) ?? 0 })) as AiEmployeeRow[];
   });
 
 export const createAiEmployee = createServerFn({ method: "POST" })
@@ -54,7 +65,7 @@ export const createAiEmployee = createServerFn({ method: "POST" })
       .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
       .single();
     if (error) throw new Error(error.message);
-    return row as AiEmployeeRow;
+    return { ...(row as any), convos: 0 } as AiEmployeeRow;
   });
 
 export const updateAiEmployee = createServerFn({ method: "POST" })
@@ -73,7 +84,7 @@ export const updateAiEmployee = createServerFn({ method: "POST" })
       .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
       .single();
     if (error) throw new Error(error.message);
-    return row as AiEmployeeRow;
+    return { ...(row as any), convos: 0 } as AiEmployeeRow;
   });
 
 export const deleteAiEmployee = createServerFn({ method: "POST" })

@@ -22,8 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/pages/_shared";
 import { useQueryClient } from "@tanstack/react-query";
 
-const spark = [8, 14, 11, 19, 17, 24, 22, 31, 28, 36, 33, 41, 44];
-
 function ago(iso: string) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return Math.floor(s) + "s";
@@ -32,10 +30,19 @@ function ago(iso: string) {
   return Math.floor(s / 86400) + "d";
 }
 
+const PERIODS: { key: "1D" | "7D" | "30D" | "90D"; days: number; label: string }[] = [
+  { key: "1D", days: 1, label: "Today" },
+  { key: "7D", days: 7, label: "7D" },
+  { key: "30D", days: 30, label: "30D" },
+  { key: "90D", days: 90, label: "90D" },
+];
+
 export function Dashboard() {
   const t = useT();
   const stats = useServerFn(dashboardStats);
-  const { data } = useQuery({ queryKey: ["dashboard_stats"], queryFn: () => stats() });
+  const [period, setPeriod] = useState<"1D" | "7D" | "30D" | "90D">("30D");
+  const periodDays = PERIODS.find((p) => p.key === period)!.days;
+  const { data } = useQuery({ queryKey: ["dashboard_stats", periodDays], queryFn: () => stats({ data: { periodDays } }) });
 
   const statDefs = [
     { key: "dash.stat.ai_employees", value: data?.aiEmployees ?? 0, delta: t("dash.stat.thisweek"), icon: Bot, tone: "violet" as const, to: "/ai-employees" },
@@ -63,34 +70,37 @@ export function Dashboard() {
 
         {/* Hero: activity + spark */}
         <div className="glass-panel col-span-12 rounded-2xl p-6 lg:col-span-8">
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-6 flex items-start justify-between gap-3">
             <div>
               <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 {t("dash.conv_volume")}
               </div>
-              <div className="mt-1 flex items-baseline gap-3">
-                <span className="font-display text-4xl font-bold tracking-tight">{data?.conversations ?? 0}</span>
+              <div className="mt-1 flex flex-wrap items-baseline gap-3">
+                <span className="font-display text-4xl font-bold tracking-tight">{(data?.periodConversations ?? 0).toLocaleString()}</span>
                 <span className="flex items-center gap-1 text-sm text-accent">
-                  <TrendingUp className="h-4 w-4" /> {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "DZD", maximumFractionDigits: 0 }).format(data?.volume7d ?? 0)}
+                  <TrendingUp className="h-4 w-4" /> {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "DZD", maximumFractionDigits: 0 }).format(data?.periodRevenue ?? 0)}
                 </span>
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">{t("dash.vs_prev")}</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {data?.periodOrders ?? 0} {t("dash.stat.orders")} · {periodDays === 1 ? "today" : `last ${periodDays}d`}
+              </div>
             </div>
             <div className="flex gap-1 rounded-lg border border-border p-1 text-xs">
-              {["7D", "30D", "90D"].map((t, i) => (
+              {PERIODS.map((p) => (
                 <button
-                  key={t}
+                  key={p.key}
+                  onClick={() => setPeriod(p.key)}
                   className={
                     "rounded-md px-2.5 py-1 font-medium transition " +
-                    (i === 1 ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground")
+                    (period === p.key ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground")
                   }
                 >
-                  {t}
+                  {p.label}
                 </button>
               ))}
             </div>
           </div>
-          <Sparkline data={spark} />
+          <Sparkline data={(data?.series ?? []).map((s) => s.conversations)} />
         </div>
 
         {/* Aurora highlight card */}
