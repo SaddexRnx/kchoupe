@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, useToast } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, useToast, HelpNote } from "./_shared";
 import { Download, Mail, RefreshCcw, Plus, Loader2, Zap, Eye, EyeOff, Save, Trash2, CheckCircle2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { listOrders, createOrder, updateOrder, deleteOrder, type OrderRow, type OrderStatus } from "@/lib/orders.functions";
