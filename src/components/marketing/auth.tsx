@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useServerFn } from "@tanstack/react-start";
 import { activatePlan } from "@/lib/workspace.functions";
 import { amIAdmin } from "@/lib/admin.functions";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const isSignup = mode === "signup";
@@ -96,6 +97,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
         <div className="animate-float absolute -left-24 top-0 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
         <div className="animate-float absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-accent/25 blur-3xl" style={{ animationDelay: "1.4s" }} />
       </div>
+      <div className="absolute right-4 top-4 z-30"><ThemeToggle /></div>
 
       {/* Left panel — brand story */}
       <aside className="relative hidden flex-col justify-between p-10 md:flex">
