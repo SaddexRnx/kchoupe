@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   User,
   Key,
@@ -23,6 +23,13 @@ import {
   MessageSquare,
   Slack,
   Zap,
+  Keyboard,
+  Database,
+  Download,
+  Activity,
+  Sparkles,
+  Languages,
+  BarChart3,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
@@ -38,6 +45,10 @@ type SectionKey =
   | "billing"
   | "notifications"
   | "security"
+  | "data"
+  | "shortcuts"
+  | "activity"
+  | "labs"
   | "danger";
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "violet" | "emerald" | "amber" | "rose" }[] = [
@@ -50,6 +61,10 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
   { key: "billing", label: "Billing", icon: CreditCard, tone: "amber" },
   { key: "notifications", label: "Notifications", icon: Bell, tone: "violet" },
   { key: "security", label: "Security", icon: Shield, tone: "emerald" },
+  { key: "data", label: "Data & privacy", icon: Database, tone: "emerald" },
+  { key: "shortcuts", label: "Keyboard shortcuts", icon: Keyboard, tone: "violet" },
+  { key: "activity", label: "Activity log", icon: Activity, tone: "amber" },
+  { key: "labs", label: "Labs", icon: Sparkles, tone: "violet" },
   { key: "danger", label: "Danger zone", icon: Trash2, tone: "rose" },
 ];
 
