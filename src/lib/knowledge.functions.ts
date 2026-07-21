@@ -160,7 +160,8 @@ export const scrapeWebsite = createServerFn({ method: "POST" })
     if (insErr || !src) throw new Error(insErr?.message ?? "insert failed");
 
     try {
-      const res = await fetch(data.url, {
+      const { safeFetch } = await import("./ssrf-guard.server");
+      const res = await safeFetch(data.url, {
         headers: { "User-Agent": "AtlasAI/1.0 (+https://atlas.ai)" },
       });
       if (!res.ok) throw new Error(`fetch ${res.status}`);
