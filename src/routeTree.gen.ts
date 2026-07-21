@@ -32,6 +32,7 @@ import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogFutureOfAiNorthAfricaRouteImport } from './routes/blog.future-of-ai-north-africa'
 import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
 import { Route as ApiPublicWebhooksTelegramIntegrationIdRouteImport } from './routes/api/public/webhooks/telegram/$integrationId'
 import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes/api/public/webhooks/meta/$integrationId'
@@ -151,6 +152,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogFutureOfAiNorthAfricaRoute =
+  BlogFutureOfAiNorthAfricaRouteImport.update({
+    id: '/blog/future-of-ai-north-africa',
+    path: '/blog/future-of-ai-north-africa',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksInboundRoute =
   ApiPublicWebhooksInboundRouteImport.update({
     id: '/api/public/webhooks/inbound',
@@ -194,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/blog/future-of-ai-north-africa'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/blog/future-of-ai-north-africa'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -337,6 +349,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/support'
     | '/terms'
+    | '/blog/future-of-ai-north-africa'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -366,6 +379,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  BlogFutureOfAiNorthAfricaRoute: typeof BlogFutureOfAiNorthAfricaRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
   ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
   ApiPublicWebhooksTelegramIntegrationIdRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -534,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/future-of-ai-north-africa': {
+      id: '/blog/future-of-ai-north-africa'
+      path: '/blog/future-of-ai-north-africa'
+      fullPath: '/blog/future-of-ai-north-africa'
+      preLoaderRoute: typeof BlogFutureOfAiNorthAfricaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/inbound': {
       id: '/api/public/webhooks/inbound'
       path: '/api/public/webhooks/inbound'
@@ -582,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  BlogFutureOfAiNorthAfricaRoute: BlogFutureOfAiNorthAfricaRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
   ApiPublicWebhooksMetaIntegrationIdRoute:
     ApiPublicWebhooksMetaIntegrationIdRoute,
