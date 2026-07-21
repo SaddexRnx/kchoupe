@@ -584,20 +584,41 @@ function discoverProductLinks(html: string, baseUrl: string, maxLinks: number): 
   return Array.from(links).slice(0, maxLinks);
 }
 
-async function fetchText(url: string, timeoutMs = 10000): Promise<string | null> {
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+async function fetchText(url: string, timeoutMs = 12000): Promise<{ ok: boolean; status: number; body: string | null }> {
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), timeoutMs);
-    const r = await fetch(url, { redirect: "follow", signal: ctl.signal, headers: { "User-Agent": "AtlasAI/1.0 (+https://atlas.ai)" } });
+    const r = await fetch(url, {
+      redirect: "follow",
+      signal: ctl.signal,
+      headers: {
+        "User-Agent": BROWSER_UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
     clearTimeout(t);
-    if (!r.ok) return null;
-    return await r.text();
-  } catch { return null; }
+    if (!r.ok) return { ok: false, status: r.status, body: null };
+    return { ok: true, status: r.status, body: await r.text() };
+  } catch { return { ok: false, status: 0, body: null }; }
+}
+
+function extractSitemapProductUrls(xml: string): string[] {
+  const out: string[] = [];
+  const re = /<loc>([^<]+)<\/loc>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml))) {
+    const u = m[1].trim();
+    if (/\/products\//i.test(u)) out.push(u);
+  }
+  return out;
 }
 
 export const scrapeWebsiteProducts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ found: number; inserted: number; skipped: number; pages_scanned: number; sample: string[] }> => {
+  .handler(async ({ context }): Promise<{ found: number; inserted: number; skipped: number; pages_scanned: number; sample: string[]; log: string[] }> => {
     const ws = await workspaceId(context);
     const { data: integ } = await context.supabase
       .from("integrations")
@@ -607,84 +628,115 @@ export const scrapeWebsiteProducts = createServerFn({ method: "POST" })
     const url = (integ?.credentials as any)?.url;
     if (!url) throw new Error("Connect a website URL first.");
 
-    // Also try /products.json (Shopify) as a fast-path.
     const scraped: ScrapedProduct[] = [];
-    try {
-      const host = new URL(url).origin;
-      const sj = await fetchText(host + "/products.json?limit=250", 8000);
-      if (sj) {
-        try {
-          const j = JSON.parse(sj);
-          if (Array.isArray(j.products)) {
-            for (const p of j.products) {
-              const variant = p.variants?.[0];
-              const price = parsePrice(variant?.price ?? p.price);
-              if (!p.title || price == null) continue;
-              scraped.push({
-                name: String(p.title).trim(),
-                price,
-                currency: variant?.presentment_prices?.[0]?.price?.currency_code || "",
-                description: p.body_html ? p.body_html.replace(/<[^>]+>/g, " ").slice(0, 500) : undefined,
-                image: p.images?.[0]?.src,
-                sku: variant?.sku,
-                url: host + "/products/" + p.handle,
-              });
-            }
-          }
-        } catch {}
-      }
-    } catch {}
-
-    const pages = new Set<string>([url]);
-    const html = await fetchText(url);
+    const log: string[] = [];
     let scanned = 0;
-    if (html) {
+    const host = new URL(url).origin;
+
+    // Shopify fast-path: paginate /products.json
+    let shopifyHit = false;
+    for (let page = 1; page <= 10; page++) {
+      const r = await fetchText(`${host}/products.json?limit=250&page=${page}`, 10000);
+      if (!r.ok || !r.body) { if (page === 1) log.push(`products.json → HTTP ${r.status}`); break; }
+      let j: any; try { j = JSON.parse(r.body); } catch { break; }
+      const arr = Array.isArray(j?.products) ? j.products : [];
+      if (arr.length === 0) break;
+      shopifyHit = true;
+      for (const p of arr) {
+        const variant = p.variants?.[0];
+        const price = parsePrice(variant?.price ?? p.price);
+        if (!p.title || price == null) continue;
+        scraped.push({
+          name: String(p.title).trim(),
+          price,
+          currency: variant?.presentment_prices?.[0]?.price?.currency_code || "USD",
+          description: p.body_html ? p.body_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 500) : undefined,
+          image: p.images?.[0]?.src,
+          sku: variant?.sku || `SHOP-${p.id}`,
+          url: `${host}/products/${p.handle}`,
+        });
+      }
+      log.push(`products.json p${page}: +${arr.length}`);
+      if (arr.length < 250) break;
+    }
+
+    // Sitemap-driven URL discovery (fallback)
+    const productUrls = new Set<string>();
+    if (!shopifyHit) {
+      const sm = await fetchText(`${host}/sitemap.xml`, 10000);
+      if (sm.ok && sm.body) {
+        const nested: string[] = [];
+        const reLoc = /<loc>([^<]+)<\/loc>/gi;
+        let mm: RegExpExecArray | null;
+        while ((mm = reLoc.exec(sm.body))) {
+          const u = mm[1].trim();
+          if (/sitemap.*products/i.test(u)) nested.push(u);
+          else if (/\/products\//i.test(u)) productUrls.add(u);
+        }
+        for (const n of nested.slice(0, 5)) {
+          const child = await fetchText(n, 10000);
+          if (child.ok && child.body) extractSitemapProductUrls(child.body).forEach((u) => productUrls.add(u));
+        }
+        log.push(`sitemap: ${productUrls.size} product URL(s)`);
+      } else {
+        log.push(`sitemap.xml → HTTP ${sm.status}`);
+      }
+    }
+
+    // Homepage HTML: JSON-LD, OG, anchor discovery
+    const home = await fetchText(url);
+    if (home.ok && home.body) {
       scanned++;
-      scraped.push(...extractJsonLdProducts(html, url));
-      const og = extractOgProduct(html, url);
+      const ld = extractJsonLdProducts(home.body, url);
+      scraped.push(...ld);
+      const og = extractOgProduct(home.body, url);
       if (og) scraped.push(og);
-      const links = discoverProductLinks(html, url, 24);
-      links.forEach((l) => pages.add(l));
+      log.push(`home: JSON-LD ${ld.length}, OG ${og ? 1 : 0}`);
+      discoverProductLinks(home.body, url, 30).forEach((l) => productUrls.add(l));
+    } else if (!shopifyHit) {
+      log.push(`home → HTTP ${home.status}`);
     }
 
-    // Fetch discovered product pages (concurrency 5).
-    const list = Array.from(pages).slice(1);
-    for (let i = 0; i < list.length; i += 5) {
-      const batch = list.slice(i, i + 5);
-      const results = await Promise.all(batch.map((u) => fetchText(u)));
-      results.forEach((h, idx) => {
-        if (!h) return;
-        scanned++;
-        scraped.push(...extractJsonLdProducts(h, batch[idx]));
-        const og = extractOgProduct(h, batch[idx]);
-        if (og) scraped.push(og);
-      });
+    // Crawl product pages (only when Shopify JSON didn't cover it)
+    if (!shopifyHit) {
+      const list = Array.from(productUrls).slice(0, 30);
+      for (let i = 0; i < list.length; i += 5) {
+        const batch = list.slice(i, i + 5);
+        const results = await Promise.all(batch.map((u) => fetchText(u)));
+        results.forEach((res, idx) => {
+          if (!res.ok || !res.body) return;
+          scanned++;
+          scraped.push(...extractJsonLdProducts(res.body, batch[idx]));
+          const og = extractOgProduct(res.body, batch[idx]);
+          if (og) scraped.push(og);
+        });
+      }
+      log.push(`crawled ${Math.min(30, productUrls.size)} product page(s)`);
     }
 
-    // Deduplicate by name (case-insensitive), prefer entries with images.
+    // Deduplicate by (sku||name)
     const dedup = new Map<string, ScrapedProduct>();
     for (const p of scraped) {
-      const key = p.name.toLowerCase();
+      const key = (p.sku || p.name).toLowerCase();
       const prev = dedup.get(key);
       if (!prev || (!prev.image && p.image)) dedup.set(key, p);
     }
     const unique = Array.from(dedup.values());
     if (unique.length === 0) {
-      return { found: 0, inserted: 0, skipped: 0, pages_scanned: scanned, sample: [] };
+      return { found: 0, inserted: 0, skipped: 0, pages_scanned: scanned, sample: [], log };
     }
 
-    // Insert into products table (upsert on sku).
     const rows = unique.map((p) => ({
       workspace_id: ws,
       sku: (p.sku && p.sku.trim()) || "WEB-" + Math.floor(Math.random() * 1e9).toString(36).toUpperCase(),
       name: p.name.slice(0, 200),
       category: "Website",
       price: p.price,
-      currency: p.currency || "DZD",
+      currency: p.currency || "USD",
       stock: 0,
       status: "draft" as const,
       image_emoji: "🛍️",
-      description: [p.description, p.url ? `Source: ${p.url}` : null].filter(Boolean).join("\n\n") || null,
+      description: [p.description, p.image ? `Image: ${p.image}` : null, p.url ? `Source: ${p.url}` : null].filter(Boolean).join("\n\n") || null,
     }));
     const { data: inserted, error } = await context.supabase
       .from("products")
@@ -698,5 +750,6 @@ export const scrapeWebsiteProducts = createServerFn({ method: "POST" })
       skipped: unique.length - (inserted?.length ?? 0),
       pages_scanned: scanned,
       sample: unique.slice(0, 5).map((p) => p.name),
+      log,
     };
   });
