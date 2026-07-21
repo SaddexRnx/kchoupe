@@ -130,3 +130,49 @@ export const updateConversationStatus = createServerFn({ method: "POST" })
     return row as InboxConvo;
   });
 
+export type ConversationStats = {
+  conversations: number;
+  messages: number;
+  user_messages: number;
+  agent_messages: number;
+  confirmed_orders: number;
+  total_orders: number;
+  customers: number;
+  returning_customers: number;
+  by_channel: Record<string, number>;
+  top_customers: Array<{ name: string; channel: string; messages: number }>;
+  learnings: number;
+};
+
+export const conversationStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ConversationStats> => {
+    const ws = await workspaceId(context);
+    const { data, error } = await context.supabase.rpc("conversation_stats", { _workspace_id: ws });
+    if (error) throw new Error(error.message);
+    return data as ConversationStats;
+  });
+
+export type Learning = {
+  id: string;
+  channel: string | null;
+  lesson: string;
+  outcome: string;
+  score: number;
+  created_at: string;
+};
+
+export const listLearnings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<Learning[]> => {
+    const ws = await workspaceId(context);
+    const { data, error } = await context.supabase
+      .from("workspace_learnings")
+      .select("id,channel,lesson,outcome,score,created_at")
+      .eq("workspace_id", ws)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Learning[];
+  });
+
