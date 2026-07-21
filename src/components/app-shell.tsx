@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotifications, markNotificationsRead } from "@/lib/notifications.functions";
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 
 type NavKey =
   | "dashboard"
@@ -65,6 +66,11 @@ export function AppShell({ active, children }: { active: NavKey; children: React
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, [navigate]);
   if (!checked) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading…</div>;
+  return <AppShellInner active={active}>{children}</AppShellInner>;
+}
+
+function AppShellInner({ active, children }: { active: NavKey; children: ReactNode }) {
+  useRealtimeSync();
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto flex max-w-[1600px] gap-4 px-3 py-4 sm:px-4 sm:py-6 lg:gap-6 lg:px-8">
