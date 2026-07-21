@@ -147,17 +147,39 @@ export function Playground() {
 
   const openOrder = (p: ProductRow) => {
     setOrderProduct(p);
-    setOrderForm({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+    setOrderForm({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+    setOrderErrors({});
+  };
+
+  const validateOrder = () => {
+    const e: Record<string, string> = {};
+    if (orderForm.customer_name.trim().length < 2) e.customer_name = "Enter the customer's full name";
+    if (orderForm.customer_phone.replace(/\D/g, "").length < 6) e.customer_phone = "Enter a valid phone number";
+    if (orderForm.shipping_address.trim().length < 8) e.shipping_address = "Enter the delivery address";
+    if (orderForm.customer_email.trim() && !/^\S+@\S+\.\S+$/.test(orderForm.customer_email.trim())) e.customer_email = "Invalid email";
+    const qty = Number(orderForm.qty);
+    if (!Number.isFinite(qty) || qty < 1) e.qty = "Quantity must be at least 1";
+    return e;
   };
 
   const submitOrder = async () => {
     if (!orderProduct) return;
-    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const errs = validateOrder();
+    setOrderErrors(errs);
+    if (Object.keys(errs).length) {
+      toast.push({ kind: "warn", title: "Missing details", body: "Please fill in name, phone and delivery address." });
+      return;
+    }
     const qty = Math.max(1, Number(orderForm.qty) || 1);
     setPlacing(true);
     try {
       const amount = Number(orderProduct.price) * qty;
       const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const composedNotes = [
+        `Phone: ${orderForm.customer_phone.trim()}`,
+        `Address: ${orderForm.shipping_address.trim()}`,
+        orderForm.notes.trim() ? `Notes: ${orderForm.notes.trim()}` : null,
+      ].filter(Boolean).join("\n");
       const res = await placeOrder({ data: {
         customer_name: orderForm.customer_name.trim(),
         customer_email: orderForm.customer_email.trim() || undefined,
@@ -167,10 +189,10 @@ export function Playground() {
         status: "pending",
         confirmed_by_ai: true,
         ai_employee_id: activeEmployee?.id ?? null,
-        notes: orderForm.notes.trim() || undefined,
+        notes: composedNotes,
       }});
       toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: `${summary} — ${amount.toLocaleString()} ${orderProduct.currency}` });
-      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** placed for ${orderForm.customer_name}: ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Status: pending confirmation.` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** confirmed for **${orderForm.customer_name.trim()}** (${orderForm.customer_phone.trim()}): ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Shipping to: ${orderForm.shipping_address.trim()}. Status: pending confirmation.` }]);
       setOrderProduct(null);
     } catch (e: any) {
       toast.push({ kind: "error", title: "Order failed", body: e?.message });
@@ -178,6 +200,7 @@ export function Playground() {
       setPlacing(false);
     }
   };
+
 
   return (
     <div>
