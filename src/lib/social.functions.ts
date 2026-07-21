@@ -128,37 +128,89 @@ export const PROVIDERS: ProviderMeta[] = [
 ];
 
 // ── Handshake dispatch ───────────────────────────────────────
-type PingResult = { ok: boolean; message: string; meta?: any };
+// `code` is a stable machine-readable category so the UI can render a chip
+// and suggest a concrete fix without re-parsing the provider's error string.
+export type PingCode =
+  | "ok"
+  | "network"          // DNS / TCP / TLS / fetch failure
+  | "auth"             // 401 / invalid token
+  | "forbidden"        // 403 / missing scope
+  | "not_found"        // 404 / wrong id
+  | "rate_limit"       // 429
+  | "server_error"     // 5xx
+  | "bad_format"       // input validation
+  | "unlinked"         // e.g. IG business account not linked
+  | "unknown";
+
+type PingResult = { ok: boolean; message: string; code: PingCode; hint?: string; meta?: any };
+
+const HINTS: Partial<Record<PingCode, string>> = {
+  network: "We couldn't reach the provider. Check the URL/host, your network, and that the endpoint is publicly reachable.",
+  auth: "The token was rejected. Regenerate it in the provider dashboard and paste the new value — long-lived / system-user tokens are safest.",
+  forbidden: "The token is valid but doesn't have permission for this call. Grant the required scopes/roles, then reconnect.",
+  not_found: "The provider returned 404. Double-check IDs (phone number id, shop domain, endpoint path) — a typo is the most common cause.",
+  rate_limit: "The provider is rate-limiting us. Wait a minute and hit Test again.",
+  server_error: "The provider had a 5xx error. It's usually transient — try again in a bit.",
+  bad_format: "One of the fields isn't in the expected shape. Fix the highlighted field and save again.",
+  unlinked: "The credentials are valid but the two accounts aren't linked on the provider side. Follow the docs to attach them.",
+  unknown: "We couldn't classify this error. Read the raw message below or open the provider docs for context.",
+};
+
+function codeFromStatus(status: number): PingCode {
+  if (status === 401) return "auth";
+  if (status === 403) return "forbidden";
+  if (status === 404) return "not_found";
+  if (status === 429) return "rate_limit";
+  if (status >= 500) return "server_error";
+  if (status >= 400) return "unknown";
+  return "ok";
+}
 
 async function safeJson(r: Response) { try { return await r.json(); } catch { return {}; } }
+
+function withHint(r: Omit<PingResult, "hint">): PingResult {
+  return { ...r, hint: r.code === "ok" ? undefined : HINTS[r.code] };
+}
+
+function metaCode(err: any, status: number): PingCode {
+  const t = String(err?.type || "").toLowerCase();
+  const sub = err?.error_subcode;
+  if (t.includes("oauth") || sub === 463 || sub === 467 || status === 401) return "auth";
+  if (status === 403 || sub === 200) return "forbidden";
+  if (status === 404) return "not_found";
+  return codeFromStatus(status);
+}
 
 async function pingTelegram(c: any): Promise<PingResult> {
   try {
     const r = await fetch(`https://api.telegram.org/bot${encodeURIComponent(c.botToken)}/getMe`);
     const j: any = await safeJson(r);
-    if (!r.ok || !j?.ok) return { ok: false, message: j?.description || `HTTP ${r.status}` };
-    return { ok: true, message: `Connected as @${j.result?.username ?? "bot"}`, meta: { handle: j.result?.username ? `@${j.result.username}` : null } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    if (!r.ok || !j?.ok) {
+      const code: PingCode = r.status === 401 || j?.error_code === 401 ? "auth" : codeFromStatus(r.status || 500);
+      return withHint({ ok: false, code, message: j?.description || `HTTP ${r.status}` });
+    }
+    return withHint({ ok: true, code: "ok", message: `Connected as @${j.result?.username ?? "bot"}`, meta: { handle: j.result?.username ? `@${j.result.username}` : null } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingFacebookPage(c: any): Promise<PingResult> {
   try {
     const r = await fetch(`https://graph.facebook.com/v20.0/me?fields=id,name,category&access_token=${encodeURIComponent(c.pageAccessToken)}`);
     const j: any = await safeJson(r);
-    if (!r.ok || j?.error) return { ok: false, message: j?.error?.message || `HTTP ${r.status}` };
-    return { ok: true, message: `Connected to page "${j.name}"`, meta: { handle: j.name || null } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    if (!r.ok || j?.error) return withHint({ ok: false, code: metaCode(j?.error, r.status), message: j?.error?.message || `HTTP ${r.status}` });
+    return withHint({ ok: true, code: "ok", message: `Connected to page "${j.name}"`, meta: { handle: j.name || null } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingInstagram(c: any): Promise<PingResult> {
   try {
     const r = await fetch(`https://graph.facebook.com/v20.0/me?fields=id,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(c.pageAccessToken)}`);
     const j: any = await safeJson(r);
-    if (!r.ok || j?.error) return { ok: false, message: j?.error?.message || `HTTP ${r.status}` };
+    if (!r.ok || j?.error) return withHint({ ok: false, code: metaCode(j?.error, r.status), message: j?.error?.message || `HTTP ${r.status}` });
     const ig = j?.instagram_business_account;
-    if (!ig) return { ok: false, message: "Page has no linked Instagram Business account." };
-    return { ok: true, message: `Linked to @${ig.username}`, meta: { handle: `@${ig.username}` } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    if (!ig) return withHint({ ok: false, code: "unlinked", message: "Page has no linked Instagram Business account." });
+    return withHint({ ok: true, code: "ok", message: `Linked to @${ig.username}`, meta: { handle: `@${ig.username}` } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingWhatsApp(c: any): Promise<PingResult> {
@@ -167,49 +219,49 @@ async function pingWhatsApp(c: any): Promise<PingResult> {
       headers: { Authorization: `Bearer ${c.accessToken}` },
     });
     const j: any = await safeJson(r);
-    if (!r.ok || j?.error) return { ok: false, message: j?.error?.message || `HTTP ${r.status}` };
-    return { ok: true, message: `Verified ${j.display_phone_number || j.verified_name}`, meta: { handle: j.display_phone_number || null } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    if (!r.ok || j?.error) return withHint({ ok: false, code: metaCode(j?.error, r.status), message: j?.error?.message || `HTTP ${r.status}` });
+    return withHint({ ok: true, code: "ok", message: `Verified ${j.display_phone_number || j.verified_name}`, meta: { handle: j.display_phone_number || null } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingShopify(c: any): Promise<PingResult> {
   try {
     const host = String(c.shopDomain || "").replace(/^https?:\/\//, "").replace(/\/+$/, "");
-    if (!/\.myshopify\.com$/.test(host)) return { ok: false, message: "Shop domain must end with .myshopify.com" };
+    if (!/\.myshopify\.com$/.test(host)) return withHint({ ok: false, code: "bad_format", message: "Shop domain must end with .myshopify.com" });
     const r = await fetch(`https://${host}/admin/api/2024-10/shop.json`, {
       headers: { "X-Shopify-Access-Token": String(c.adminAccessToken || ""), Accept: "application/json" },
     });
     const j: any = await safeJson(r);
-    if (!r.ok) return { ok: false, message: j?.errors ? JSON.stringify(j.errors) : `HTTP ${r.status}` };
-    return { ok: true, message: `Store "${j?.shop?.name}" · ${j?.shop?.currency}`, meta: { handle: j?.shop?.name || host } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    if (!r.ok) return withHint({ ok: false, code: codeFromStatus(r.status), message: j?.errors ? JSON.stringify(j.errors) : `HTTP ${r.status}` });
+    return withHint({ ok: true, code: "ok", message: `Store "${j?.shop?.name}" · ${j?.shop?.currency}`, meta: { handle: j?.shop?.name || host } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingWoo(c: any): Promise<PingResult> {
   try {
     const base = String(c.siteUrl || "").replace(/\/+$/, "");
-    if (!/^https?:\/\//.test(base)) return { ok: false, message: "Site URL must start with https://" };
+    if (!/^https?:\/\//.test(base)) return withHint({ ok: false, code: "bad_format", message: "Site URL must start with https://" });
     const auth = Buffer.from(`${c.consumerKey}:${c.consumerSecret}`).toString("base64");
     const r = await fetch(`${base}/wp-json/wc/v3/system_status`, { headers: { Authorization: `Basic ${auth}`, Accept: "application/json" } });
-    if (r.status === 404) return { ok: false, message: "wp-json not found — enable pretty permalinks and the WooCommerce REST API." };
+    if (r.status === 404) return withHint({ ok: false, code: "not_found", message: "wp-json not found — enable pretty permalinks and the WooCommerce REST API." });
     const j: any = await safeJson(r);
-    if (!r.ok) return { ok: false, message: j?.message || `HTTP ${r.status}` };
+    if (!r.ok) return withHint({ ok: false, code: codeFromStatus(r.status), message: j?.message || `HTTP ${r.status}` });
     const env = j?.environment;
-    return { ok: true, message: `WooCommerce ${env?.version ?? ""} · ${env?.site_url ?? base}`, meta: { handle: env?.site_url || base } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    return withHint({ ok: true, code: "ok", message: `WooCommerce ${env?.version ?? ""} · ${env?.site_url ?? base}`, meta: { handle: env?.site_url || base } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function pingWebsite(c: any): Promise<PingResult> {
   try {
     const url = String(c.url || "").trim();
-    if (!/^https?:\/\//.test(url)) return { ok: false, message: "URL must start with http:// or https://" };
+    if (!/^https?:\/\//.test(url)) return withHint({ ok: false, code: "bad_format", message: "URL must start with http:// or https://" });
     const r = await fetch(url, { redirect: "follow" });
-    if (!r.ok) return { ok: false, message: `HTTP ${r.status}` };
+    if (!r.ok) return withHint({ ok: false, code: codeFromStatus(r.status), message: `HTTP ${r.status}` });
     const text = (await r.text()).slice(0, 20000);
     const m = text.match(/<title[^>]*>([^<]{1,140})<\/title>/i);
     const title = m ? m[1].trim() : new URL(url).host;
-    return { ok: true, message: `Reachable · "${title}"`, meta: { handle: title } };
-  } catch (e: any) { return { ok: false, message: e?.message || "Network error" }; }
+    return withHint({ ok: true, code: "ok", message: `Reachable · "${title}"`, meta: { handle: title } });
+  } catch (e: any) { return withHint({ ok: false, code: "network", message: e?.message || "Network error" }); }
 }
 
 async function ping(provider: ProviderId, creds: any): Promise<PingResult> {
@@ -221,7 +273,7 @@ async function ping(provider: ProviderId, creds: any): Promise<PingResult> {
     case "shopify": return pingShopify(creds);
     case "woocommerce": return pingWoo(creds);
     case "website": return pingWebsite(creds);
-    default: return { ok: false, message: "Unknown provider" };
+    default: return withHint({ ok: false, code: "unknown", message: "Unknown provider" });
   }
 }
 
