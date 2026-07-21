@@ -375,21 +375,33 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
   const test = useServerFn(testCustomModel);
   const del = useServerFn(deleteCustomModel);
   const [addOpen, setAddOpen] = useState(false);
-  const [draft, setDraft] = useState({ label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" });
+  const [editId, setEditId] = useState<string | null>(null);
+  const emptyDraft = { label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" };
+  const [draft, setDraft] = useState(emptyDraft);
   const [reveal, setReveal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["custom_models"] });
 
+  const openAdd = () => { setEditId(null); setDraft(emptyDraft); setAddOpen(true); };
+  const openEdit = (m: CustomModelRow) => {
+    setEditId(m.id);
+    setDraft({ label: m.label, base_url: m.base_url, model_id: m.model_id, api_key: "" });
+    setAddOpen(true);
+  };
+  const closeForm = () => { setAddOpen(false); setEditId(null); setDraft(emptyDraft); };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const row = await save({ data: draft });
+      const payload: any = { label: draft.label, base_url: draft.base_url, model_id: draft.model_id };
+      if (editId) payload.id = editId;
+      if (draft.api_key) payload.api_key = draft.api_key;
+      const row = await save({ data: payload });
       const ok = row.last_test_status === "ok";
-      toast.push({ kind: ok ? "success" : "error", title: ok ? "Model saved & verified" : "Saved but handshake failed", body: row.last_test_message ?? "" });
-      setAddOpen(false);
-      setDraft({ label: "", base_url: "https://openrouter.ai/api/v1", model_id: "openai/gpt-4o-mini", api_key: "" });
+      toast.push({ kind: ok ? "success" : "error", title: editId ? (ok ? "Model updated & verified" : "Updated but handshake failed") : (ok ? "Model saved & verified" : "Saved but handshake failed"), body: row.last_test_message ?? "" });
+      closeForm();
       invalidate();
     } catch (e: any) { toast.push({ kind: "error", title: "Save failed", body: e?.message }); }
     finally { setSaving(false); }
