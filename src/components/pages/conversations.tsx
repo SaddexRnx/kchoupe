@@ -23,7 +23,7 @@ function ago(iso: string) {
 
 type ProductLite = {
   id: string; name: string; sku: string; price: number | string; currency: string;
-  stock: number; image_emoji: string;
+  stock: number; image_emoji: string; status?: string;
 };
 
 function findProductMatches(text: string, products: ProductLite[]): ProductLite[] {
@@ -246,9 +246,13 @@ export function Conversations() {
                               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                                 <span className="font-mono">{p.sku}</span>
                                 <span>·</span>
-                                <span className={p.stock === 0 ? "text-rose-300" : "text-emerald-300"}>
-                                  {p.stock === 0 ? "Out of stock" : `${p.stock} in stock`}
-                                </span>
+                                {(() => {
+                                  const unknown = p.status === "draft" || p.stock == null;
+                                  const out = !unknown && (p.status === "out" || p.stock === 0);
+                                  const cls = out ? "text-rose-300" : unknown ? "text-amber-300" : "text-emerald-300";
+                                  const label = out ? "Out of stock" : unknown ? "Check website for stock" : `${p.stock} in stock`;
+                                  return <span className={cls}>{label}</span>;
+                                })()}
                               </div>
                             </div>
                             <div className="shrink-0 text-right">
