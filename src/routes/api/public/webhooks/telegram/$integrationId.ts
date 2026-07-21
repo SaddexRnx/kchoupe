@@ -56,6 +56,7 @@ export const Route = createFileRoute("/api/public/webhooks/telegram/$integration
                 body: `I want to order [${sku}]. Please guide me.`,
                 platformThreadId: String(chatId),
                 botToken: token,
+                suppressProductCards: true,
               });
             } catch (e: any) { console.error("telegram callback handle:", e?.message || e); }
           }

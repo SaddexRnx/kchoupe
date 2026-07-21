@@ -17,6 +17,7 @@ export type InboundMessage = {
   body: string;
   platformThreadId?: string | null; // where to reply on the platform (chat_id, thread id, PSID)
   botToken?: string | null;         // when already known (webhook route already loaded creds)
+  suppressProductCards?: boolean;   // when true, don't re-send product cards (e.g. after an Order button tap)
 };
 
 // ── Guardrail (mirrors customer-chat.functions but adds customer memory) ─────
@@ -399,7 +400,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     .eq("id", convoId);
 
   // 9) Dispatch reply back to the originating platform
-  const mentioned = !createdOrder ? findMentionedProducts(reply, prodRes.data ?? []) : [];
+  const mentioned = (!createdOrder && !msg.suppressProductCards) ? findMentionedProducts(reply, prodRes.data ?? []) : [];
   try {
     const threadId = msg.platformThreadId ?? msg.externalId;
     if (msg.channel === "telegram") {
