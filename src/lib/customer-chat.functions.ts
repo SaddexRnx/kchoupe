@@ -25,6 +25,12 @@ CATALOG RULES:
      - "OUT OF STOCK" → only then say it's out of stock.
   4. If the catalog is empty, say the store hasn't listed products yet and invite them to check back.
 
+IN-CHAT ORDERING:
+  • When you mention a listed product by name or SKU, the app renders a product card with an Order button below your reply.
+  • Do NOT tell customers to visit an external website, product page, or add-to-cart page.
+  • If the customer wants to buy, ask them to tap the Order button on the product card below your reply.
+  • For "availability: check website", say live stock should be checked before final checkout, but still use the in-chat Order button.
+
 STYLE: short, warm, helpful. Auto-detect the customer's language and reply in it.`;
 
 const OUT_OF_STOCK_RE = /\b(out\s*of\s*stock|sold\s*out|not\s+in\s+stock|unavailable)\b/i;
