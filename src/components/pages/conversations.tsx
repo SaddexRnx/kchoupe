@@ -428,12 +428,15 @@ export function Conversations() {
               </div>
               <div className="text-right"><div className="font-display text-sm font-bold">{Number(orderProduct.price).toLocaleString()} <span className="text-[10px] text-muted-foreground">{orderProduct.currency}</span></div></div>
             </div>
-            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" />
-            <TextField label="Customer email" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" />
+            <TextField label="Customer name *" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" help={orderErrors.customer_name} />
+            <TextField label="Phone number *" value={orderForm.customer_phone} onChange={(v) => setOrderForm({ ...orderForm, customer_phone: v })} placeholder="+213 555 12 34 56" help={orderErrors.customer_phone} />
+            <TextField label="Delivery address *" value={orderForm.shipping_address} onChange={(v) => setOrderForm({ ...orderForm, shipping_address: v })} placeholder="Street, city, wilaya / country" help={orderErrors.shipping_address} />
+            <TextField label="Email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" help={orderErrors.customer_email} />
             <label className="block">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity *</div>
               <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+              {orderErrors.qty && <div className="mt-1 text-[11px] text-rose-400">{orderErrors.qty}</div>}
             </label>
             <label className="block">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
