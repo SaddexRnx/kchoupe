@@ -60,9 +60,34 @@ export const sendPlaygroundMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: true });
     if (histErr) throw new Error(histErr.message);
 
-    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
-    if (data.systemPrompt?.trim()) messages.push({ role: "system", content: data.systemPrompt.trim() });
-    for (const m of history ?? []) messages.push({ role: m.role as "user" | "assistant" | "system", content: m.content });
+    // Load catalog for grounding + in-chat ordering
+    const { data: ws } = await supabase.rpc("ensure_default_workspace");
+    const wsId = ws as string | null;
+    let catalogBlock = "";
+    if (wsId) {
+      const { data: products } = await supabase
+        .from("products")
+        .select("sku,name,category,price,currency,stock,status")
+        .eq("workspace_id", wsId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (products && products.length) {
+        const lines = products.map((p: any) => {
+          const unknown = p.status === "draft" || p.stock == null;
+          const out = !unknown && (p.status === "out" || p.stock === 0);
+          const avail = out ? "OUT OF STOCK" : unknown ? "availability: check website" : `${p.stock} in stock`;
+          return `• [${p.sku}] ${p.name} · ${p.category ?? "-"} · ${p.price} ${p.currency} · ${avail}`;
+        });
+        catalogBlock = `\n\nPRODUCT CATALOG (${products.length} items — recommend ONLY from this list, cite exact name + price):\n${lines.join("\n")}`;
+      }
+    }
+
+    const ORDER_HINT = `\n\nIN-CHAT ORDERING: When you mention any product from the catalog by its exact name or SKU, the interface automatically renders a product card under your reply with an "Order" button. Customers place orders directly here — do NOT tell them to visit an external website, do NOT paste external product URLs, and do NOT say "add to cart on our site". Instead invite them to tap the Order button on the card that appears below your message. If they say "order", "buy", "checkout", or similar, confirm the item and quantity and tell them to tap Order on the card below.`;
+
+    const combinedSystem = [data.systemPrompt?.trim(), catalogBlock, ORDER_HINT].filter(Boolean).join("");
+
+    const messages: { role: "user" | "assistant"; content: string }[] = [];
+    for (const m of history ?? []) messages.push({ role: m.role as "user" | "assistant", content: m.content });
 
     // Call the model
     const gateway = createLovableAiGatewayProvider(apiKey);
@@ -70,6 +95,7 @@ export const sendPlaygroundMessage = createServerFn({ method: "POST" })
     try {
       const result = await generateText({
         model: gateway(data.model),
+        system: combinedSystem || undefined,
         messages,
       });
       assistantText = result.text;
