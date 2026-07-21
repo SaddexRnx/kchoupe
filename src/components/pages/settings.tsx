@@ -126,6 +126,7 @@ export function SettingsPage() {
           {active === "shortcuts" && <ShortcutsSection />}
           {active === "activity" && <ActivitySection />}
           {active === "labs" && <LabsSection />}
+          {active === "advanced" && <AdvancedSection />}
           {active === "danger" && <DangerSection />}
         </div>
       </div>
