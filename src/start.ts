@@ -26,7 +26,6 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 // the correct headers automatically — no per-route wiring needed.
 const NOINDEX_VALUE = "noindex, nofollow, noarchive, nosnippet";
 const noIndexMiddleware = createMiddleware().server(async ({ next, request }) => {
-  console.log("[noindex-mw]", request.url);
   let pathname = "";
   try {
     pathname = new URL(request.url).pathname;
@@ -34,22 +33,29 @@ const noIndexMiddleware = createMiddleware().server(async ({ next, request }) =>
     /* ignore */
   }
   const policy = classifyPath(pathname);
-  if (policy === "noindex") {
-    try {
-      setResponseHeader("X-Robots-Tag", NOINDEX_VALUE);
-    } catch {
-      /* no request context */
-    }
+  if (policy !== "noindex") return next();
+
+  // Try setResponseHeader first (works for SSR-rendered pages).
+  try {
+    setResponseHeader("X-Robots-Tag", NOINDEX_VALUE);
+  } catch {
+    /* no request context */
   }
+
   const result = await next();
-  // Also stamp the header directly on any returned Response so handlers that
-  // build their own Response (MCP, 404s, JSON error responses) still inherit
-  // the correct policy — setResponseHeader alone is bypassed in those cases.
-  if (policy === "noindex" && result && typeof result === "object" && "response" in result) {
-    const res = (result as { response?: Response }).response;
-    if (res instanceof Response) {
-      try { res.headers.set("X-Robots-Tag", NOINDEX_VALUE); } catch { /* immutable */ }
-    }
+  console.log("[noindex-mw] result", pathname, typeof result, result && Object.keys(result as object));
+
+  // Fallback: mutate the returned Response headers for handlers that build
+  // their own Response (MCP, custom 404s, JSON handlers).
+  const maybe = result as unknown;
+  const res =
+    maybe instanceof Response
+      ? maybe
+      : maybe && typeof maybe === "object" && "response" in (maybe as Record<string, unknown>)
+        ? ((maybe as { response?: unknown }).response as Response | undefined)
+        : undefined;
+  if (res instanceof Response) {
+    try { res.headers.set("X-Robots-Tag", NOINDEX_VALUE); } catch { /* immutable */ }
   }
   return result;
 });
