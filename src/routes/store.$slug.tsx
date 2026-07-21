@@ -69,7 +69,7 @@ function StorePage() {
           <div className="text-center py-24 text-muted-foreground">No products available yet.</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((p) => (
+            {products.map((p: any) => (
               <div key={p.id} className="group rounded-2xl border border-white/10 bg-white/[0.02] p-4 hover:bg-white/[0.05] hover:-translate-y-0.5 transition">
                 <div className="aspect-square rounded-xl bg-white/5 flex items-center justify-center text-5xl mb-3">{p.image_emoji || "📦"}</div>
                 <div className="text-sm font-semibold line-clamp-2">{p.name}</div>
