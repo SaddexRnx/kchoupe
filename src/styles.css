@@ -151,6 +151,27 @@ a[href*="lovable.dev"][target="_blank"] {
   --scheme: light;
 }
 
+/* --- Light mode overlay remap ---
+ * The UI uses bg-white/*, border-white/*, bg-black/* overlays that were tuned
+ * for a dark background. In light mode they become invisible or wrong, so we
+ * flip white overlays to ink (foreground) overlays and black overlays to a
+ * soft neutral tint. This keeps the entire chrome legible without rewriting
+ * every component.
+ */
+html.light [class*="bg-white/"]      { background-color: color-mix(in oklab, var(--foreground) 4%, transparent) !important; }
+html.light [class*="hover:bg-white/"]:hover { background-color: color-mix(in oklab, var(--foreground) 8%, transparent) !important; }
+html.light [class*="border-white/"]  { border-color: color-mix(in oklab, var(--foreground) 12%, transparent) !important; }
+html.light [class*="hover:border-white/"]:hover { border-color: color-mix(in oklab, var(--foreground) 20%, transparent) !important; }
+html.light [class*="divide-white/"] > * + * { border-color: color-mix(in oklab, var(--foreground) 10%, transparent) !important; }
+html.light [class*="bg-black/"]      { background-color: color-mix(in oklab, var(--foreground) 6%, transparent) !important; }
+html.light [class*="ring-white/"]    { --tw-ring-color: color-mix(in oklab, var(--foreground) 15%, transparent) !important; }
+
+/* Glass panel in light mode: solid-ish white with a soft ink border. */
+html.light .glass-panel {
+  background: color-mix(in oklab, var(--card) 92%, transparent) !important;
+  border-color: color-mix(in oklab, var(--foreground) 10%, transparent) !important;
+}
+
 /* All remaining theme names collapse to the default dark monochrome. */
 [data-theme="midnight"],
 [data-theme="sunset"],
