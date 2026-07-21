@@ -317,29 +317,77 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
   }
   if (!reply) reply = "Thanks for your message! We'll get right back to you.";
 
+  // 8a) Parse [[ORDER ...]] tag — create the real order, then strip it from reply
+  const orderTag = parseOrderTag(reply);
+  let createdOrder: { id: string; order_no: string } | null = null;
+  if (orderTag) {
+    const prod = (prodRes.data ?? []).find((p: any) => String(p.sku).toLowerCase() === orderTag.sku.toLowerCase());
+    if (prod) {
+      const amount = Number(prod.price) * orderTag.qty;
+      const { data: ord } = await supabaseAdmin.from("orders").insert({
+        workspace_id: wsId,
+        order_no: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+        customer_name: orderTag.name,
+        customer_email: null,
+        product_summary: `${prod.name} × ${orderTag.qty}`,
+        amount,
+        currency: prod.currency || "DZD",
+        status: "pending",
+        confirmed_by_ai: true,
+        ai_employee_id: aiEmployeeId,
+        notes: `Channel: ${msg.channel}\nPhone: ${orderTag.phone}\nAddress: ${orderTag.address}\nCustomer: ${externalUserLabel}`,
+      }).select("id,order_no").single();
+      if (ord) createdOrder = ord as any;
+      // update customer memory (phone + address)
+      await supabaseAdmin.from("customers").update({
+        phone: customer.phone || orderTag.phone,
+        name: customer.name || orderTag.name,
+        metadata: { ...(customer.metadata || {}), address: orderTag.address, handle: customer.metadata?.handle ?? null },
+      }).eq("id", customer.id);
+    }
+    reply = reply.replace(ORDER_TAG_RE, "").trim();
+    if (createdOrder) {
+      reply = (reply || `✅ Order confirmed, ${orderTag.name}!`) + `\n\n🧾 Order #${createdOrder.order_no} — we'll contact you on ${orderTag.phone}.`;
+    }
+  }
+
+  // Strip [SKU] tokens from the visible reply (they're for our parser)
+  const visibleReply = reply.replace(/\[[A-Z0-9\-_]{3,}\]/g, "").replace(/\s{2,}/g, " ").trim();
+
   // 8) Save agent reply
   await supabaseAdmin.from("inbox_messages").insert({
-    workspace_id: wsId, conversation_id: convoId, role: "agent", sender: aiEmployeeName ?? "Atlas AI", body: reply,
+    workspace_id: wsId, conversation_id: convoId, role: "agent", sender: aiEmployeeName ?? "Atlas AI", body: visibleReply,
   });
   await supabaseAdmin.from("inbox_conversations")
-    .update({ last_message: reply, unread_count: 0, updated_at: new Date().toISOString() })
+    .update({ last_message: visibleReply, unread_count: 0, updated_at: new Date().toISOString() })
     .eq("id", convoId);
 
   // 9) Dispatch reply back to the originating platform
+  const mentioned = !createdOrder ? findMentionedProducts(reply, prodRes.data ?? []) : [];
   try {
     const threadId = msg.platformThreadId ?? msg.externalId;
     if (msg.channel === "telegram") {
       const token = msg.botToken ?? creds.botToken;
-      if (token) await sendTelegram(token, threadId, reply);
+      if (token) {
+        await sendTelegram(token, threadId, visibleReply);
+        // Send a product card (photo + Order button) for each mentioned product
+        for (const p of mentioned) {
+          const img = extractImageUrl(p.description);
+          const price = `${p.price} ${p.currency}`;
+          const caption = `🛍️ ${p.name}\n💰 ${price}${p.category ? `\n📂 ${p.category}` : ""}`;
+          const kb = { inline_keyboard: [[{ text: `🛒 Order — ${price}`, callback_data: `order:${p.sku}` }]] };
+          if (img) await sendTelegramPhoto(token, threadId, img, caption, { reply_markup: kb });
+          else await sendTelegram(token, threadId, caption, { reply_markup: kb });
+        }
+      }
     } else if (msg.channel === "facebook_page") {
-      if (creds.pageAccessToken) await sendMessenger(creds.pageAccessToken, threadId, reply);
+      if (creds.pageAccessToken) await sendMessenger(creds.pageAccessToken, threadId, visibleReply);
     } else if (msg.channel === "instagram") {
-      if (creds.pageAccessToken) await sendInstagram(creds.pageAccessToken, threadId, reply);
+      if (creds.pageAccessToken) await sendInstagram(creds.pageAccessToken, threadId, visibleReply);
     } else if (msg.channel === "whatsapp") {
-      if (creds.phoneNumberId && creds.accessToken) await sendWhatsApp(creds.phoneNumberId, creds.accessToken, threadId, reply);
+      if (creds.phoneNumberId && creds.accessToken) await sendWhatsApp(creds.phoneNumberId, creds.accessToken, threadId, visibleReply);
     }
   } catch (e: any) {
-    // Don't fail webhook — the message + reply are already stored in the inbox.
     await supabaseAdmin.from("notifications").insert({
       workspace_id: wsId, kind: "warning",
       title: `Auto-reply couldn't be delivered on ${msg.channel}`,
@@ -347,6 +395,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       link: "/conversations",
     });
   }
+
 
   // 10) Notify humans
   await supabaseAdmin.from("notifications").insert({
