@@ -257,7 +257,8 @@ async function pingWebsite(c: any): Promise<PingResult> {
   try {
     const url = String(c.url || "").trim();
     if (!/^https?:\/\//.test(url)) return withHint({ ok: false, code: "bad_format", message: "URL must start with http:// or https://" });
-    const r = await fetch(url, { redirect: "follow" });
+    const { safeFetch } = await import("./ssrf-guard.server");
+    const r = await safeFetch(url);
     if (!r.ok) return withHint({ ok: false, code: codeFromStatus(r.status), message: `HTTP ${r.status}` });
     const text = (await r.text()).slice(0, 20000);
     const m = text.match(/<title[^>]*>([^<]{1,140})<\/title>/i);
