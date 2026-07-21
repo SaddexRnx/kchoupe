@@ -780,7 +780,7 @@ const ar: Dict = {
   "common.all_categories": "كل الفئات",
   "dash.weekday": "الأحد · نظرة عامة",
   "dash.welcome": "مرحبًا بعودتك،",
-  "dash.subtitle": "أدار فريقك 412 محادثة أثناء غيابك.",
+  "dash.subtitle": "إليك آخر نشاطات فريقك الذكي.",
   "dash.systems_ok": "كل الأنظمة تعمل",
   "dash.stat.ai_employees": "موظفو الذكاء الاصطناعي",
   "dash.stat.products": "المنتجات",
