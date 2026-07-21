@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
 
-type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "system";
+type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "security" | "system";
 
 const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "overview",      label: "Overview",      icon: Gauge,         hint: "Pulse" },
@@ -34,6 +34,7 @@ const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "conversations", label: "Conversations", icon: MessageSquare, hint: "Inbox" },
   { key: "integrations",  label: "Integrations",  icon: Plug,          hint: "Wiring" },
   { key: "support",       label: "Support",       icon: LifeBuoy,      hint: "Tickets" },
+  { key: "security",      label: "Security",      icon: Shield,        hint: "Trust" },
   { key: "system",        label: "System",        icon: Radio,         hint: "Ops" },
 ];
 
