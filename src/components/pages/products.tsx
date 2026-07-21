@@ -33,6 +33,18 @@ export function Products() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
+  const [ageFilter, setAgeFilter] = useState<"all" | "day" | "week" | "month">("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "in" | "low" | "out">("all");
+  const [sort, setSort] = useState<"new" | "old" | "stock_asc" | "sold_desc" | "price_desc" | "price_asc">("new");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState<number>(() => {
+    if (typeof window === "undefined") return 8;
+    const v = Number(window.localStorage.getItem("prod_per_page") || 8);
+    return [8, 12, 24, 48, 96].includes(v) ? v : 8;
+  });
+  useEffect(() => { try { window.localStorage.setItem("prod_per_page", String(perPage)); } catch {} }, [perPage]);
+  useEffect(() => { setPage(1); }, [q, cat, status, ageFilter, stockFilter, sort, perPage]);
+
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [editing, setEditing] = useState<Row | null>(null);
@@ -42,18 +54,65 @@ export function Products() {
 
   const categories = useMemo(() => ["all", ...Array.from(new Set(rowsState.map(r => r.category)))], [rowsState]);
 
-  const rows = useMemo(() => rowsState.filter(r =>
-    (cat === "all" || r.category === cat) &&
-    (status === "all" || r.status === status) &&
-    (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.sku.toLowerCase().includes(q.toLowerCase()))
-  ), [q, cat, status, rowsState]);
+  const now = Date.now();
+  const ageCutoff = ageFilter === "day" ? 864e5 : ageFilter === "week" ? 7 * 864e5 : ageFilter === "month" ? 30 * 864e5 : Infinity;
 
-  const totals = useMemo(() => ({
-    products: rowsState.length,
-    active: rowsState.filter(r => r.status === "active").length,
-    stock: rowsState.reduce((s, r) => s + r.stock, 0),
-    ai: rowsState.reduce((s, r) => s + r.ai_sold, 0),
-  }), [rowsState]);
+  const filtered = useMemo(() => {
+    const arr = rowsState.filter(r =>
+      (cat === "all" || r.category === cat) &&
+      (status === "all" || r.status === status) &&
+      (stockFilter === "all" ||
+        (stockFilter === "in" && r.stock >= 20) ||
+        (stockFilter === "low" && r.stock > 0 && r.stock < 20) ||
+        (stockFilter === "out" && r.stock === 0)) &&
+      (ageFilter === "all" || (now - new Date(r.created_at).getTime()) <= ageCutoff) &&
+      (q === "" || r.name.toLowerCase().includes(q.toLowerCase()) || r.sku.toLowerCase().includes(q.toLowerCase()))
+    );
+    const sorted = [...arr];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "new": return +new Date(b.created_at) - +new Date(a.created_at);
+        case "old": return +new Date(a.created_at) - +new Date(b.created_at);
+        case "stock_asc": return a.stock - b.stock;
+        case "sold_desc": return b.sold_30 - a.sold_30;
+        case "price_desc": return Number(b.price) - Number(a.price);
+        case "price_asc": return Number(a.price) - Number(b.price);
+      }
+    });
+    return sorted;
+  }, [q, cat, status, ageFilter, stockFilter, sort, rowsState, now, ageCutoff]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const pageSafe = Math.min(page, totalPages);
+  const rows = useMemo(() => filtered.slice((pageSafe - 1) * perPage, pageSafe * perPage), [filtered, pageSafe, perPage]);
+
+  const totals = useMemo(() => {
+    const outStock = rowsState.filter(r => r.stock === 0).length;
+    const lowStock = rowsState.filter(r => r.stock > 0 && r.stock < 20).length;
+    const newThisWeek = rowsState.filter(r => (now - new Date(r.created_at).getTime()) <= 7 * 864e5).length;
+    const revenue30 = rowsState.reduce((s, r) => s + Number(r.price) * r.sold_30, 0);
+    const currency = rowsState[0]?.currency || "DZD";
+    return {
+      products: rowsState.length,
+      active: rowsState.filter(r => r.status === "active").length,
+      stock: rowsState.reduce((s, r) => s + r.stock, 0),
+      ai: rowsState.reduce((s, r) => s + r.ai_sold, 0),
+      outStock, lowStock, newThisWeek,
+      revenue30, currency,
+    };
+  }, [rowsState, now]);
+
+  const exportCsv = () => {
+    const head = ["sku","name","category","price","currency","stock","status","sold_30","ai_sold","created_at"];
+    const escape = (s: any) => `"${String(s ?? "").replace(/"/g,'""')}"`;
+    const csv = [head.join(","), ...filtered.map(r => head.map(h => escape((r as any)[h])).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `products-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.push({ kind: "success", title: "Exported", body: `${filtered.length} products` });
+  };
 
   const handleCreate = async () => {
     const price = parseInt(draft.price || "0", 10);
