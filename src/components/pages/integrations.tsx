@@ -370,6 +370,12 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
               {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube2 className="h-4 w-4" />}
               Test
             </GhostButton>
+            {meta.id === "website" && (
+              <GhostButton onClick={handleScrape}>
+                {busy === "scrape" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
+                Scrape products
+              </GhostButton>
+            )}
             <GhostButton onClick={handleDisconnect} tone="danger">
               <Trash2 className="h-4 w-4" /> Disconnect
             </GhostButton>
