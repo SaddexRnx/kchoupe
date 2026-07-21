@@ -35,9 +35,16 @@ const noIndexMiddleware = createMiddleware().server(async ({ next, request }) =>
   const policy = classifyPath(pathname);
   if (policy !== "noindex") return next();
 
+  // Cache-Control that prevents shared caches (CDNs, proxies) and browsers
+  // from storing private/auth'd content — pairs with X-Robots-Tag noindex.
+  const CACHE_VALUE = "private, no-store, no-cache, must-revalidate, max-age=0";
+
   // Try setResponseHeader first (works for SSR-rendered pages).
   try {
     setResponseHeader("X-Robots-Tag", NOINDEX_VALUE);
+    setResponseHeader("Cache-Control", CACHE_VALUE);
+    setResponseHeader("Pragma", "no-cache");
+    setResponseHeader("Vary", "Cookie, Authorization");
   } catch {
     /* no request context */
   }
@@ -54,7 +61,21 @@ const noIndexMiddleware = createMiddleware().server(async ({ next, request }) =>
         ? ((maybe as { response?: unknown }).response as Response | undefined)
         : undefined;
   if (res instanceof Response) {
-    try { res.headers.set("X-Robots-Tag", NOINDEX_VALUE); } catch { /* immutable */ }
+    try {
+      res.headers.set("X-Robots-Tag", NOINDEX_VALUE);
+      res.headers.set("Cache-Control", CACHE_VALUE);
+      res.headers.set("Pragma", "no-cache");
+      // Append to Vary rather than replace so handler-set values survive.
+      const existingVary = res.headers.get("Vary");
+      const vary = new Set(
+        (existingVary ? existingVary.split(",") : []).map((v) => v.trim()).filter(Boolean),
+      );
+      vary.add("Cookie");
+      vary.add("Authorization");
+      res.headers.set("Vary", Array.from(vary).join(", "));
+    } catch {
+      /* immutable */
+    }
   }
   return result;
 });

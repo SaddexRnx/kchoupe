@@ -7,16 +7,18 @@ FAIL=0
 pass() { printf "  \033[32m✓\033[0m %s\n" "$1"; }
 fail() { printf "  \033[31m✗\033[0m %s\n" "$1"; FAIL=$((FAIL+1)); }
 
-hdr() { curl -sI "$BASE$1" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-robots-tag"{print tolower($2)}'; }
+hdr() { curl -sI "$BASE$1" | tr -d '\r' | awk -F': ' -v k="$2" 'tolower($1)==k{print tolower($2)}'; }
 body() { curl -s "$BASE$1"; }
 
 expect_noindex() {
-  local path="$1" h; h="$(hdr "$path")"
+  local path="$1" h c; h="$(hdr "$path" x-robots-tag)"; c="$(hdr "$path" cache-control)"
   if [[ "$h" == *"noindex"* ]]; then pass "noindex header on $path  ($h)"
   else fail "MISSING noindex header on $path  (got: '${h:-<none>}')"; fi
+  if [[ "$c" == *"no-store"* && "$c" == *"private"* ]]; then pass "no-store cache on $path  ($c)"
+  else fail "MISSING private/no-store Cache-Control on $path  (got: '${c:-<none>}')"; fi
 }
 expect_indexable() {
-  local path="$1" h; h="$(hdr "$path")"
+  local path="$1" h; h="$(hdr "$path" x-robots-tag)"
   if [[ -z "$h" || "$h" != *"noindex"* ]]; then pass "indexable $path  (X-Robots-Tag: '${h:-<none>}')"
   else fail "$path should be indexable but got X-Robots-Tag: '$h'"; fi
 }
