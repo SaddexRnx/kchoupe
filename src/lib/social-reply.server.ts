@@ -350,11 +350,11 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     reply = res.text?.trim() || "";
   } catch (e: any) {
     const em = String(e?.message || e);
-    reply = em.includes("429") ? "One moment — I'm getting a lot of messages. Please try again shortly."
-          : em.includes("402") ? "Our assistant is temporarily unavailable. A human will follow up."
-          : "Sorry, I ran into a problem. A team member will follow up shortly.";
+    reply = em.includes("429") ? "One sec 🙏 lots of messages right now — I'll be right with you."
+          : em.includes("402") ? "I'm briefly offline — a team member will jump in shortly. 🙌"
+          : "Hmm, something glitched on my side — a teammate will follow up in a moment. 🙏";
   }
-  if (!reply) reply = "Thanks for your message! We'll get right back to you.";
+  if (!reply) reply = "Thanks for reaching out! 🙌 How can I help?";
 
   // 8a) Parse [[ORDER ...]] tag — create the real order, then strip it from reply
   const orderTag = parseOrderTag(reply);
