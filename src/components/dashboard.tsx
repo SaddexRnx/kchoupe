@@ -22,8 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/pages/_shared";
 import { useQueryClient } from "@tanstack/react-query";
 
-const spark = [8, 14, 11, 19, 17, 24, 22, 31, 28, 36, 33, 41, 44];
-
 function ago(iso: string) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return Math.floor(s) + "s";
@@ -32,10 +30,19 @@ function ago(iso: string) {
   return Math.floor(s / 86400) + "d";
 }
 
+const PERIODS: { key: "1D" | "7D" | "30D" | "90D"; days: number; label: string }[] = [
+  { key: "1D", days: 1, label: "Today" },
+  { key: "7D", days: 7, label: "7D" },
+  { key: "30D", days: 30, label: "30D" },
+  { key: "90D", days: 90, label: "90D" },
+];
+
 export function Dashboard() {
   const t = useT();
   const stats = useServerFn(dashboardStats);
-  const { data } = useQuery({ queryKey: ["dashboard_stats"], queryFn: () => stats() });
+  const [period, setPeriod] = useState<"1D" | "7D" | "30D" | "90D">("30D");
+  const periodDays = PERIODS.find((p) => p.key === period)!.days;
+  const { data } = useQuery({ queryKey: ["dashboard_stats", periodDays], queryFn: () => stats({ data: { periodDays } }) });
 
   const statDefs = [
     { key: "dash.stat.ai_employees", value: data?.aiEmployees ?? 0, delta: t("dash.stat.thisweek"), icon: Bot, tone: "violet" as const, to: "/ai-employees" },
