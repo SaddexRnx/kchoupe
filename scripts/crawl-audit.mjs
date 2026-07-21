@@ -16,13 +16,19 @@ const BASE = process.env.CRAWL_BASE ?? "http://localhost:8080";
 const MAX_DEPTH = 2;
 const MAX_PAGES = 60;
 
-const PRIVATE_PATHS = [
+// Auth-gated app surfaces — must NEVER be linked from public pages.
+const AUTHENTICATED_PATHS = [
   "/admin", "/dashboard", "/ai-employees", "/products", "/orders",
   "/conversations", "/knowledge", "/integrations", "/playground",
   "/settings", "/support", "/onboarding",
-  "/login", "/signup", "/reset-password",
 ];
+// Auth flows — public links are expected (Login/Sign up CTAs) but they
+// must still be noindex + Disallow'd so crawlers don't index them.
+const AUTH_FLOW_PATHS = ["/login", "/signup", "/reset-password"];
+const PRIVATE_PATHS = [...AUTHENTICATED_PATHS, ...AUTH_FLOW_PATHS];
 
+const isAuthenticated = (path) =>
+  AUTHENTICATED_PATHS.some((p) => path === p || path.startsWith(p + "/"));
 const isPrivate = (path) =>
   PRIVATE_PATHS.some((p) => path === p || path.startsWith(p + "/"));
 
