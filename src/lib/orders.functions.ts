@@ -233,7 +233,7 @@ export type DashboardExtras = {
   totalRevenue: number;
   topProducts: Array<{ id: string; name: string; sold_30: number; price: number; currency: string; image_emoji: string | null; stock: number }>;
   lowStock: Array<{ id: string; name: string; stock: number; sku: string | null }>;
-  integrations: Array<{ provider: string; status: string; connected_at: string | null }>;
+  integrations: Array<{ provider: string; status: string; last_test_status: string | null; last_test_at: string | null }>;
   learningsCount: number;
   openTickets: number;
   activity: Array<{ id: string; kind: string; label: string; sub: string; created_at: string }>;
