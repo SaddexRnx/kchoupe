@@ -34,6 +34,7 @@ export function AdminAlertPopup() {
     queryKey: ["notifications"],
     queryFn: () => listFn(),
     refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
   const mark = useMutation({
     mutationFn: (id: string) => markFn({ data: { id } }),
