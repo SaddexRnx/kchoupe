@@ -27,13 +27,41 @@ CATALOG RULES:
 
 STYLE: short, warm, helpful. Auto-detect the customer's language and reply in it.`;
 
+const OUT_OF_STOCK_RE = /\b(out\s*of\s*stock|sold\s*out|not\s+in\s+stock|unavailable)\b/i;
+
+function isUnknownWebsiteAvailability(p: any): boolean {
+  return p.status === "draft" || p.stock == null;
+}
+
+function isActuallyOutOfStock(p: any): boolean {
+  return !isUnknownWebsiteAvailability(p) && (p.status === "out" || p.stock === 0);
+}
+
+function findMentionedProducts(text: string, products: any[]): any[] {
+  const lower = text.toLowerCase();
+  const matches: any[] = [];
+  for (const p of products) {
+    const name = String(p.name || "").toLowerCase();
+    const sku = String(p.sku || "").toLowerCase();
+    if ((sku && lower.includes(sku)) || (name.length >= 4 && lower.includes(name))) {
+      matches.push(p);
+      if (matches.length >= 3) break;
+    }
+  }
+  return matches;
+}
+
+function stockSafeReplyForUnknownProduct(product: any): string {
+  const price = `${Number(product.price).toLocaleString()} ${product.currency}`;
+  return `${product.name} is available to order for ${price}. Live stock for this website import has not been confirmed inside Atlas yet, so please check the product page for the latest stock before checkout.`;
+}
+
 function buildCatalog(products: any[]): string {
   if (!products.length) return "PRODUCT CATALOG: (empty — the store has no products listed yet)";
   const lines = products.slice(0, 200).map((p) => {
     let availability: string;
-    if (p.status === "out") availability = "OUT OF STOCK";
-    else if (p.status === "draft" || p.stock == null) availability = "availability: check website";
-    else if (p.stock === 0) availability = "OUT OF STOCK";
+    if (isUnknownWebsiteAvailability(p)) availability = "availability: check website";
+    else if (isActuallyOutOfStock(p)) availability = "OUT OF STOCK";
     else availability = `${p.stock} in stock`;
     const desc = p.description ? ` — ${String(p.description).slice(0, 160)}` : "";
     return `• [${p.sku}] ${p.name} · ${p.category} · ${p.price} ${p.currency} · ${availability}${desc}`;
@@ -88,13 +116,25 @@ export const askCustomerAssistant = createServerFn({ method: "POST" })
       model = gw(data.fallbackModel || "google/gemini-2.5-flash");
     }
 
+    const matchedUnknown = findMentionedProducts(data.message, products || []).filter(isUnknownWebsiteAvailability);
+    const currentRequestGuard = matchedUnknown.length
+      ? `\n\nCURRENT REQUEST AVAILABILITY OVERRIDE:\n${matchedUnknown.map((p) => `- ${p.name}: availability: check website. Treat as available to order. Do NOT say out of stock.`).join("\n")}`
+      : "";
+
     const messages: any[] = [];
-    for (const m of (data.history || []).slice(-16)) messages.push({ role: m.role, content: m.content });
+    for (const m of (data.history || []).slice(-12)) {
+      const content = matchedUnknown.length && m.role === "assistant"
+        ? m.content.replace(OUT_OF_STOCK_RE, "availability should be checked on the website")
+        : m.content;
+      messages.push({ role: m.role, content });
+    }
     messages.push({ role: "user", content: data.message });
 
     try {
-      const res = await generateText({ model, system, messages });
-      return { reply: res.text, catalog_size: products?.length ?? 0 };
+      const res = await generateText({ model, system: system + currentRequestGuard, messages });
+      const unsafeUnknown = matchedUnknown.find((p) => res.text.toLowerCase().includes(String(p.name).toLowerCase()) && OUT_OF_STOCK_RE.test(res.text));
+      const reply = unsafeUnknown ? stockSafeReplyForUnknownProduct(unsafeUnknown) : res.text;
+      return { reply, catalog_size: products?.length ?? 0 };
     } catch (e: any) {
       const msg = e?.message || String(e);
       if (msg.includes("429")) throw new Error("Rate limit reached — try again in a moment.");
