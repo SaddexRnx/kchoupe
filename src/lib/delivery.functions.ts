@@ -11,7 +11,6 @@ export type Carrier = {
   id: string; workspace_id: string; name: string; mode: "manual" | "api";
   provider: string | null; tracking_url_template: string | null;
   default_fee: number; is_default: boolean; active: boolean; notes: string | null;
-  api_config: Record<string, unknown>;
 };
 
 export type ShippingZone = {
