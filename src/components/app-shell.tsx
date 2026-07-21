@@ -26,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotifications, markNotificationsRead } from "@/lib/notifications.functions";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { AdminAlertPopup } from "@/components/admin-alert-popup";
 
 type NavKey =
   | "dashboard"
