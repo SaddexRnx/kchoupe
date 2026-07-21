@@ -1111,10 +1111,10 @@ function SystemTab() {
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Notification title" className="w-full rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2.5 text-sm outline-none transition focus:border-primary/50" />
           <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Message body (optional)" className="w-full rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2.5 text-sm outline-none transition focus:border-primary/50" />
           <select value={kind} onChange={(e) => setKind(e.target.value)} className="w-full rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2.5 text-sm outline-none focus:border-primary/50">
-            <option value="info">Info</option>
-            <option value="success">Success</option>
-            <option value="warn">Warning</option>
-            <option value="error">Alert</option>
+            <option value="broadcast">Announcement (popup)</option>
+            <option value="success">Success (popup)</option>
+            <option value="warn">Warning (popup)</option>
+            <option value="error">Critical alert (popup)</option>
           </select>
           <button disabled={mut.isPending || !title} className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_12px_40px_-12px_var(--primary)] transition hover:brightness-110 disabled:opacity-60">
             {mut.isPending ? "Sending…" : "Send to everyone"}
