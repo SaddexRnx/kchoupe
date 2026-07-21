@@ -31,7 +31,7 @@ export const listOrders = createServerFn({ method: "GET" })
     const ws = await workspaceId(context);
     const { data, error } = await context.supabase
       .from("orders")
-      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
       .eq("workspace_id", ws)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -66,7 +66,7 @@ export const createOrder = createServerFn({ method: "POST" })
       ai_employee_id: data.ai_employee_id || null,
       notes: data.notes || null,
     })
-    .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+    .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
     .single();
     if (error) throw new Error(error.message);
     return row as OrderRow;
@@ -82,7 +82,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase.from("orders")
       .update({ status: data.status })
       .eq("id", data.id)
-      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
       .single();
     if (error) throw new Error(error.message);
     return row as OrderRow;
