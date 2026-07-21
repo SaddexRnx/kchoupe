@@ -26,6 +26,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 // the correct headers automatically — no per-route wiring needed.
 const NOINDEX_VALUE = "noindex, nofollow, noarchive, nosnippet";
 const noIndexMiddleware = createMiddleware().server(async ({ next, request }) => {
+  console.log("[noindex-mw]", request.url);
   let pathname = "";
   try {
     pathname = new URL(request.url).pathname;
