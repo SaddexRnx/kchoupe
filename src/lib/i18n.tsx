@@ -77,7 +77,7 @@ const en: Dict = {
   // dashboard
   "dash.weekday": "Sunday · Overview",
   "dash.welcome": "Welcome back,",
-  "dash.subtitle": "Your workforce handled 412 conversations while you were away.",
+  "dash.subtitle": "Here's what your AI workforce has been up to.",
   "dash.systems_ok": "All systems operational",
   "dash.stat.ai_employees": "AI employees",
   "dash.stat.products": "Products",
