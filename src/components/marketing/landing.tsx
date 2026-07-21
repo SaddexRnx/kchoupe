@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowRight, Bot, Sparkles, ShoppingBag, MessageSquare, Zap, Globe, Shield, Check,
   Instagram, Facebook, MessageCircle, Store, Package, BarChart3, PlayCircle,
