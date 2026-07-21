@@ -30,16 +30,19 @@ import {
   Sparkles,
   Languages,
   BarChart3,
+  Truck,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
 import { AdvancedSection } from "./settings-advanced";
+import { DeliverySection } from "./settings-delivery";
 
 type SectionKey =
   | "profile"
   | "workspace"
   | "team"
+  | "delivery"
   | "appearance"
   | "api-keys"
   | "webhooks"
@@ -57,6 +60,7 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
   { key: "profile", label: "Profile", icon: User, tone: "violet" },
   { key: "workspace", label: "Workspace", icon: Globe, tone: "violet" },
   { key: "team", label: "Team & roles", icon: Users, tone: "emerald" },
+  { key: "delivery", label: "Delivery", icon: Truck, tone: "amber" },
   { key: "appearance", label: "Appearance", icon: Palette, tone: "violet" },
   { key: "api-keys", label: "API keys", icon: Key, tone: "emerald" },
   { key: "webhooks", label: "Webhooks", icon: Webhook, tone: "emerald" },
@@ -116,6 +120,7 @@ export function SettingsPage() {
           {active === "profile" && <ProfileSection />}
           {active === "workspace" && <WorkspaceSection />}
           {active === "team" && <TeamSection />}
+          {active === "delivery" && <DeliverySection />}
           {active === "appearance" && <AppearanceSection />}
           {active === "api-keys" && <ApiKeysSection />}
           {active === "webhooks" && <WebhooksSection />}
