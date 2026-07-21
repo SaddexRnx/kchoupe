@@ -111,7 +111,7 @@ export const saveSocialChannel = createServerFn({ method: "POST" })
       .select("credentials,assigned_employees")
       .eq("workspace_id", ws).eq("integration_key", KEY_OF[data.provider])
       .maybeSingle();
-    const merged = { ...(existing?.credentials || {}) } as any;
+    const merged: any = { ...((existing?.credentials as Record<string, any>) || {}) };
     for (const [k, v] of Object.entries(data.credentials || {})) {
       if (v == null || v === "" || v === "__saved__") continue;
       merged[k] = v;
@@ -163,7 +163,7 @@ export const testSocialChannel = createServerFn({ method: "POST" })
     const started = Date.now();
     const result = await ping(data.provider, existing.credentials || {});
     const latency = Date.now() - started;
-    const merged = { ...(existing.credentials || {}) } as any;
+    const merged: any = { ...((existing.credentials as Record<string, any>) || {}) };
     if (result.ok) {
       merged.__handle = data.provider === "telegram"
         ? (result.meta?.username ? `@${result.meta.username}` : merged.__handle)
