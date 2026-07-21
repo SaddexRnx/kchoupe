@@ -67,6 +67,7 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
   { key: "shortcuts", label: "Keyboard shortcuts", icon: Keyboard, tone: "violet" },
   { key: "activity", label: "Activity log", icon: Activity, tone: "amber" },
   { key: "labs", label: "Labs", icon: Sparkles, tone: "violet" },
+  { key: "advanced", label: "Advanced", icon: Zap, tone: "emerald" },
   { key: "danger", label: "Danger zone", icon: Trash2, tone: "rose" },
 ];
 
