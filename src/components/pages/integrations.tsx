@@ -258,9 +258,8 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
   const [busy, setBusy] = useState<"save" | "test" | "disc" | null>(null);
 
   const connected = !!initial?.connected;
-  const lastOk = initial?.last_test_status === "ok";
-  const lastMsg = initial?.last_test_message;
   const hasCreds = !!initial?.has_credentials;
+
 
   const handleSave = async () => {
     setBusy("save");
