@@ -244,7 +244,7 @@ export function Conversations() {
           { label: "Conversations", value: stats?.conversations ?? 0 },
           { label: "Total messages", value: stats?.messages ?? 0 },
           { label: "Customer msgs", value: stats?.user_messages ?? 0 },
-          { label: "Atlas replies", value: stats?.agent_messages ?? 0 },
+          { label: "KC replies", value: stats?.agent_messages ?? 0 },
           { label: "Confirmed orders", value: stats?.confirmed_orders ?? 0, accent: true },
           { label: "AI learnings", value: stats?.learnings ?? 0 },
         ].map((s) => (
@@ -279,7 +279,7 @@ export function Conversations() {
           </Panel>
           <Panel className="p-4">
             <div className="mb-2 flex items-center justify-between">
-              <div className="text-sm font-semibold">What Atlas learned</div>
+              <div className="text-sm font-semibold">What KC learned</div>
               <span className="text-[11px] text-muted-foreground">auto-distilled from confirmed orders</span>
             </div>
             {learnings.length ? (
@@ -293,7 +293,7 @@ export function Conversations() {
                   </li>
                 ))}
               </ul>
-            ) : <div className="text-sm text-muted-foreground">Atlas will save a lesson here after each confirmed order and reuse it in future chats.</div>}
+            ) : <div className="text-sm text-muted-foreground">KC will save a lesson here after each confirmed order and reuse it in future chats.</div>}
           </Panel>
         </div>
       )}

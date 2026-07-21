@@ -217,7 +217,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function ProfileSection() {
   const [name, setName] = useState("Khalid Chennoufi");
-  const [email, setEmail] = useState("khalid@atlas.ai");
+  const [email, setEmail] = useState("khalid@kc.app");
   const [bio, setBio] = useState("Building AI teammates for commerce.");
   const [saved, setSaved] = useState(false);
 
@@ -269,7 +269,7 @@ function ProfileSection() {
 }
 
 function WorkspaceSection() {
-  const [name, setName] = useState("Atlas AI");
+  const [name, setName] = useState("KC");
   const toast = useToast();
   const [saved, setSaved] = useState(false);
   return (
@@ -281,7 +281,7 @@ function WorkspaceSection() {
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Workspace name"><input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Workspace URL" help="Used for shared links and API callbacks.">
-          <input className={inputCls} defaultValue="atlas-ai.lovable.app" />
+          <input className={inputCls} defaultValue="kc-ai.lovable.app" />
         </Field>
         <Field label="Default AI model">
           <select className={inputCls}>
@@ -305,10 +305,10 @@ function TeamSection() {
   const toast = useToast();
   const { ask, node: confirmNode } = useConfirm();
   const [members, setMembers] = useState([
-    { name: "Khalid Chennoufi", email: "khalid@atlas.ai", role: "Owner", tone: "violet" as const },
-    { name: "Sara Idrissi", email: "sara@atlas.ai", role: "Admin", tone: "emerald" as const },
-    { name: "Mehdi Alaoui", email: "mehdi@atlas.ai", role: "Editor", tone: "emerald" as const },
-    { name: "Lina Berrada", email: "lina@atlas.ai", role: "Viewer", tone: "muted" as const },
+    { name: "Khalid Chennoufi", email: "khalid@kc.app", role: "Owner", tone: "violet" as const },
+    { name: "Sara Idrissi", email: "sara@kc.app", role: "Admin", tone: "emerald" as const },
+    { name: "Mehdi Alaoui", email: "mehdi@kc.app", role: "Editor", tone: "emerald" as const },
+    { name: "Lina Berrada", email: "lina@kc.app", role: "Viewer", tone: "muted" as const },
   ]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invite, setInvite] = useState({ email: "", role: "Editor" });
@@ -450,7 +450,7 @@ function ApiKeysSection() {
   return (
     <SectionShell
       title="API keys"
-      desc="Programmatic access to the Atlas AI API. Keep secret keys server-side."
+      desc="Programmatic access to the KC API. Keep secret keys server-side."
       actions={<PrimaryBtn><Plus className="h-4 w-4" /> New key</PrimaryBtn>}
     >
       <div className="space-y-2">
@@ -485,13 +485,13 @@ function ApiKeysSection() {
 
 function WebhooksSection() {
   const hooks = [
-    { url: "https://atlas-ai.com/hooks/orders", events: ["order.paid", "order.refunded"], status: "healthy" as const },
-    { url: "https://n8n.atlas.ai/webhook/conv", events: ["conversation.resolved"], status: "failing" as const },
+    { url: "https://kc-ai.com/hooks/orders", events: ["order.paid", "order.refunded"], status: "healthy" as const },
+    { url: "https://n8n.kc.app/webhook/conv", events: ["conversation.resolved"], status: "failing" as const },
   ];
   return (
     <SectionShell
       title="Webhooks"
-      desc="Send events to your own services when things happen in Atlas."
+      desc="Send events to your own services when things happen in KC."
       actions={<PrimaryBtn><Plus className="h-4 w-4" /> New endpoint</PrimaryBtn>}
     >
       <div className="space-y-2">
@@ -566,7 +566,7 @@ function BillingSection() {
     <div className="space-y-4">
       <SectionShell
         title="Region & currency"
-        desc="Atlas AI launches first for North Africa — pick your country to see local prices and payment methods."
+        desc="KC launches first for North Africa — pick your country to see local prices and payment methods."
       >
         <div className="grid grid-cols-3 gap-2">
           {(["DZ", "TN", "MA"] as const).map((c) => {
@@ -668,12 +668,12 @@ function NotificationsSection() {
   const rows: { key: keyof typeof prefs; icon: typeof Mail; title: string; desc: string }[] = [
     { key: "emailDigest", icon: Mail, title: "Weekly digest", desc: "Summary of conversations, CSAT and top employees." },
     { key: "emailAlerts", icon: Bell, title: "Email alerts", desc: "Failed integrations, quota warnings, escalations." },
-    { key: "slack", icon: Slack, title: "Slack", desc: "Ping #atlas-alerts on critical events." },
+    { key: "slack", icon: Slack, title: "Slack", desc: "Ping #kc-alerts on critical events." },
     { key: "sms", icon: Smartphone, title: "SMS", desc: "Text on P0 incidents only." },
     { key: "inApp", icon: MessageSquare, title: "In-app", desc: "Bell notifications and toasts." },
   ];
   return (
-    <SectionShell title="Notifications" desc="Choose where and how Atlas reaches you."
+    <SectionShell title="Notifications" desc="Choose where and how KC reaches you."
       actions={<PrimaryBtn onClick={() => toast.push({ kind: "success", title: "Preferences saved" })}><Save className="h-4 w-4" /> Save</PrimaryBtn>}>
       <div className="space-y-2">
         {rows.map((r, i) => (
@@ -798,7 +798,7 @@ function DataSection() {
   const download = (name: string) => {
     const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), scope: name, note: "Full export runs in the background and emails when ready." }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `atlas-${name}-${Date.now()}.json`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `kc-${name}-${Date.now()}.json`; a.click();
     URL.revokeObjectURL(url);
     toast.push({ kind: "success", title: `${name} export started`, body: "You'll get an email when the full archive is ready." });
   };
@@ -892,7 +892,7 @@ function ActivitySection() {
     { who: "Aurora AI", what: "confirmed order #A-1042 (12,900 DZD)", when: "18 min ago", ip: "—", tag: "ai" },
     { who: "Sara Idrissi", what: "edited product 'Argan hair oil 60ml'", when: "1h ago", ip: "160.176.42.8", tag: "edit" },
     { who: "System", what: "Shopify sync ran (312 products)", when: "3h ago", ip: "—", tag: "sync" },
-    { who: "You", what: "invited mehdi@atlas.ai as Editor", when: "yesterday", ip: "197.14.0.12", tag: "team" },
+    { who: "You", what: "invited mehdi@kc.app as Editor", when: "yesterday", ip: "197.14.0.12", tag: "team" },
     { who: "System", what: "webhook telegram.inbound delivered (24 events)", when: "yesterday", ip: "—", tag: "hook" },
   ];
   const filtered = filter === "all" ? events : events.filter(e => e.tag === filter);

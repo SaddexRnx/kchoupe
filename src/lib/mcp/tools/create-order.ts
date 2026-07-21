@@ -12,7 +12,7 @@ function sb(ctx: ToolContext) {
 export default defineTool({
   name: "create_order",
   title: "Create order",
-  description: "Create a new order in the signed-in user's Atlas AI workspace.",
+  description: "Create a new order in the signed-in user's KC workspace.",
   inputSchema: {
     customer_name: z.string().trim().min(1),
     product_summary: z.string().trim().min(1).describe("Short description of what the customer is buying."),

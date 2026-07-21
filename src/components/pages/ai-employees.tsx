@@ -122,8 +122,8 @@ export function AiEmployees() {
 
   useEffect(() => {
     const handler = () => setAddOpen(true);
-    window.addEventListener("atlas:new-employee", handler);
-    return () => window.removeEventListener("atlas:new-employee", handler);
+    window.addEventListener("kc:new-employee", handler);
+    return () => window.removeEventListener("kc:new-employee", handler);
   }, []);
 
   const resetDraft = () => setDraft(emptyDraft());
@@ -237,7 +237,7 @@ export function AiEmployees() {
       />
 
       <HelpNote>
-        <b>AI employees</b> are the personalities Atlas uses to reply to your customers. Each one has its own name, role,
+        <b>AI employees</b> are the personalities KC uses to reply to your customers. Each one has its own name, role,
         model, tone (temperature), preferred language, and knowledge scope. Pause an employee to stop them from replying;
         resume anytime. Delete removes them permanently.
       </HelpNote>
@@ -260,7 +260,7 @@ export function AiEmployees() {
           <Panel className="md:col-span-2 xl:col-span-3 py-10 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary"><Bot className="h-6 w-6" /></div>
             <div className="font-display text-lg font-semibold">No AI employees yet</div>
-            <div className="mt-1 text-sm text-muted-foreground">Create your first one — Atlas will bring them online instantly.</div>
+            <div className="mt-1 text-sm text-muted-foreground">Create your first one — KC will bring them online instantly.</div>
             <div className="mt-4 flex justify-center">
               <PrimaryButton onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> {t("emp.new")}</PrimaryButton>
             </div>
@@ -318,7 +318,7 @@ export function AiEmployees() {
         open={addOpen}
         onClose={() => { setAddOpen(false); resetDraft(); }}
         title="Create AI employee"
-        description="Give them a personality, pick a model, and Atlas will train them on your knowledge base."
+        description="Give them a personality, pick a model, and KC will train them on your knowledge base."
         footer={
           <>
             <GhostButton onClick={() => { setAddOpen(false); resetDraft(); }}>Cancel</GhostButton>
@@ -462,7 +462,7 @@ function EmployeeForm({
       <label className="block md:col-span-2">
         <div className="mb-1.5 text-xs font-medium text-muted-foreground">Opening greeting (optional)</div>
         <input value={value.greeting} onChange={(e) => onChange({ greeting: e.target.value })}
-          placeholder="Hi 👋 I'm Nova from Atlas. How can I help you today?"
+          placeholder="Hi 👋 I'm Nova from KC. How can I help you today?"
           className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
         <div className="mt-1 text-[11px] text-muted-foreground">Sent as the first reply on new conversations.</div>
       </label>
@@ -470,7 +470,7 @@ function EmployeeForm({
       <label className="block md:col-span-2">
         <div className="mb-1.5 text-xs font-medium text-muted-foreground">System prompt (personality & rules)</div>
         <textarea value={value.prompt} onChange={(e) => onChange({ prompt: e.target.value })}
-          rows={4} placeholder="You are a warm, concise sales concierge for Atlas. Always answer in the customer's language."
+          rows={4} placeholder="You are a warm, concise sales concierge for KC. Always answer in the customer's language."
           className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
         <div className="mt-1 text-[11px] text-muted-foreground">Tell the AI who it is, what to do, and what to avoid.</div>
       </label>

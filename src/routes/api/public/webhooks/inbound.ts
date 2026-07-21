@@ -10,10 +10,10 @@ export const Route = createFileRoute("/api/public/webhooks/inbound")({
       GET: async () =>
         json({
           ok: true,
-          endpoint: "atlas-inbound-webhook",
+          endpoint: "kc-inbound-webhook",
           method: "POST",
           description:
-            "Send inbound customer messages here. Include a HMAC-SHA256 hex digest of the raw body signed with your integration's webhookSecret in the x-atlas-signature header.",
+            "Send inbound customer messages here. Include a HMAC-SHA256 hex digest of the raw body signed with your integration's webhookSecret in the x-kc-signature header.",
           body_schema: {
             integration_id: "uuid — from your integration in the Integrations page",
             external_user: "string — display name of the sender",
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/public/webhooks/inbound")({
 
         const secret = (integ.credentials as any)?.webhookSecret;
         if (!secret) return json({ error: "no_webhook_secret_configured" }, 401);
-        const sig = request.headers.get("x-atlas-signature") ?? "";
+        const sig = request.headers.get("x-kc-signature") ?? "";
         const expected = createHmac("sha256", secret).update(raw).digest("hex");
         const a = Buffer.from(sig), b = Buffer.from(expected);
         if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ error: "bad_signature" }, 401);

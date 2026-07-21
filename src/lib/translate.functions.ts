@@ -36,13 +36,13 @@ export const translateBatch = createServerFn({ method: "POST" })
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
     const gateway = createLovableAiGatewayProvider(key);
 
-    const system = `You are a professional UI translator for a SaaS product called "Atlas AI".
+    const system = `You are a professional UI translator for a SaaS product called "KC".
 Translate every input string from English into ${LANG_NAME[data.lang]}.
 Rules:
 - Output ONLY a JSON array of strings, same length and same order as input. No prose, no keys, no code fences.
 - Preserve leading/trailing whitespace, punctuation, emojis, and casing style.
 - Keep placeholders like {name}, {n}, {t}, {q}, %s, %d, $variable, #hashtag EXACTLY as-is.
-- Keep URLs, emails, file paths, code snippets, brand names ("Atlas AI", "Lovable", "WhatsApp", "Shopify", "Telegram", "Instagram", "Facebook", "Stripe", "Nova", "Ember", "Aurora", "Atlas") UNTRANSLATED.
+- Keep URLs, emails, file paths, code snippets, brand names ("KC", "Lovable", "WhatsApp", "Shopify", "Telegram", "Instagram", "Facebook", "Stripe", "Nova", "Ember", "Aurora", "KC") UNTRANSLATED.
 - Keep numeric values and currency codes unchanged.
 - Never add explanations, quotes around the array, or trailing commas.
 - If a string is already in the target language or has no translatable words, return it unchanged.`;

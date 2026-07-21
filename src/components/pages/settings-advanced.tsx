@@ -317,7 +317,7 @@ function Privacy({ toast }: { toast: ReturnType<typeof useToast> }) {
             const payload = await exportFn();
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a"); a.href = url; a.download = `atlas-export-${Date.now()}.json`; a.click();
+            const a = document.createElement("a"); a.href = url; a.download = `kc-export-${Date.now()}.json`; a.click();
             URL.revokeObjectURL(url);
             toast.push({ kind: "success", title: "Export ready" });
           } catch (e: any) { toast.push({ kind: "error", title: e.message }); }

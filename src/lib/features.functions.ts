@@ -29,7 +29,7 @@ export const start2FASetup = createServerFn({ method: "POST" })
     const { supabase, userId, claims } = context;
     const secret = new OTPAuth.Secret({ size: 20 });
     const email = (claims as any)?.email ?? "user";
-    const totp = new OTPAuth.TOTP({ issuer: "Atlas AI", label: email, secret });
+    const totp = new OTPAuth.TOTP({ issuer: "KC", label: email, secret });
     const uri = totp.toString();
     const qr = await QRCode.toDataURL(uri);
     // stash secret but don't enable until verify
@@ -54,7 +54,7 @@ export const verify2FA = createServerFn({ method: "POST" })
     if (pErr) throw new Error(pErr.message);
     if (!p?.totp_secret) throw new Error("Start 2FA setup first");
     const totp = new OTPAuth.TOTP({
-      issuer: "Atlas AI",
+      issuer: "KC",
       secret: OTPAuth.Secret.fromBase32(p.totp_secret),
     });
     const delta = totp.validate({ token: data.code, window: 1 });

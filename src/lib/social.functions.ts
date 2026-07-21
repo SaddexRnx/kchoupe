@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Real handshake tests for every provider Atlas supports.
+// Real handshake tests for every provider KC supports.
 // Tokens live in the `integrations` row credentials JSONB, workspace-scoped by RLS.
 // Keeping the filename `social.functions.ts` to avoid churn — despite the name,
 // this now covers commerce (Shopify / WooCommerce / Website) too.
@@ -71,7 +71,7 @@ export const PROVIDERS: ProviderMeta[] = [
     id: "website",
     category: "sales",
     title: "Website URL",
-    blurb: "Point Atlas at any public URL — landing page, catalog, blog. We fetch it to confirm it's reachable and indexable.",
+    blurb: "Point KC at any public URL — landing page, catalog, blog. We fetch it to confirm it's reachable and indexable.",
     helpUrl: "",
     requiredKeys: ["url"],
     fields: [

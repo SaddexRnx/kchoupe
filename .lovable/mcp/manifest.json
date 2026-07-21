@@ -11,15 +11,15 @@
   },
   "mcp": {
     "server": {
-      "name": "atlas-ai-mcp",
+      "name": "kc-mcp",
       "version": "0.1.0",
-      "title": "Atlas AI"
+      "title": "KC"
     },
     "tools": [
       {
         "name": "workspace_overview",
         "title": "Workspace overview",
-        "description": "Return a summary of the signed-in user's Atlas AI workspace: workspace name, plan, and counts of products, orders, conversations, and AI employees.",
+        "description": "Return a summary of the signed-in user's KC workspace: workspace name, plan, and counts of products, orders, conversations, and AI employees.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -35,7 +35,7 @@
       {
         "name": "list_products",
         "title": "List products",
-        "description": "List products in the signed-in user's Atlas AI workspace, optionally filtered by a search query on name, SKU, or category.",
+        "description": "List products in the signed-in user's KC workspace, optionally filtered by a search query on name, SKU, or category.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -63,7 +63,7 @@
       {
         "name": "list_orders",
         "title": "List orders",
-        "description": "List orders in the signed-in user's Atlas AI workspace, optionally filtered by status.",
+        "description": "List orders in the signed-in user's KC workspace, optionally filtered by status.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -99,7 +99,7 @@
       {
         "name": "create_order",
         "title": "Create order",
-        "description": "Create a new order in the signed-in user's Atlas AI workspace.",
+        "description": "Create a new order in the signed-in user's KC workspace.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -146,7 +146,7 @@
       {
         "name": "list_conversations",
         "title": "List conversations",
-        "description": "List recent customer conversations in the signed-in user's Atlas AI workspace.",
+        "description": "List recent customer conversations in the signed-in user's KC workspace.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

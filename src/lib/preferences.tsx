@@ -20,7 +20,7 @@ type Prefs = {
 
 const Ctx = createContext<Prefs | null>(null);
 
-const KEY = "atlas.prefs.v1";
+const KEY = "kc.prefs.v1";
 
 function readInitial(): { lang: Lang; theme: ThemeId; motion: boolean; mode: Mode } {
   if (typeof window === "undefined") return { lang: "en", theme: "aurora", motion: true, mode: "dark" };

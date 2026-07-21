@@ -8,7 +8,7 @@ const groups: Group[] = [
   {
     title: "Marketing",
     items: [
-      { to: "/", label: "Home", desc: "The Atlas AI landing page.", icon: Home },
+      { to: "/", label: "Home", desc: "The KC landing page.", icon: Home },
       { to: "/about", label: "About", desc: "Our mission and team." },
       { to: "/contact", label: "Contact", desc: "Talk to us." },
       { to: "/blog/future-of-ai-north-africa", label: "Blog · Future of AI in North Africa", icon: BookOpen },
@@ -37,10 +37,10 @@ const groups: Group[] = [
 export const Route = createFileRoute("/sitemap")({
   head: () => ({
     meta: [
-      { title: "Sitemap — Atlas AI" },
-      { name: "description", content: "Every public page on Atlas AI: marketing, sign-in and legal." },
-      { property: "og:title", content: "Atlas AI · Sitemap" },
-      { property: "og:description", content: "Every public page on Atlas AI." },
+      { title: "Sitemap — KC" },
+      { name: "description", content: "Every public page on KC: marketing, sign-in and legal." },
+      { property: "og:title", content: "KC · Sitemap" },
+      { property: "og:description", content: "Every public page on KC." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -59,7 +59,7 @@ function SitemapPage() {
           </div>
           <div>
             <h1 className="font-display text-3xl font-bold">Sitemap</h1>
-            <p className="text-sm text-muted-foreground">Every public page on Atlas AI, in one place.</p>
+            <p className="text-sm text-muted-foreground">Every public page on KC, in one place.</p>
           </div>
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
             <a href="/sitemap.xml" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 hover:bg-white/10">

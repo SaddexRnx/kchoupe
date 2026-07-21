@@ -432,7 +432,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
 
   // 8) Save agent reply
   await supabaseAdmin.from("inbox_messages").insert({
-    workspace_id: wsId, conversation_id: convoId, role: "agent", sender: aiEmployeeName ?? "Atlas AI", body: visibleReply,
+    workspace_id: wsId, conversation_id: convoId, role: "agent", sender: aiEmployeeName ?? "KC", body: visibleReply,
   });
   await supabaseAdmin.from("inbox_conversations")
     .update({ last_message: visibleReply, unread_count: 0, updated_at: new Date().toISOString() })

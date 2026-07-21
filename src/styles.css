@@ -15,7 +15,7 @@ a[href*="lovable.dev"][target="_blank"] {
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Atlas AI — Monochrome theme.
+ * KC — Monochrome theme.
  * Pure black and white. No gradients, no color accents.
  * Type: Sora (display) + Manrope (body) — loaded via <link> in __root.tsx.
  */

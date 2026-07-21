@@ -26,8 +26,8 @@ export const Route = createFileRoute("/blog/future-of-ai-north-africa")({
           "@type": "Article",
           headline: TITLE,
           description: DESCRIPTION,
-          author: { "@type": "Organization", name: "Atlas AI" },
-          publisher: { "@type": "Organization", name: "Atlas AI" },
+          author: { "@type": "Organization", name: "KC" },
+          publisher: { "@type": "Organization", name: "KC" },
           mainEntityOfPage: URL,
           inLanguage: "en",
           about: [
@@ -151,7 +151,7 @@ function BlogPost() {
           to="/signup"
           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110"
         >
-          Try Atlas free for 14 days
+          Try KC free for 14 days
         </Link>
         <Link
           to="/contact"

@@ -162,7 +162,7 @@ export const scrapeWebsite = createServerFn({ method: "POST" })
     try {
       const { safeFetch } = await import("./ssrf-guard.server");
       const res = await safeFetch(data.url, {
-        headers: { "User-Agent": "AtlasAI/1.0 (+https://atlas.ai)" },
+        headers: { "User-Agent": "AtlasAI/1.0 (+https://kc.app)" },
       });
       if (!res.ok) throw new Error(`fetch ${res.status}`);
       const html = await res.text();

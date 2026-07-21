@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 // Strict prompt: AI acts only as a store assistant, answers only from provided catalog.
-const SYSTEM_GUARDRAIL = `You are Atlas, a customer-support assistant for ONE specific online store.
+const SYSTEM_GUARDRAIL = `You are KC, a customer-support assistant for ONE specific online store.
 
 ABSOLUTE SCOPE — you may ONLY discuss:
   • Products listed in the PRODUCT CATALOG below (name, price, stock, description, category).
@@ -59,7 +59,7 @@ function findMentionedProducts(text: string, products: any[]): any[] {
 
 function stockSafeReplyForUnknownProduct(product: any): string {
   const price = `${Number(product.price).toLocaleString()} ${product.currency}`;
-  return `${product.name} is available to order for ${price}. Live stock for this website import has not been confirmed inside Atlas yet, so please check the product page for the latest stock before checkout.`;
+  return `${product.name} is available to order for ${price}. Live stock for this website import has not been confirmed inside KC yet, so please check the product page for the latest stock before checkout.`;
 }
 
 function buildCatalog(products: any[]): string {

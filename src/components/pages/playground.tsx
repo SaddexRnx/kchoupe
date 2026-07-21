@@ -97,7 +97,7 @@ export function Playground() {
   const activeEmployee = employees.find((e) => e.id === selectedEmployeeId);
   const activeModel = activeEmployee?.model ?? selectedModel;
   const activePrompt = activeEmployee?.system_prompt ?? undefined;
-  const activeName = activeEmployee?.name ?? "Atlas Playground";
+  const activeName = activeEmployee?.name ?? "KC Playground";
 
   const productsByMessage = useMemo(() => {
     return messages.map((m) => (m.role === "assistant" ? findProductMatches(m.content, products) : []));

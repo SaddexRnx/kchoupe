@@ -12,7 +12,7 @@ function sb(ctx: ToolContext) {
 export default defineTool({
   name: "list_conversations",
   title: "List conversations",
-  description: "List recent customer conversations in the signed-in user's Atlas AI workspace.",
+  description: "List recent customer conversations in the signed-in user's KC workspace.",
   inputSchema: {
     limit: z.number().int().min(1).max(100).optional().describe("Maximum rows to return (default 25)."),
     channel: z.string().trim().optional().describe("Optional channel filter (telegram, meta, playground, etc.)."),

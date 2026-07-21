@@ -32,9 +32,9 @@ export const Route = createFileRoute("/store/$slug")({
   },
   head: ({ loaderData }) => ({
     meta: loaderData ? [
-      { title: `${loaderData.ws.name} — Atlas Store` },
+      { title: `${loaderData.ws.name} — KC Store` },
       { name: "description", content: loaderData.ws.storefront_tagline ?? `Shop ${loaderData.ws.name} online.` },
-      { property: "og:title", content: `${loaderData.ws.name} — Atlas Store` },
+      { property: "og:title", content: `${loaderData.ws.name} — KC Store` },
       { property: "og:description", content: loaderData.ws.storefront_tagline ?? "" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -88,7 +88,7 @@ function StorePage() {
         )}
       </main>
       <footer className="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-muted-foreground">
-        Powered by <a href="/" className="underline hover:text-foreground">Atlas AI</a>
+        Powered by <a href="/" className="underline hover:text-foreground">KC</a>
       </footer>
     </div>
   );

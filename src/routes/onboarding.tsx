@@ -6,7 +6,7 @@ export const Route = createFileRoute("/onboarding")({
   beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
-      { title: "Welcome to Atlas AI" },
+      { title: "Welcome to KC" },
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/onboarding" }],

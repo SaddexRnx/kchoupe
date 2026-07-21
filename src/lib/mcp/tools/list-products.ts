@@ -12,7 +12,7 @@ function sb(ctx: ToolContext) {
 export default defineTool({
   name: "list_products",
   title: "List products",
-  description: "List products in the signed-in user's Atlas AI workspace, optionally filtered by a search query on name, SKU, or category.",
+  description: "List products in the signed-in user's KC workspace, optionally filtered by a search query on name, SKU, or category.",
   inputSchema: {
     query: z.string().trim().optional().describe("Optional search term matched against name, SKU, and category."),
     limit: z.number().int().min(1).max(100).optional().describe("Maximum rows to return (default 25)."),

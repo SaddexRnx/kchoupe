@@ -36,7 +36,7 @@ export function Landing() {
           <span className="aurora-gradient-text animate-gradient">sells while you sleep.</span>
         </h1>
         <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg" style={{ animationDelay: "160ms" }}>
-          Atlas AI trains employees that answer, upsell and close orders across WhatsApp, Instagram
+          KC trains employees that answer, upsell and close orders across WhatsApp, Instagram
           and your store — in Arabic, French and English. Setup in minutes, revenue by tonight.
         </p>
         <div className="animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3" style={{ animationDelay: "240ms" }}>
@@ -61,11 +61,11 @@ export function Landing() {
         <SectionHeader eyebrow="Built to sell" title="Everything your store needs, in one command center." />
         <div className="mt-10 grid gap-3 md:grid-cols-6 md:grid-rows-2">
           <BentoCard className="md:col-span-4 md:row-span-2" icon={Bot} title="AI employees with roles"
-            body="Nova sells, Atlas supports, Sage onboards. Assign skills, pick a model, plug in your knowledge — they're on shift in 5 minutes." accent>
+            body="Nova sells, KC supports, Sage onboards. Assign skills, pick a model, plug in your knowledge — they're on shift in 5 minutes." accent>
             <div className="mt-5 grid grid-cols-3 gap-2">
               {[
                 { n: "Nova", r: "Sales", g: "from-primary to-accent" },
-                { n: "Atlas", r: "Support", g: "from-accent to-primary" },
+                { n: "KC", r: "Support", g: "from-accent to-primary" },
                 { n: "Sage", r: "Onboarding", g: "from-primary to-accent" },
               ].map((a) => (
                 <div key={a.n} className="rounded-xl border border-white/10 bg-white/5 p-3">
@@ -120,14 +120,14 @@ export function Landing() {
 
       {/* COMPARISON */}
       <section id="compare" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
-        <SectionHeader eyebrow="Why Atlas AI" title="Built for North Africa. Priced for local shops." />
+        <SectionHeader eyebrow="Why KC" title="Built for North Africa. Priced for local shops." />
         <div className="mt-10 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-white/10 text-left">
                 <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Feature</th>
                 <th className="px-4 py-4 text-xs font-bold uppercase tracking-widest">
-                  <span className="aurora-gradient-text animate-gradient">Atlas AI</span>
+                  <span className="aurora-gradient-text animate-gradient">KC</span>
                 </th>
                 <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Intercom Fin</th>
                 <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tidio Lyro</th>
@@ -261,7 +261,7 @@ export function Nav() {
         <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40">
           <Sparkles className="h-4 w-4 text-primary-foreground" />
         </div>
-        <span className="font-display text-lg font-black tracking-tight">Atlas AI</span>
+        <span className="font-display text-lg font-black tracking-tight">KC</span>
       </Link>
       <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
         <Link to="/" hash="features" className="transition hover:text-foreground">Features</Link>
@@ -311,7 +311,7 @@ function HeroPreview() {
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-          <span className="ml-3 text-[11px] text-muted-foreground">atlas.ai/dashboard</span>
+          <span className="ml-3 text-[11px] text-muted-foreground">kc.app/dashboard</span>
         </div>
         <div className="grid gap-3 md:grid-cols-4">
           {[
@@ -332,7 +332,7 @@ function HeroPreview() {
             <div className="mb-2 text-xs text-muted-foreground">Live conversations</div>
             {[
               { n: "Amel", m: "Do you have the argan oil in 100ml?", t: "just now", tag: "Nova" },
-              { n: "Rachid", m: "شكرا، خذيت الطلبية", t: "1m", tag: "Atlas" },
+              { n: "Rachid", m: "شكرا، خذيت الطلبية", t: "1m", tag: "KC" },
               { n: "Léa", m: "Livraison sur Oran?", t: "2m", tag: "Nova" },
             ].map((c) => (
               <div key={c.n} className="flex items-center gap-3 border-t border-white/5 py-2 first:border-0">
@@ -374,7 +374,7 @@ export function Footer() {
             <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-accent">
               <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
-            <span className="font-display font-black">Atlas AI</span>
+            <span className="font-display font-black">KC</span>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">The AI workforce for North African commerce.</p>
           <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -394,7 +394,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-white/5 px-6 py-5 text-center text-[11px] text-muted-foreground">© 2026 Atlas AI. Made in Algiers.</div>
+      <div className="border-t border-white/5 px-6 py-5 text-center text-[11px] text-muted-foreground">© 2026 KC. Made in Algiers.</div>
     </footer>
   );
 }

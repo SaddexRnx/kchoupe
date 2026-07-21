@@ -46,15 +46,15 @@ export function IntegrationsPage() {
       />
 
       <HelpNote>
-        The <b>Integrations hub</b> is where you plug Atlas into the tools you already use. Connect a shop to sync products,
-        add messaging channels so Atlas can reply to customers, add your own AI model endpoint (OpenAI-compatible), or
+        The <b>Integrations hub</b> is where you plug KC into the tools you already use. Connect a shop to sync products,
+        add messaging channels so KC can reply to customers, add your own AI model endpoint (OpenAI-compatible), or
         scrape a website into your knowledge base. Every save runs a live handshake so you know it works before going live.
       </HelpNote>
 
       <ProviderPicker
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}
         title="Sales channels"
-        blurb="Where your products live. Atlas syncs catalog, stock and orders from here."
+        blurb="Where your products live. KC syncs catalog, stock and orders from here."
         providers={salesProviders}
         conns={conns}
         onChanged={invalidate}
@@ -64,7 +64,7 @@ export function IntegrationsPage() {
       <ProviderPicker
         icon={<MessageCircle className="h-5 w-5 text-primary" />}
         title="Messaging channels"
-        blurb="Where your customers talk to you. Atlas replies here on your behalf."
+        blurb="Where your customers talk to you. KC replies here on your behalf."
         providers={messagingProviders}
         conns={conns}
         onChanged={invalidate}
@@ -87,7 +87,7 @@ export function IntegrationsPage() {
       <ComingSoonSection
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}
         title="Payments — coming soon"
-        blurb="Atlas will confirm checkout inside chat once these are enabled. For now, mark orders as paid manually."
+        blurb="KC will confirm checkout inside chat once these are enabled. For now, mark orders as paid manually."
         items={[
           { name: "CIB (Algeria)", emoji: "💳", note: "Card gateway" },
           { name: "BaridiMob", emoji: "📱", note: "Wallet + QR" },
@@ -585,7 +585,7 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
       )}
 
       {models.length === 0 ? (
-        <Panel className="text-center text-sm text-muted-foreground">No custom models yet — add one to route Atlas to your OpenRouter / Gemini / any OpenAI-compatible endpoint.</Panel>
+        <Panel className="text-center text-sm text-muted-foreground">No custom models yet — add one to route KC to your OpenRouter / Gemini / any OpenAI-compatible endpoint.</Panel>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {models.map((m) => {
@@ -768,7 +768,7 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
             <Bot className="h-5 w-5 text-primary" /> Test the customer assistant
           </h2>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Atlas answers using <b>your product catalog only</b> and stays on-topic (products, prices, stock, orders, shipping). Off-topic questions are politely redirected.
+            KC answers using <b>your product catalog only</b> and stays on-topic (products, prices, stock, orders, shipping). Off-topic questions are politely redirected.
           </p>
         </div>
         {catalogSize !== null && <Chip tone="emerald">{catalogSize} products in scope</Chip>}
