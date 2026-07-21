@@ -5,6 +5,7 @@ import {
   Globe, Bot, Rocket, Languages, DollarSign,
 } from "lucide-react";
 import { useToast } from "@/components/pages/_shared";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const STEPS = ["Workspace", "Region", "Channels", "Your first AI", "Launch"];
 
@@ -64,9 +65,12 @@ export function Onboarding() {
           </div>
           <span className="font-display text-base font-black">Atlas AI</span>
         </Link>
-        <button onClick={() => navigate({ to: "/dashboard" })} className="text-xs text-muted-foreground hover:text-foreground">
-          Skip setup →
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button onClick={() => navigate({ to: "/dashboard" })} className="text-xs text-muted-foreground hover:text-foreground">
+            Skip setup →
+          </button>
+        </div>
       </header>
 
       {/* Stepper */}

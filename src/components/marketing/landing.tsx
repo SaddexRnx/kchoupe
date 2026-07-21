@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowRight, Bot, Sparkles, ShoppingBag, MessageSquare, Zap, Globe, Shield, Check,
   Instagram, Facebook, MessageCircle, Store, Package, BarChart3, PlayCircle,
@@ -206,6 +207,7 @@ export function Nav() {
         <Link to="/" hash="how-it-works" className="transition hover:text-foreground">How it works</Link>
       </nav>
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Link to="/login" className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:text-foreground">Sign in</Link>
         <Link to="/signup" className="rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-1.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/25 transition hover:brightness-110">Get started</Link>
       </div>
