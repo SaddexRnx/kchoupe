@@ -206,18 +206,15 @@ export function Products() {
               <div className="flex justify-end gap-1 text-muted-foreground">
                 <button onClick={() => setViewing(r)} title={t("common.view")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
                 <button onClick={() => setEditing(r)} title={t("common.edit")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
-                <div className="relative">
-                  <button onClick={() => setMenuFor(menuFor === r.id ? null : r.id)} title={t("common.more")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
-                  {menuFor === r.id && (
-                    <>
-                      <div className="fixed inset-0 z-20" onClick={() => setMenuFor(null)} />
-                      <div className="glass-panel absolute right-0 z-30 mt-1 w-40 overflow-hidden rounded-lg text-left text-xs">
-                        <button onClick={() => duplicate(r)} className="block w-full px-3 py-2 hover:bg-white/10">Duplicate</button>
-                        <button onClick={() => remove(r)} className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10">Delete</button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setMenuFor(menuFor?.id === r.id ? null : { id: r.id, x: rect.right, y: rect.bottom + 6 });
+                  }}
+                  title={t("common.more")}
+                  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"
+                ><MoreHorizontal className="h-3.5 w-3.5" /></button>
               </div>
             </li>
           ))}
