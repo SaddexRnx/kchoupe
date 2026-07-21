@@ -377,6 +377,12 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
                 Scrape products
               </GhostButton>
             )}
+            {meta.id === "website" && (
+              <div className="basis-full rounded-lg border border-amber-400/30 bg-amber-500/5 p-2.5 text-[11px] leading-relaxed text-amber-200/90">
+                <AlertTriangle className="mr-1 inline h-3 w-3" />
+                Custom websites only expose product name, price, description and image. Stock levels can't be detected — imported items start at <span className="font-semibold">0 stock / draft</span>. Update them from the Products page.
+              </div>
+            )}
             <GhostButton onClick={handleDisconnect} tone="danger">
               <Trash2 className="h-4 w-4" /> Disconnect
             </GhostButton>

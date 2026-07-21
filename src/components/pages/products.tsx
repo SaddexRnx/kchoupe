@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Package, Plus, Search, Filter, Edit3, Trash2, Eye, MoreHorizontal, TrendingUp, Loader2 } from "lucide-react";
@@ -35,7 +36,7 @@ export function Products() {
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [editing, setEditing] = useState<Row | null>(null);
-  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<{ id: string; x: number; y: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState({ name: "", category: "Beauty", price: "", stock: "", image: "📦" });
 
@@ -205,18 +206,15 @@ export function Products() {
               <div className="flex justify-end gap-1 text-muted-foreground">
                 <button onClick={() => setViewing(r)} title={t("common.view")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
                 <button onClick={() => setEditing(r)} title={t("common.edit")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
-                <div className="relative">
-                  <button onClick={() => setMenuFor(menuFor === r.id ? null : r.id)} title={t("common.more")}  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"><MoreHorizontal className="h-3.5 w-3.5" /></button>
-                  {menuFor === r.id && (
-                    <>
-                      <div className="fixed inset-0 z-20" onClick={() => setMenuFor(null)} />
-                      <div className="glass-panel absolute right-0 z-30 mt-1 w-40 overflow-hidden rounded-lg text-left text-xs">
-                        <button onClick={() => duplicate(r)} className="block w-full px-3 py-2 hover:bg-white/10">Duplicate</button>
-                        <button onClick={() => remove(r)} className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10">Delete</button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setMenuFor(menuFor?.id === r.id ? null : { id: r.id, x: rect.right, y: rect.bottom + 6 });
+                  }}
+                  title={t("common.more")}
+                  className="rounded p-1.5 hover:bg-white/10 hover:text-foreground"
+                ><MoreHorizontal className="h-3.5 w-3.5" /></button>
               </div>
             </li>
           ))}
@@ -312,6 +310,33 @@ export function Products() {
             </label>
           </div>
         </Modal>
+      )}
+
+      {menuFor && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setMenuFor(null)} />
+          <div
+            className="glass-panel fixed z-[100] w-44 overflow-hidden rounded-lg text-left text-xs shadow-xl"
+            style={{ top: menuFor.y, left: Math.max(8, menuFor.x - 176) }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                const row = rowsState.find((x) => x.id === menuFor.id);
+                if (row) duplicate(row);
+              }}
+              className="block w-full px-3 py-2 text-left hover:bg-white/10"
+            >Duplicate</button>
+            <button
+              onClick={() => {
+                const row = rowsState.find((x) => x.id === menuFor.id);
+                if (row) remove(row);
+              }}
+              className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10"
+            >Delete</button>
+          </div>
+        </>,
+        document.body,
       )}
 
       {confirmNode}
