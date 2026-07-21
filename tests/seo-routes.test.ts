@@ -77,7 +77,7 @@ function loadRoutes(): Route[] {
       priv: PRIVATE_ROUTES.has(top),
       hasNoindex: /['"]robots['"]\s*,\s*content:\s*['"][^'"]*noindex/i.test(src),
       hasCanonical: /rel:\s*['"]canonical['"]/i.test(src),
-      canonicalHref: canonicalMatch ? canonicalMatch[1] : null,
+      canonicalHref,
       hasHeaderCall: /setNoIndexHeader\s*\(/.test(src),
     });
   }
