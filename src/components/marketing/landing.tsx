@@ -398,3 +398,52 @@ export function Footer() {
     </footer>
   );
 }
+
+const INTEGRATIONS = [
+  { i: Store, l: "Shopify" }, { i: Store, l: "WooCommerce" }, { i: Package, l: "YouCan" },
+  { i: MessageCircle, l: "WhatsApp" }, { i: Instagram, l: "Instagram" }, { i: Facebook, l: "Facebook" },
+  { i: Globe, l: "Your website" }, { i: BarChart3, l: "GA4" }, { i: Bot, l: "OpenAI" },
+  { i: Bot, l: "Claude" }, { i: Bot, l: "Mistral" }, { i: Bot, l: "Gemini" },
+  { i: Bot, l: "Groq" }, { i: Bot, l: "OpenRouter" }, { i: MessageCircle, l: "Telegram" },
+  { i: ShoppingBag, l: "Stripe" }, { i: ShoppingBag, l: "CIB" }, { i: ShoppingBag, l: "BaridiMob" },
+];
+
+const INTEGRATIONS_2 = [
+  { i: ShoppingBag, l: "CMI" }, { i: ShoppingBag, l: "Flouci" }, { i: Package, l: "Yalidine" },
+  { i: Package, l: "ZR Express" }, { i: Package, l: "Aramex" }, { i: BarChart3, l: "Meta Pixel" },
+  { i: BarChart3, l: "TikTok Ads" }, { i: Zap, l: "Zapier" }, { i: Zap, l: "n8n" },
+  { i: Zap, l: "Make" }, { i: MessageSquare, l: "Slack" }, { i: MessageSquare, l: "Discord" },
+  { i: Bot, l: "Mistral Saba" }, { i: Globe, l: "Notion" }, { i: Sparkles, l: "+150 more" },
+];
+
+const COMPARE: { f: string; us: string | boolean; a: string | boolean; b: string | boolean; c: string | boolean }[] = [
+  { f: "Trilingual (Arabic · French · English)", us: true, a: "Partial", b: "Partial", c: false },
+  { f: "Native Darija (Maghrebi Arabic)", us: true, a: false, b: false, c: false },
+  { f: "WhatsApp · Instagram · Messenger · Telegram", us: true, a: "WhatsApp only", b: true, c: true },
+  { f: "Order-closing inside chat (COD, CIB, BaridiMob)", us: true, a: false, b: false, c: "Partial" },
+  { f: "Shopify · WooCommerce · YouCan catalog sync", us: true, a: "Shopify only", b: "Shopify only", c: "Shopify only" },
+  { f: "Website scraper (any store)", us: true, a: false, b: false, c: false },
+  { f: "Bring-your-own model (OpenAI, Claude, Mistral, Gemini)", us: true, a: false, b: false, c: false },
+  { f: "Multiple AI employees with roles", us: true, a: false, b: false, c: false },
+  { f: "Live playground before deploy", us: true, a: false, b: "Partial", c: false },
+  { f: "RAG on your own knowledge base", us: true, a: true, b: "Partial", c: false },
+  { f: "Realtime inbox with human handoff", us: true, a: true, b: true, c: "Partial" },
+  { f: "Learns from confirmed conversations", us: true, a: false, b: false, c: false },
+  { f: "AI-only ordering assistant, on-catalog only", us: true, a: false, b: false, c: false },
+  { f: "Admin panel across all workspaces", us: true, a: true, b: "Partial", c: "Partial" },
+  { f: "Support ticket escalation to platform", us: true, a: true, b: true, c: false },
+  { f: "Dark & light theme, full RTL", us: true, a: "Partial", b: "Partial", c: false },
+  { f: "GDPR-style data controls & export", us: true, a: true, b: true, c: "Partial" },
+  { f: "Local currency (DZD · TND · MAD)", us: true, a: false, b: false, c: false },
+  { f: "Cash-on-delivery flow per wilaya", us: true, a: false, b: false, c: false },
+  { f: "MCP agent integration", us: true, a: false, b: false, c: false },
+  { f: "Custom domain webhooks", us: true, a: true, b: "Partial", c: true },
+  { f: "Starts at (USD equivalent)", us: "≈ $18/mo", a: "$29/mo", b: "$29/mo", c: "$15/mo" },
+];
+
+function Cell({ v, highlight }: { v: string | boolean; highlight?: boolean }) {
+  const cls = "px-4 py-3 text-sm " + (highlight ? "bg-primary/5 font-medium text-foreground" : "text-muted-foreground");
+  if (v === true) return <td className={cls}><Check className="h-4 w-4 text-emerald-400" /></td>;
+  if (v === false) return <td className={cls}><span className="text-rose-400/70">—</span></td>;
+  return <td className={cls}>{v}</td>;
+}
