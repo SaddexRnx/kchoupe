@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PreferencesProvider } from "../lib/preferences";
 import { ToastProvider } from "../components/pages/_shared";
+import { AutoTranslateProvider } from "../lib/auto-translate";
 
 function NotFoundComponent() {
   return (
