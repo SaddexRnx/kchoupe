@@ -178,6 +178,7 @@ export function Products() {
         description={t("prod.desc")}
         actions={
           <div className="flex gap-2">
+            <GhostButton onClick={exportCsv}><Download className="h-3.5 w-3.5" /> Export CSV</GhostButton>
             <PrimaryButton onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" /> {t("prod.new")}
             </PrimaryButton>
@@ -191,28 +192,54 @@ export function Products() {
         current — Atlas will only confirm orders for items it can see here.
       </HelpNote>
 
-      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+      {(totals.outStock > 0 || totals.lowStock > 0) && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm animate-fade-up">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-300" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">Stock attention needed</div>
+            <div className="text-xs text-muted-foreground">
+              {totals.outStock > 0 && <><b className="text-rose-300">{totals.outStock}</b> out of stock · </>}
+              {totals.lowStock > 0 && <><b className="text-amber-300">{totals.lowStock}</b> low stock (under 20 units) · </>}
+              Restock or mark as draft so Atlas doesn't offer them.
+            </div>
+          </div>
+          {totals.outStock > 0 && (
+            <button onClick={() => { setStockFilter("out"); setStatus("all"); }} className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-200 hover:bg-rose-500/20">See out of stock</button>
+          )}
+          {totals.lowStock > 0 && (
+            <button onClick={() => { setStockFilter("low"); setStatus("all"); }} className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-200 hover:bg-amber-500/20">See low stock</button>
+          )}
+        </div>
+      )}
+
+      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
         {[
-          { l: t("prod.title"), v: totals.products, sub: t("prod.in_catalog") },
-          { l: t("common.active"),   v: totals.active,   sub: t("prod.live_on_store") },
-          { l: t("prod.total_stock"), v: totals.stock, sub: t("prod.units") },
-          { l: t("prod.sold_ai"), v: totals.ai, sub: t("prod.auto_fulfilled") },
+          { l: t("prod.title"), v: totals.products.toLocaleString(), sub: t("prod.in_catalog") },
+          { l: t("common.active"), v: totals.active.toLocaleString(), sub: t("prod.live_on_store") },
+          { l: "New (7d)", v: totals.newThisWeek.toLocaleString(), sub: "recently added", tone: "emerald" as const },
+          { l: t("prod.total_stock"), v: totals.stock.toLocaleString(), sub: t("prod.units") },
+          { l: "Out of stock", v: totals.outStock.toLocaleString(), sub: "0 units left", tone: totals.outStock > 0 ? "rose" as const : undefined },
+          { l: t("prod.sold_ai"), v: totals.ai.toLocaleString(), sub: t("prod.auto_fulfilled") },
+          { l: "Revenue 30d", v: fmt(totals.revenue30, totals.currency), sub: "gross", tone: "violet" as const },
         ].map((s) => (
-          <div key={s.l} className="glass-panel animate-fade-up rounded-xl px-3 py-2.5">
+          <div key={s.l} className={"glass-panel animate-fade-up rounded-xl px-3 py-2.5 " +
+            (s.tone === "rose" ? "border-rose-400/30 bg-rose-500/5 " :
+             s.tone === "emerald" ? "border-emerald-400/30 bg-emerald-500/5 " :
+             s.tone === "violet" ? "border-primary/30 bg-primary/5 " : "")}>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{s.l}</div>
-            <div className="mt-0.5 font-display text-lg font-bold leading-tight">{s.v.toLocaleString()}</div>
+            <div className="mt-0.5 font-display text-lg font-bold leading-tight truncate">{s.v}</div>
             <div className="text-[10px] text-muted-foreground">{s.sub}</div>
           </div>
         ))}
       </div>
 
       <Panel className="mb-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+          <div className="flex flex-1 min-w-[220px] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("prod.search")} className="w-full bg-transparent text-sm outline-none" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select value={cat} onChange={(e) => setCat(e.target.value)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
               {categories.map(c => <option key={c} value={c}>{c === "all" ? t("common.all_categories") : c}</option>)}
@@ -222,6 +249,26 @@ export function Products() {
               <option value="active">{t("common.active")}</option>
               <option value="draft">{t("common.draft")}</option>
               <option value="out">{t("common.out_of_stock")}</option>
+            </select>
+            <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="all">All stock</option>
+              <option value="in">In stock (20+)</option>
+              <option value="low">Low (&lt;20)</option>
+              <option value="out">Out of stock</option>
+            </select>
+            <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="all">Any age</option>
+              <option value="day">Added today</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+            </select>
+            <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm">
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+              <option value="stock_asc">Lowest stock</option>
+              <option value="sold_desc">Best sellers</option>
+              <option value="price_desc">Price ↓</option>
+              <option value="price_asc">Price ↑</option>
             </select>
           </div>
         </div>
