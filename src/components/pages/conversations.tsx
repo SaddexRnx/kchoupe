@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageSquare, Search, Filter, ChevronRight, Send, X, Check, CheckCheck, Plus, Loader2 } from "lucide-react";
+import { MessageSquare, Search, Filter, ChevronRight, Send, X, Check, CheckCheck, Plus, Loader2, ShoppingBag } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
@@ -9,6 +9,7 @@ import {
   type InboxConvo,
 } from "@/lib/inbox.functions";
 import { listProducts } from "@/lib/products.functions";
+import { createOrder } from "@/lib/orders.functions";
 
 const tones = { won: "emerald", open: "violet", risk: "rose", resolved: "muted" } as const;
 const statusKey = { won: "common.won", open: "common.open", risk: "common.risk", resolved: "common.resolved" } as const;
