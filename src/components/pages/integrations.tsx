@@ -315,6 +315,17 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
       toast.push({ kind: "error", title: "Scrape failed", body: e?.message });
     } finally { setBusy(null); }
   };
+  const handleRegisterHook = async () => {
+    setBusy("hook");
+    try {
+      const r = await cfgHook({ data: { provider: meta.id as any, appOrigin: window.location.origin } });
+      setHookInfo({ url: r.webhook_url, verify_token: r.verify_token, registered: r.registered, message: r.message });
+      toast.push({ kind: r.registered || meta.id !== "telegram" ? "success" : "error", title: r.registered ? "Webhook registered" : "Webhook ready", body: r.message });
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Webhook setup failed", body: e?.message });
+    } finally { setBusy(null); }
+  };
+  const isMessaging = meta.id === "telegram" || meta.id === "instagram" || meta.id === "facebook_page";
 
   return (
     <Panel className="flex flex-col gap-4">
