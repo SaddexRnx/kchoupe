@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageSquare, Search, Filter, ChevronRight, Send, X, Check, CheckCheck, Plus, Loader2, ShoppingBag } from "lucide-react";
-import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, HelpNote } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
   listConversations, listMessages, createConversation, sendReply, updateConversationStatus,
