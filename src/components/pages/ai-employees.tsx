@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2, Loader2 } from "lucide-react";
+import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
@@ -11,9 +11,10 @@ import {
   deleteAiEmployee,
   type AiEmployeeRow,
 } from "@/lib/ai-employees.functions";
+import { listCustomModels, testCustomModel, type CustomModelRow } from "@/lib/custom-models.functions";
 
 const EMOJI = ["🚀", "🛎️", "🌿", "📡", "🪐", "💡", "🤖", "🧠", "✨", "🎯", "📚", "🛍️"];
-export const MODELS: { id: string; label: string }[] = [
+const BUILTIN_MODELS: { id: string; label: string }[] = [
   { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, default)" },
   { id: "google/gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   { id: "google/gemini-3.1-pro-preview", label: "Gemini 3.1 Pro" },
@@ -21,6 +22,7 @@ export const MODELS: { id: string; label: string }[] = [
   { id: "openai/gpt-5.5", label: "GPT-5.5" },
   { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra" },
 ];
+export const MODELS = BUILTIN_MODELS;
 
 const toneFor = (status: AiEmployeeRow["status"]): "violet" | "emerald" | "amber" | "muted" =>
   status === "active" ? "emerald" : status === "training" ? "amber" : "muted";
@@ -34,11 +36,46 @@ export function AiEmployees() {
   const create = useServerFn(createAiEmployee);
   const update = useServerFn(updateAiEmployee);
   const del = useServerFn(deleteAiEmployee);
+  const listCM = useServerFn(listCustomModels);
+  const testCM = useServerFn(testCustomModel);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["ai_employees"],
     queryFn: () => list(),
   });
+  const { data: customModels = [] } = useQuery<CustomModelRow[]>({
+    queryKey: ["custom_models"],
+    queryFn: () => listCM(),
+  });
+
+  const modelOptions = useMemo(() => ([
+    ...BUILTIN_MODELS.map((m) => ({ id: m.id, label: m.label, group: "Built-in (Lovable AI)", status: "ok" as const, custom: false })),
+    ...customModels.map((m) => ({
+      id: `custom:${m.id}`,
+      label: `${m.label} · ${m.model_id}`,
+      group: "Your custom models",
+      status: (m.last_test_status ?? "untested") as "ok" | "fail" | "untested",
+      custom: true,
+    })),
+  ]), [customModels]);
+
+  const [testingCM, setTestingCM] = useState<string | null>(null);
+  const runTestCustom = async (rawModelId: string) => {
+    if (!rawModelId.startsWith("custom:")) return;
+    const id = rawModelId.slice(7);
+    setTestingCM(id);
+    try {
+      const r = await testCM({ data: { id } });
+      qc.setQueryData<CustomModelRow[]>(["custom_models"], (old) =>
+        (old ?? []).map((m) => (m.id === id ? r : m))
+      );
+      toast.push({ kind: r.last_test_status === "ok" ? "success" : "warn", title: `${r.label}: ${r.last_test_status}`, body: r.last_test_message ?? undefined });
+    } catch (e) {
+      toast.push({ kind: "warn", title: "Test failed", body: e instanceof Error ? e.message : String(e) });
+    } finally { setTestingCM(null); }
+  };
+
+  const currentModelStatus = (modelId: string) => modelOptions.find((m) => m.id === modelId)?.status ?? "ok";
 
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<AiEmployeeRow | null>(null);
@@ -243,13 +280,14 @@ export function AiEmployees() {
         <div className="grid gap-4 md:grid-cols-2">
           <TextField label="Name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="e.g. Nova" />
           <TextField label="Role" value={draft.role} onChange={(v) => setDraft({ ...draft, role: v })} placeholder="Sales lead" />
-          <label className="block">
-            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
-            <select value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50">
-              {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-            </select>
-          </label>
+          <ModelPicker
+            value={draft.model}
+            onChange={(v) => setDraft({ ...draft, model: v })}
+            options={modelOptions}
+            onTest={runTestCustom}
+            testing={testingCM}
+          />
+
           <label className="block">
             <div className="mb-1.5 text-xs font-medium text-muted-foreground">Avatar</div>
             <div className="flex flex-wrap gap-1.5">
@@ -288,13 +326,16 @@ export function AiEmployees() {
           <div className="grid gap-4 md:grid-cols-2">
             <TextField label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
             <TextField label="Role" value={editing.role} onChange={(v) => setEditing({ ...editing, role: v })} />
-            <label className="block md:col-span-2">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
-              <select value={editing.model} onChange={(e) => setEditing({ ...editing, model: e.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none">
-                {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-              </select>
-            </label>
+            <div className="md:col-span-2">
+              <ModelPicker
+                value={editing.model}
+                onChange={(v) => setEditing({ ...editing, model: v })}
+                options={modelOptions}
+                onTest={runTestCustom}
+                testing={testingCM}
+              />
+            </div>
+
             <label className="block md:col-span-2">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">System prompt</div>
               <textarea value={editing.system_prompt ?? ""} onChange={(e) => setEditing({ ...editing, system_prompt: e.target.value })}
@@ -306,5 +347,59 @@ export function AiEmployees() {
 
       {confirmNode}
     </div>
+  );
+}
+
+type ModelOption = { id: string; label: string; group: string; status: "ok" | "fail" | "untested"; custom: boolean };
+
+function ModelPicker({
+  value, onChange, options, onTest, testing,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: ModelOption[];
+  onTest: (id: string) => void;
+  testing: string | null;
+}) {
+  const selected = options.find((o) => o.id === value);
+  const groups = Array.from(new Set(options.map((o) => o.group)));
+  const isCustom = selected?.custom;
+  const customId = isCustom ? value.slice(7) : null;
+  return (
+    <label className="block">
+      <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
+        <span>Model</span>
+        {selected && (
+          <span className="flex items-center gap-1.5">
+            {selected.status === "ok" && <Chip tone="emerald"><CheckCircle2 className="h-3 w-3" /> Connected</Chip>}
+            {selected.status === "fail" && <Chip tone="amber"><AlertTriangle className="h-3 w-3" /> Failing</Chip>}
+            {selected.status === "untested" && <Chip tone="muted">Untested</Chip>}
+            {isCustom && customId && (
+              <button type="button" onClick={() => onTest(value)} disabled={testing === customId}
+                className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] hover:bg-white/10 disabled:opacity-50">
+                {testing === customId ? <Loader2 className="h-3 w-3 animate-spin" /> : "Test connection"}
+              </button>
+            )}
+          </span>
+        )}
+      </div>
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50">
+        {groups.map((g) => (
+          <optgroup key={g} label={g}>
+            {options.filter((o) => o.group === g).map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}{o.custom ? ` ${o.status === "ok" ? "✓" : o.status === "fail" ? "⚠" : "•"}` : ""}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      {options.filter((o) => o.custom).length === 0 && (
+        <div className="mt-1 text-[11px] text-muted-foreground">
+          Add OpenAI-compatible endpoints (OpenRouter, Gemini, self-hosted) in <a href="/integrations" className="text-primary hover:underline">Integrations</a>.
+        </div>
+      )}
+    </label>
   );
 }
