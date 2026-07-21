@@ -299,7 +299,7 @@ function Overview() {
       {/* KPI TILES — horizontal, with mini sparklines */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {kpiTiles.map((k, i) => (
-          <KpiTile key={k.label} {...k} delay={i * 60} />
+          <KpiTile key={k.key} icon={k.icon} label={k.label} value={k.value} delta={k.delta} spark={k.spark} tone={k.tone} delay={i * 60} />
         ))}
       </div>
 
