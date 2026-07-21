@@ -228,7 +228,8 @@ async function pingShopify(c: any): Promise<PingResult> {
   try {
     const host = String(c.shopDomain || "").replace(/^https?:\/\//, "").replace(/\/+$/, "");
     if (!/\.myshopify\.com$/.test(host)) return withHint({ ok: false, code: "bad_format", message: "Shop domain must end with .myshopify.com" });
-    const r = await fetch(`https://${host}/admin/api/2024-10/shop.json`, {
+    const { safeFetch } = await import("./ssrf-guard.server");
+    const r = await safeFetch(`https://${host}/admin/api/2024-10/shop.json`, {
       headers: { "X-Shopify-Access-Token": String(c.adminAccessToken || ""), Accept: "application/json" },
     });
     const j: any = await safeJson(r);
