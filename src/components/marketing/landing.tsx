@@ -418,12 +418,12 @@ const INTEGRATIONS_2 = [
 
 const COMPARE: { f: string; us: string | boolean; a: string | boolean; b: string | boolean; c: string | boolean }[] = [
   { f: "Trilingual (Arabic · French · English)", us: true, a: "Partial", b: "Partial", c: false },
-  { f: "Native Darija (Maghrebi Arabic)", us: true, a: false, b: false, c: false },
-  { f: "WhatsApp · Instagram · Messenger · Telegram", us: true, a: "WhatsApp only", b: true, c: true },
-  { f: "Order-closing inside chat (COD, CIB, BaridiMob)", us: true, a: false, b: false, c: "Partial" },
-  { f: "Shopify · WooCommerce · YouCan catalog sync", us: true, a: "Shopify only", b: "Shopify only", c: "Shopify only" },
+  { f: "Native Darija · MSA · French · English ...", us: true, a: false, b: false, c: false },
+  { f: "WhatsApp · Instagram · Messenger · Telegram ...", us: true, a: "WhatsApp only", b: true, c: true },
+  { f: "Order-closing inside chat (COD, CIB, BaridiMob ...)", us: true, a: false, b: false, c: "Partial" },
+  { f: "Shopify · WooCommerce · YouCan catalog sync ...", us: true, a: "Shopify only", b: "Shopify only", c: "Shopify only" },
   { f: "Website scraper (any store)", us: true, a: false, b: false, c: false },
-  { f: "Bring-your-own model (OpenAI, Claude, Mistral, Gemini)", us: true, a: false, b: false, c: false },
+  { f: "Bring-your-own model (OpenAI-compatible, Claude, Mistral, Gemini ...)", us: true, a: false, b: false, c: false },
   { f: "Multiple AI employees with roles", us: true, a: false, b: false, c: false },
   { f: "Live playground before deploy", us: true, a: false, b: "Partial", c: false },
   { f: "RAG on your own knowledge base", us: true, a: true, b: "Partial", c: false },
