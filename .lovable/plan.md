@@ -1,45 +1,55 @@
-# Full FR + AR translation coverage
+## Goal
+Give store owners a realistic way to manage delivery in Algeria. Start with a hybrid model: manual carriers cover 100% of the market, with API-ready hooks for carriers that later offer APIs.
 
-The current `src/lib/i18n.tsx` only has keys for a portion of the app. Most page bodies (dashboard cards, product/order/integration copy, playground, admin, marketing, auth, onboarding, 404, toasts, modals) render hardcoded English. That's why switching to FR/AR only translates ~30% of the UI.
+## Why this approach
+Algerian logistics (Yalidine, ZR Express, Ecouriers, Rapidex, etc.) do not have a single public API. Most stores still paste a tracking number into the customer chat manually. We will mirror that reality, but structure the data so API integrations can plug in later without re-architecting.
 
-Chasing every literal string by hand across 40+ files is guaranteed to miss things. Instead I'll combine two layers so nothing slips through.
+## What we will build
 
-## Approach
+### Database changes
+- New `public.carriers` table (workspace-owned carriers, e.g. "Yalidine Alger", "ZR Express Oran", "Manual").
+- New `public.shipping_zones` table: per-workspace wilaya → price + free-shipping threshold.
+- Extend `orders` with: `delivery_fee`, `cod_amount`, `carrier_id`, `tracking_number`, `shipping_status`, `wilaya`, `commune`, `address`, `customer_phone`, `delivered_at`.
+- New order status values: `pending`, `confirmed`, `paid`, `shipped`, `out_for_delivery`, `delivered`, `cancelled`, `returned`, `refunded`.
+- New `public.delivery_status_history` table: log each shipping transition.
+- Seed all 58 Algerian wilayas in a small reference table.
 
-### Layer 1 — Runtime auto-translator (catches everything)
+### Backend functions
+- `listCarriers`, `createCarrier`, `updateCarrier`, `deleteCarrier`.
+- `listShippingZones`, `upsertShippingZone`, `deleteShippingZone`.
+- `calculateShippingFee(workspace_id, wilaya, order_value)`.
+- `assignShipment(order_id, carrier_id, tracking_number, shipping_status)`.
+- `updateOrderDeliveryStatus` with history logging.
+- `shippingWebhook` public route (signature placeholder) for carrier tracking callbacks.
 
-A new `AutoTranslate` provider that, when the active language is `fr` or `ar`:
+### UI changes
+- **Settings → Delivery**: manage carriers and wilaya prices, set free-shipping threshold.
+- **Products page / storefront**: AI reads the shipping fee when quoting a price.
+- **Order detail drawer**: assign carrier, add tracking number, update delivery status, view timeline.
+- **Inbox AI prompt**: when a customer asks about delivery, AI can quote the fee and tracking status.
+- **Orders table**: new columns for carrier, tracking, shipping status.
 
-1. Walks the rendered DOM (MutationObserver on `document.body`) and collects visible English text nodes + `placeholder` / `title` / `aria-label` attributes.
-2. Looks each string up in a persistent cache (`localStorage` key `atlas.i18n.<lang>.v1`, seeded with the existing dictionary keys so nothing already translated re-hits the network).
-3. Batches unknown strings (up to 50 per call, debounced 200 ms) and sends them to a new server function `translateBatch` that calls Lovable AI (`google/gemini-3-flash-preview`) with a strict "return JSON array, same order, no explanations, preserve punctuation, keep {placeholders}" system prompt.
-4. Writes the returned strings back into the DOM and the cache. All future renders are instant.
-5. Skips: nodes inside `<code>`, `<pre>`, `[data-noi18n]`, inputs the user is typing in, and anything whose text is already non-Latin (for AR) / already contains diacritics (for FR heuristic).
+### AI integration
+- Inject shipping rules and carrier list into the customer-chat system prompt.
+- If the AI detects an order intent, ask for wilaya + commune + phone and estimate the delivery fee.
+- When a tracking number exists, AI can repeat it to the customer.
 
-This guarantees 100% coverage even for strings I never touched.
+### Manual fallback (default)
+Every carrier starts in `manual` mode. Store owner assigns a tracking number by hand. The app copies a formatted tracking message to the clipboard so the owner can paste it into Telegram/WhatsApp/Instagram. Later, if a carrier key is provided, we can switch to `api` mode and auto-create the shipment.
 
-### Layer 2 — Expand the static dictionary (fast + free for known copy)
+### Algerian specifics
+- All prices in DZD unless the workspace currency is changed.
+- COD field is separate from the order total because most Algerian orders are cash on delivery.
+- Wilaya + commune + phone are required before an order is marked confirmed.
 
-Extend `src/lib/i18n.tsx` with FR + AR entries for every key that already exists in the `en` dict but is missing translations (currently ~40% of AR keys and ~20% of FR keys are missing/fallback). This keeps the common, hot UI instant and cheap, and reduces AI calls.
+## Out of scope for this plan
+- Live API integrations with Algerian carriers (will be empty adapters ready for future keys).
+- SMS tracking notifications.
+- Real-time GPS tracking.
 
-### RTL correctness
-
-`<html dir="rtl">` is already toggled by `preferences.tsx` for AR. I'll audit the shell/layout for any `left-*` / `right-*` / `ml-*` / `mr-*` that break in RTL and swap to logical `start-*` / `end-*` / `ms-*` / `me-*` on the top-level chrome (sidebar, topbar, drawers, modals).
-
-## Files touched
-
-- `src/lib/i18n.tsx` — fill in every missing FR + AR entry.
-- `src/lib/auto-translate.tsx` (new) — provider, DOM walker, cache, batching.
-- `src/lib/translate.functions.ts` (new) — `translateBatch` server function using Lovable AI.
-- `src/routes/__root.tsx` — mount `<AutoTranslateProvider>` inside the existing providers so it runs on every page (marketing + app).
-- `src/components/app-shell.tsx` + `src/components/marketing/page-shell.tsx` — a handful of `ml/mr` → `ms/me` swaps for RTL polish.
-
-## Non-goals
-
-- Not switching to `i18next` / `react-intl` — too invasive for what's needed.
-- Not translating user-generated content (product names, customer messages, admin-entered notes). Only UI chrome.
-- Not touching the DB schema.
-
-## Cost note
-
-First page-load in FR or AR triggers one or two batched AI calls (~1–2 s of background work); subsequent loads are instant from `localStorage`. Uses your existing `LOVABLE_API_KEY`, no new secret.
+## Success criteria
+1. Store owner can add carriers and set per-wilaya prices in Settings.
+2. AI can quote a delivery price during a conversation.
+3. Orders can be assigned a carrier, tracking number, and delivery status timeline.
+4. Customer can ask "where is my order?" and the AI replies with the latest tracking status.
+5. All new fields are translated into FR/AR.
