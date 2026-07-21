@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Map, ExternalLink, Home, Sparkles, BookOpen, ShieldCheck } from "lucide-react";
+import { Map, ExternalLink, Home, Sparkles, BookOpen, ShieldCheck, ChevronRight } from "lucide-react";
 
 type Item = { to: string; label: string; desc?: string; icon?: any };
 type Group = { title: string; items: Item[] };
