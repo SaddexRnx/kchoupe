@@ -207,13 +207,38 @@ export function Conversations() {
               {messages.length === 0 && (
                 <div className="py-8 text-center text-xs text-muted-foreground">No messages yet — send the first reply.</div>
               )}
-              {messages.map((m) => (
-                <div key={m.id} className={"flex " + (m.role === "agent" ? "justify-end" : "justify-start")}>
-                  <div className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (m.role === "agent" ? "bg-gradient-to-br from-primary to-accent text-primary-foreground" : "bg-white/5")}>
-                    {m.body}
+              {messages.map((m) => {
+                const matches = findProductMatches(m.body, products);
+                return (
+                  <div key={m.id} className={"flex flex-col gap-2 " + (m.role === "agent" ? "items-end" : "items-start")}>
+                    <div className={"max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm " + (m.role === "agent" ? "bg-gradient-to-br from-primary to-accent text-primary-foreground" : "bg-white/5")}>
+                      {m.body}
+                    </div>
+                    {matches.length > 0 && (
+                      <div className="flex w-full max-w-[85%] flex-col gap-2">
+                        {matches.map((p) => (
+                          <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{p.image_emoji}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-semibold">{p.name}</div>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                                <span className="font-mono">{p.sku}</span>
+                                <span>·</span>
+                                <span className={p.stock === 0 ? "text-rose-300" : "text-emerald-300"}>
+                                  {p.stock === 0 ? "Out of stock" : `${p.stock} in stock`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <div className="font-display text-sm font-bold">{Number(p.price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{p.currency}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-3 flex items-end gap-2 rounded-xl border border-white/10 bg-white/5 p-2">
               <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={2} placeholder="Type a reply…"
