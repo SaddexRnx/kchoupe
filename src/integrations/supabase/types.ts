@@ -462,6 +462,7 @@ export type Database = {
           notes: string | null
           order_no: string
           product_summary: string
+          seen: boolean
           status: string
           updated_at: string
           workspace_id: string
@@ -478,6 +479,7 @@ export type Database = {
           notes?: string | null
           order_no: string
           product_summary: string
+          seen?: boolean
           status?: string
           updated_at?: string
           workspace_id: string
@@ -494,6 +496,7 @@ export type Database = {
           notes?: string | null
           order_no?: string
           product_summary?: string
+          seen?: boolean
           status?: string
           updated_at?: string
           workspace_id?: string
