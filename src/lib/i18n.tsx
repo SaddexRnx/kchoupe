@@ -438,7 +438,7 @@ const fr: Dict = {
   "common.all_categories": "Toutes catégories",
   "dash.weekday": "Dimanche · Aperçu",
   "dash.welcome": "Bon retour,",
-  "dash.subtitle": "Votre équipe a géré 412 conversations pendant votre absence.",
+  "dash.subtitle": "Voici ce que votre équipe IA a fait récemment.",
   "dash.systems_ok": "Tous les systèmes opérationnels",
   "dash.stat.ai_employees": "Employés IA",
   "dash.stat.products": "Produits",
