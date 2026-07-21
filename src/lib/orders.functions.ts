@@ -225,3 +225,69 @@ export const dashboardStats = createServerFn({ method: "POST" })
     };
   });
 
+export type DashboardExtras = {
+  statusCounts: Record<string, number>;
+  avgOrderValue: number;
+  aiResolutionRate: number;
+  totalMessages: number;
+  totalRevenue: number;
+  topProducts: Array<{ id: string; name: string; sold_30: number; price: number; currency: string; image_emoji: string | null; stock: number }>;
+  lowStock: Array<{ id: string; name: string; stock: number; sku: string | null }>;
+  integrations: Array<{ provider: string; status: string; connected_at: string | null }>;
+  learningsCount: number;
+  openTickets: number;
+  activity: Array<{ id: string; kind: string; label: string; sub: string; created_at: string }>;
+};
+
+export const dashboardExtras = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<DashboardExtras> => {
+    const ws = await workspaceId(context);
+    const [ordersRes, productsRes, integRes, learnRes, ticketsRes, msgCountRes, recentOrdersRes] = await Promise.all([
+      context.supabase.from("orders").select("status,amount,confirmed_by_ai,created_at").eq("workspace_id", ws),
+      context.supabase.from("products").select("id,name,sold_30,price,currency,image_emoji,stock,sku").eq("workspace_id", ws),
+      context.supabase.from("integrations").select("provider,status,connected_at").eq("workspace_id", ws),
+      context.supabase.from("workspace_learnings").select("id", { count: "exact", head: true }).eq("workspace_id", ws),
+      context.supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("workspace_id", ws).in("status", ["open", "pending"]),
+      context.supabase.from("inbox_messages").select("id", { count: "exact", head: true }).eq("workspace_id", ws),
+      context.supabase.from("orders").select("id,order_no,customer_name,status,created_at,confirmed_by_ai,amount,currency").eq("workspace_id", ws).order("created_at", { ascending: false }).limit(6),
+    ]);
+
+    const orders = (ordersRes.data ?? []) as Array<{ status: string; amount: number; confirmed_by_ai: boolean }>;
+    const statusCounts: Record<string, number> = {};
+    let paidTotal = 0, paidCount = 0, aiConfirmed = 0;
+    for (const o of orders) {
+      statusCounts[o.status] = (statusCounts[o.status] ?? 0) + 1;
+      if (o.status === "paid" || o.status === "delivered") { paidTotal += Number(o.amount); paidCount += 1; }
+      if (o.confirmed_by_ai) aiConfirmed += 1;
+    }
+    const products = (productsRes.data ?? []) as Array<{ id: string; name: string; sold_30: number | null; price: number; currency: string; image_emoji: string | null; stock: number; sku: string | null }>;
+    const topProducts = [...products].sort((a, b) => (b.sold_30 ?? 0) - (a.sold_30 ?? 0)).slice(0, 5).map((p) => ({ id: p.id, name: p.name, sold_30: p.sold_30 ?? 0, price: p.price, currency: p.currency, image_emoji: p.image_emoji, stock: p.stock }));
+    const lowStock = products.filter((p) => p.stock <= 5).sort((a, b) => a.stock - b.stock).slice(0, 5).map((p) => ({ id: p.id, name: p.name, stock: p.stock, sku: p.sku }));
+    const integrations = ((integRes.data ?? []) as Array<{ provider: string; status: string; connected_at: string | null }>);
+
+    const recentOrders = (recentOrdersRes.data ?? []) as Array<{ id: string; order_no: string; customer_name: string; status: string; created_at: string; confirmed_by_ai: boolean; amount: number; currency: string }>;
+    const activity = recentOrders.map((o) => ({
+      id: o.id,
+      kind: o.confirmed_by_ai ? "ai_order" : "order",
+      label: `${o.order_no} · ${o.customer_name}`,
+      sub: `${o.status} · ${new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.currency, maximumFractionDigits: 0 }).format(Number(o.amount))}`,
+      created_at: o.created_at,
+    }));
+
+    return {
+      statusCounts,
+      avgOrderValue: paidCount ? paidTotal / paidCount : 0,
+      aiResolutionRate: orders.length ? aiConfirmed / orders.length : 0,
+      totalMessages: msgCountRes.count ?? 0,
+      totalRevenue: paidTotal,
+      topProducts,
+      lowStock,
+      integrations,
+      learningsCount: learnRes.count ?? 0,
+      openTickets: ticketsRes.count ?? 0,
+      activity,
+    };
+  });
+
+
