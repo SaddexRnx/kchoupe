@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Map, ExternalLink, Home, Sparkles, BookOpen, ShieldCheck, LifeBuoy, LayoutDashboard, Package, Users, MessageSquare, Layers, Bot, Puzzle, Settings2, ChevronRight } from "lucide-react";
+import { Map, ExternalLink, Home, Sparkles, BookOpen, ShieldCheck } from "lucide-react";
 
 type Item = { to: string; label: string; desc?: string; icon?: any };
 type Group = { title: string; items: Item[] };
@@ -17,33 +17,11 @@ const groups: Group[] = [
     ],
   },
   {
-    title: "Account",
+    title: "Get started",
     items: [
       { to: "/login", label: "Sign in" },
       { to: "/signup", label: "Create account", icon: Sparkles },
       { to: "/reset-password", label: "Reset password" },
-      { to: "/onboarding", label: "Onboarding wizard" },
-    ],
-  },
-  {
-    title: "Product",
-    items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, desc: "Live KPIs and channel summary." },
-      { to: "/ai-employees", label: "AI Employees", icon: Bot, desc: "Design, tune and deploy AI agents." },
-      { to: "/products", label: "Products", icon: Package, desc: "Your catalog." },
-      { to: "/orders", label: "Orders", icon: Layers, desc: "Every order across every channel." },
-      { to: "/conversations", label: "Conversations", icon: MessageSquare, desc: "Unified inbox." },
-      { to: "/knowledge", label: "Knowledge base", icon: BookOpen, desc: "Docs the AI reads from." },
-      { to: "/playground", label: "Playground", icon: Sparkles, desc: "Test prompts before rollout." },
-      { to: "/integrations", label: "Integrations", icon: Puzzle, desc: "Channels, storefronts, models." },
-      { to: "/support", label: "Support", icon: LifeBuoy, desc: "Get help from the Atlas team." },
-      { to: "/settings", label: "Settings", icon: Settings2, desc: "Profile, billing, security." },
-    ],
-  },
-  {
-    title: "Admin",
-    items: [
-      { to: "/admin", label: "Admin Panel", icon: Users, desc: "Owner-only: workspaces, users, billing." },
     ],
   },
   {
@@ -54,6 +32,7 @@ const groups: Group[] = [
     ],
   },
 ];
+
 
 export const Route = createFileRoute("/sitemap")({
   head: () => ({
