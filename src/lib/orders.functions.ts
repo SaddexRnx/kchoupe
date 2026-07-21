@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type OrderStatus = "pending" | "paid" | "delivered" | "cancelled" | "returned" | "refunded";
 export type OrderRow = {
   id: string;
   order_no: string;
@@ -9,12 +10,14 @@ export type OrderRow = {
   product_summary: string;
   amount: number;
   currency: string;
-  status: "paid" | "pending" | "refunded" | "cancelled";
+  status: OrderStatus;
   confirmed_by_ai: boolean;
   ai_employee_id: string | null;
   notes: string | null;
+  seen: boolean;
   created_at: string;
 };
+
 
 async function workspaceId(ctx: { supabase: any }): Promise<string> {
   const { data, error } = await ctx.supabase.rpc("ensure_default_workspace");
@@ -28,7 +31,7 @@ export const listOrders = createServerFn({ method: "GET" })
     const ws = await workspaceId(context);
     const { data, error } = await context.supabase
       .from("orders")
-      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
       .eq("workspace_id", ws)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -63,7 +66,7 @@ export const createOrder = createServerFn({ method: "POST" })
       ai_employee_id: data.ai_employee_id || null,
       notes: data.notes || null,
     })
-    .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+    .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
     .single();
     if (error) throw new Error(error.message);
     return row as OrderRow;
@@ -79,11 +82,32 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase.from("orders")
       .update({ status: data.status })
       .eq("id", data.id)
-      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,created_at")
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
       .single();
     if (error) throw new Error(error.message);
     return row as OrderRow;
   });
+
+export const updateOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; status?: OrderStatus; notes?: string | null; seen?: boolean }) => {
+    if (!input?.id) throw new Error("id required");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<OrderRow> => {
+    const patch: { status?: OrderStatus; notes?: string | null; seen?: boolean } = {};
+    if (data.status) patch.status = data.status;
+    if (data.notes !== undefined) patch.notes = data.notes;
+    if (data.seen !== undefined) patch.seen = data.seen;
+    const { data: row, error } = await context.supabase.from("orders")
+      .update(patch)
+      .eq("id", data.id)
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return row as OrderRow;
+  });
+
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

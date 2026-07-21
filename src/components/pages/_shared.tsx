@@ -44,7 +44,7 @@ export function Chip({
   tone = "muted",
   children,
 }: {
-  tone?: "muted" | "emerald" | "violet" | "amber" | "rose";
+  tone?: "muted" | "emerald" | "violet" | "amber" | "rose" | "sky";
   children: ReactNode;
 }) {
   const tones: Record<string, string> = {
@@ -53,7 +53,9 @@ export function Chip({
     violet: "bg-violet-400/10 text-violet-300 border-violet-400/20",
     amber: "bg-amber-400/10 text-amber-300 border-amber-400/20",
     rose: "bg-rose-400/10 text-rose-300 border-rose-400/20",
+    sky: "bg-sky-400/10 text-sky-300 border-sky-400/20",
   };
+
   return (
     <span className={"inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium " + tones[tone]}>
       {children}
