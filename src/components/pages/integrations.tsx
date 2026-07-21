@@ -231,12 +231,8 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
         ))}
       </div>
 
-      {lastMsg && (
-        <div className={"flex items-start gap-2 rounded-lg border px-3 py-2 text-xs " + (lastOk ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-200" : "border-rose-500/30 bg-rose-500/5 text-rose-200")}>
-          {lastOk ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
-          <div><span className="font-medium">Last test:</span> {lastMsg}</div>
-        </div>
-      )}
+      <StatusPanel conn={initial} meta={meta} busy={busy === "test" || busy === "save"} />
+
 
       <div className="flex flex-wrap gap-2">
         <PrimaryButton onClick={handleSave} disabled={busy === "save"}>
