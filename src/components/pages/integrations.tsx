@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Send, Bot, Loader2, MessageCircle, RefreshCw, Trash2, CheckCircle2, AlertTriangle,
   Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag,
-  ExternalLink,
+  ExternalLink, ChevronDown,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import {
