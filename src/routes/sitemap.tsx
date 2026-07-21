@@ -44,7 +44,7 @@ export const Route = createFileRoute("/sitemap")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: "/sitemap" }],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/sitemap" }],
   }),
   component: SitemapPage,
 });
