@@ -312,6 +312,33 @@ export function Products() {
         </Modal>
       )}
 
+      {menuFor && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setMenuFor(null)} />
+          <div
+            className="glass-panel fixed z-[100] w-44 overflow-hidden rounded-lg text-left text-xs shadow-xl"
+            style={{ top: menuFor.y, left: Math.max(8, menuFor.x - 176) }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                const row = rowsState.find((x) => x.id === menuFor.id);
+                if (row) duplicate(row);
+              }}
+              className="block w-full px-3 py-2 text-left hover:bg-white/10"
+            >Duplicate</button>
+            <button
+              onClick={() => {
+                const row = rowsState.find((x) => x.id === menuFor.id);
+                if (row) remove(row);
+              }}
+              className="block w-full px-3 py-2 text-left text-rose-300 hover:bg-rose-500/10"
+            >Delete</button>
+          </div>
+        </>,
+        document.body,
+      )}
+
       {confirmNode}
     </div>
   );
