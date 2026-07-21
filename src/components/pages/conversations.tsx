@@ -93,26 +93,51 @@ export function Conversations() {
 
   const placeOrder = useServerFn(createOrder);
   const [orderProduct, setOrderProduct] = useState<ProductLite | null>(null);
-  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+  const [orderErrors, setOrderErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
 
   const openOrder = (p: ProductLite) => {
     setOrderProduct(p);
+    const seedUser = open?.external_user ?? "";
     setOrderForm({
-      customer_name: open?.external_user ?? "",
-      customer_email: (open?.external_user ?? "").includes("@") ? (open?.external_user ?? "") : "",
+      customer_name: seedUser && !seedUser.includes("@") ? seedUser : "",
+      customer_email: seedUser.includes("@") ? seedUser : "",
+      customer_phone: "",
+      shipping_address: "",
       qty: 1,
       notes: "",
     });
+    setOrderErrors({});
+  };
+  const validateOrder = () => {
+    const e: Record<string, string> = {};
+    if (orderForm.customer_name.trim().length < 2) e.customer_name = "Enter the customer's full name";
+    if (orderForm.customer_phone.replace(/\D/g, "").length < 6) e.customer_phone = "Enter a valid phone number";
+    if (orderForm.shipping_address.trim().length < 8) e.shipping_address = "Enter the delivery address";
+    if (orderForm.customer_email.trim() && !/^\S+@\S+\.\S+$/.test(orderForm.customer_email.trim())) e.customer_email = "Invalid email";
+    const qty = Number(orderForm.qty);
+    if (!Number.isFinite(qty) || qty < 1) e.qty = "Quantity must be at least 1";
+    return e;
   };
   const submitOrder = async () => {
     if (!orderProduct) return;
-    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const errs = validateOrder();
+    setOrderErrors(errs);
+    if (Object.keys(errs).length) {
+      toast.push({ kind: "warn", title: "Missing details", body: "Please fill in name, phone and delivery address." });
+      return;
+    }
     const qty = Math.max(1, Number(orderForm.qty) || 1);
     setPlacing(true);
     try {
       const amount = Number(orderProduct.price) * qty;
       const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const composedNotes = [
+        `Phone: ${orderForm.customer_phone.trim()}`,
+        `Address: ${orderForm.shipping_address.trim()}`,
+        orderForm.notes.trim() ? `Notes: ${orderForm.notes.trim()}` : null,
+      ].filter(Boolean).join("\n");
       const res = await placeOrder({ data: {
         customer_name: orderForm.customer_name.trim(),
         customer_email: orderForm.customer_email.trim() || undefined,
@@ -121,7 +146,7 @@ export function Conversations() {
         currency: orderProduct.currency,
         status: "pending",
         confirmed_by_ai: false,
-        notes: orderForm.notes.trim() || undefined,
+        notes: composedNotes,
       }});
       toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: summary });
       setOrderProduct(null);
@@ -131,6 +156,7 @@ export function Conversations() {
       setPlacing(false);
     }
   };
+
 
   const open = convos.find((c) => c.id === openId) || null;
   const { data: messages = [] } = useQuery({
