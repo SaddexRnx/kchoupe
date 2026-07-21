@@ -171,6 +171,7 @@ function RootComponent() {
           <ToastProvider>
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
+            <PwaInstallPrompt />
           </ToastProvider>
         </AutoTranslateProvider>
       </PreferencesProvider>
