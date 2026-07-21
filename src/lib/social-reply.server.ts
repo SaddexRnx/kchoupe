@@ -342,7 +342,7 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       await supabaseAdmin.from("customers").update({
         phone: customer.phone || orderTag.phone,
         name: customer.name || orderTag.name,
-        metadata: { ...(customer.metadata || {}), address: orderTag.address, handle: customer.metadata?.handle ?? null },
+        metadata: { ...((customer.metadata && typeof customer.metadata === "object" && !Array.isArray(customer.metadata)) ? customer.metadata as Record<string, unknown> : {}), address: orderTag.address },
       }).eq("id", customer.id);
     }
     reply = reply.replace(ORDER_TAG_RE, "").trim();
