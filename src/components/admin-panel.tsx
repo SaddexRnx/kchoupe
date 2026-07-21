@@ -164,6 +164,7 @@ export function AdminPanel() {
           {tab === "conversations" && <SimpleListTab kind="conversations" />}
           {tab === "integrations" && <SimpleListTab kind="integrations" />}
           {tab === "support" && <AdminSupportTab />}
+          {tab === "security" && <SecurityDashboard />}
           {tab === "system" && <SystemTab />}
         </main>
       </div>
