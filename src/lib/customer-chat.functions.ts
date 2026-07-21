@@ -100,7 +100,28 @@ export const askCustomerAssistant = createServerFn({ method: "POST" })
       .limit(300);
 
     const catalog = buildCatalog(products || []);
-    const system = `${SYSTEM_GUARDRAIL}\n\n${catalog}`;
+
+    // Delivery context (Algerian wilayas + carriers)
+    const [zonesRes, carriersRes] = await Promise.all([
+      supabase.from("shipping_zones").select("wilaya_code,home_fee,desk_fee,free_shipping_threshold,estimated_days").eq("workspace_id", wsId).eq("active", true),
+      supabase.from("carriers").select("name,mode,default_fee,is_default").eq("workspace_id", wsId).eq("active", true),
+    ]);
+    const wilayaNames = await supabase.from("wilayas").select("code,name_fr");
+    const nameMap = new Map<number, string>();
+    (wilayaNames.data || []).forEach((w: any) => nameMap.set(w.code, w.name_fr));
+    let deliveryBlock = "";
+    if ((zonesRes.data || []).length || (carriersRes.data || []).length) {
+      const zoneLines = (zonesRes.data || []).slice(0, 60).map((z: any) => {
+        const name = nameMap.get(z.wilaya_code) || `Wilaya ${z.wilaya_code}`;
+        const free = z.free_shipping_threshold ? ` · free above ${z.free_shipping_threshold} DZD` : "";
+        const days = z.estimated_days ? ` · ~${z.estimated_days}d` : "";
+        return `  - ${z.wilaya_code}. ${name}: home ${z.home_fee} DZD${z.desk_fee != null ? `, desk ${z.desk_fee} DZD` : ""}${free}${days}`;
+      }).join("\n");
+      const carrierLines = (carriersRes.data || []).map((c: any) => `  - ${c.name} (${c.mode})${c.is_default ? " [default]" : ""}`).join("\n");
+      deliveryBlock = `\n\nDELIVERY (Algeria):\nCarriers:\n${carrierLines || "  - Manual"}\nShipping fees by wilaya (DZD, cash on delivery accepted):\n${zoneLines || "  - Not configured — invite customer to contact the store."}\n\nWhen the customer wants to buy, ask for: wilaya, commune, phone number. Then quote the delivery fee from the list above. Never invent a fee.`;
+    }
+
+    const system = `${SYSTEM_GUARDRAIL}\n\n${catalog}${deliveryBlock}`;
 
     // Route: custom model if selected, else Lovable AI Gateway
     let model: any;
