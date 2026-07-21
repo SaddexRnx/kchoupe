@@ -2,55 +2,192 @@ import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import {
   Sparkles, ArrowRight, ArrowLeft, Check, Store, MessageCircle, Instagram, Facebook,
-  Globe, Bot, Rocket, Languages, DollarSign,
+  Globe, Bot, Rocket, Languages, DollarSign, Send, SkipForward,
 } from "lucide-react";
 import { useToast } from "@/components/pages/_shared";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useServerFn } from "@tanstack/react-start";
+import { createAiEmployee } from "@/lib/ai-employees.functions";
+import { saveIntegration } from "@/lib/integrations.functions";
 
-const STEPS = ["Workspace", "Region", "Channels", "Your first AI", "Launch"];
+const STEPS = ["Workspace", "Region", "Channels", "Connect", "Your AI", "Launch"];
+
+type ChannelId = "whatsapp" | "instagram" | "facebook" | "telegram" | "website" | "shopify";
+
+const CHANNEL_META: Record<ChannelId, {
+  label: string;
+  icon: any;
+  category: string;
+  fields: { key: string; label: string; type?: string; placeholder?: string; help?: string }[];
+}> = {
+  whatsapp: {
+    label: "WhatsApp Business",
+    icon: MessageCircle,
+    category: "messaging",
+    fields: [
+      { key: "phoneNumberId", label: "Phone number ID", placeholder: "123456789012345" },
+      { key: "accessToken", label: "Access token", type: "password", placeholder: "EAAG…" },
+    ],
+  },
+  instagram: {
+    label: "Instagram DM",
+    icon: Instagram,
+    category: "social",
+    fields: [
+      { key: "pageId", label: "Page/IG account ID", placeholder: "1789…" },
+      { key: "accessToken", label: "Access token", type: "password", placeholder: "EAAG…" },
+    ],
+  },
+  facebook: {
+    label: "Facebook Messenger",
+    icon: Facebook,
+    category: "social",
+    fields: [
+      { key: "pageId", label: "Facebook page ID", placeholder: "1789…" },
+      { key: "accessToken", label: "Page access token", type: "password", placeholder: "EAAG…" },
+    ],
+  },
+  telegram: {
+    label: "Telegram Bot",
+    icon: Send,
+    category: "messaging",
+    fields: [
+      { key: "botToken", label: "Bot token from @BotFather", type: "password", placeholder: "123456:AA…" },
+    ],
+  },
+  website: {
+    label: "Website chat widget",
+    icon: Globe,
+    category: "web",
+    fields: [
+      { key: "domain", label: "Your website URL", placeholder: "https://kasbahbeauty.com" },
+    ],
+  },
+  shopify: {
+    label: "Shopify",
+    icon: Store,
+    category: "commerce",
+    fields: [
+      { key: "shopDomain", label: "Store domain", placeholder: "my-store.myshopify.com" },
+      { key: "accessToken", label: "Admin API access token", type: "password" },
+    ],
+  },
+};
 
 export function Onboarding() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [step, setStep] = useState(0);
+  const createEmployee = useServerFn(createAiEmployee);
+  const saveIntegrationFn = useServerFn(saveIntegration);
 
+  const [step, setStep] = useState(0);
   const [workspace, setWorkspace] = useState("");
   const [role, setRole] = useState("owner");
   const [country, setCountry] = useState("DZ");
   const [lang, setLang] = useState<"ar" | "fr" | "en">("fr");
-  const [channels, setChannels] = useState<string[]>(["whatsapp"]);
+  const [channels, setChannels] = useState<ChannelId[]>(["whatsapp"]);
+  const [creds, setCreds] = useState<Record<string, Record<string, string>>>({});
   const [agentName, setAgentName] = useState("Nova");
   const [agentRole, setAgentRole] = useState("sales");
   const [launching, setLaunching] = useState(false);
 
-  const toggleChannel = (c: string) =>
+  const toggleChannel = (c: ChannelId) =>
     setChannels((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+
+  const setCred = (chan: ChannelId, key: string, val: string) =>
+    setCreds((prev) => ({ ...prev, [chan]: { ...(prev[chan] ?? {}), [key]: val } }));
 
   const canNext =
     (step === 0 && workspace.trim().length > 1) ||
     step === 1 ||
     (step === 2 && channels.length > 0) ||
-    (step === 3 && agentName.trim().length > 1) ||
-    step === 4;
+    step === 3 ||
+    (step === 4 && agentName.trim().length > 1) ||
+    step === 5;
+
+  const goNext = () => {
+    if (step < STEPS.length - 1) setStep(step + 1);
+  };
 
   const next = () => {
     if (!canNext) {
       toast.push({ kind: "warn", title: "One more thing", body: "Complete this step before continuing." });
       return;
     }
-    if (step < STEPS.length - 1) setStep(step + 1);
+    goNext();
   };
 
-  const launch = () => {
-    setLaunching(true);
-    setTimeout(() => {
-      toast.push({ kind: "success", title: "You're live!", body: `${agentName} is on shift.` });
-      navigate({ to: "/dashboard" });
-    }, 1500);
+  const skipStep = () => {
+    // On the channel picker, skipping clears selection so nothing is saved.
+    if (step === 2) setChannels([]);
+    if (step === 3) {
+      // clear only untouched channels' creds — nothing to do, they remain empty
+    }
+    goNext();
   };
+
+  const skipAll = () => navigate({ to: "/dashboard" });
+
+  const launch = async () => {
+    setLaunching(true);
+    let saved = 0;
+    try {
+      // 1. Persist AI employee (if named).
+      if (agentName.trim().length > 1) {
+        try {
+          await createEmployee({
+            data: {
+              name: agentName.trim(),
+              role: agentRole,
+              model: "google/gemini-2.5-flash",
+              avatar_emoji: "🤖",
+              system_prompt: `You are ${agentName}, a ${agentRole} agent for ${workspace || "our store"}. Reply in ${lang.toUpperCase()}.`,
+            },
+          });
+        } catch (err: any) {
+          // Non-fatal — user can still create later.
+          console.warn("AI employee create failed:", err?.message);
+        }
+      }
+
+      // 2. Persist each selected channel as an integration.
+      for (const chan of channels) {
+        const meta = CHANNEL_META[chan];
+        const filled = creds[chan] ?? {};
+        const hasCreds = meta.fields.some((f) => (filled[f.key] ?? "").trim().length > 0);
+        try {
+          await saveIntegrationFn({
+            data: {
+              integration_key: chan,
+              category_id: meta.category,
+              status: hasCreds ? "connected" : "disconnected",
+              credentials: filled,
+            },
+          });
+          saved += 1;
+        } catch (err: any) {
+          console.warn(`Integration ${chan} save failed:`, err?.message);
+        }
+      }
+
+      toast.push({
+        kind: "success",
+        title: "You're live!",
+        body: saved > 0
+          ? `${agentName} is on shift · ${saved} channel${saved === 1 ? "" : "s"} ready.`
+          : `${agentName} is on shift.`,
+      });
+      navigate({ to: "/dashboard" });
+    } finally {
+      setLaunching(false);
+    }
+  };
+
+  // Steps where a skip button makes sense (i.e. not required and not the review).
+  const skippableSteps = new Set([1, 2, 3, 4]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       {/* Aurora bg */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="animate-float absolute -left-24 top-0 h-96 w-96 rounded-full bg-primary/25 blur-3xl" />
@@ -67,7 +204,7 @@ export function Onboarding() {
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <button onClick={() => navigate({ to: "/dashboard" })} className="text-xs text-muted-foreground hover:text-foreground">
+          <button onClick={skipAll} className="text-xs text-muted-foreground hover:text-foreground">
             Skip setup →
           </button>
         </div>
@@ -92,7 +229,7 @@ export function Onboarding() {
             </div>
           ))}
         </div>
-        <div className="mt-3 hidden grid-cols-5 gap-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground sm:grid">
+        <div className="mt-3 hidden grid-cols-6 gap-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground sm:grid">
           {STEPS.map((s, i) => (
             <div key={s} className={i === step ? "font-semibold text-foreground" : ""}>{s}</div>
           ))}
@@ -172,25 +309,19 @@ export function Onboarding() {
           )}
 
           {step === 2 && (
-            <Step title="Where do customers reach you?" subtitle="Pick every channel your AI should staff. Change anytime.">
+            <Step title="Where do customers reach you?" subtitle="Pick every channel your AI should staff. Skip to add later.">
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                {[
-                  { id: "whatsapp", i: MessageCircle, l: "WhatsApp" },
-                  { id: "instagram", i: Instagram, l: "Instagram DM" },
-                  { id: "facebook", i: Facebook, l: "Messenger" },
-                  { id: "website", i: Globe, l: "Website chat" },
-                  { id: "shopify", i: Store, l: "Shopify" },
-                  { id: "tiktok", i: Sparkles, l: "TikTok" },
-                ].map((c) => {
-                  const on = channels.includes(c.id);
+                {(Object.keys(CHANNEL_META) as ChannelId[]).map((id) => {
+                  const meta = CHANNEL_META[id];
+                  const on = channels.includes(id);
                   return (
-                    <button key={c.id} onClick={() => toggleChannel(c.id)}
+                    <button key={id} onClick={() => toggleChannel(id)}
                       className={"relative flex items-center gap-3 rounded-xl border p-3 text-left text-sm transition " +
                         (on ? "border-primary/40 bg-primary/10" : "border-white/10 bg-white/5 hover:bg-white/10")}>
                       <div className={"grid h-9 w-9 place-items-center rounded-lg " + (on ? "bg-gradient-to-br from-primary to-accent text-primary-foreground" : "bg-white/5 text-primary")}>
-                        <c.i className="h-4 w-4" />
+                        <meta.icon className="h-4 w-4" />
                       </div>
-                      <span className="font-medium">{c.l}</span>
+                      <span className="font-medium">{meta.label}</span>
                       {on && <Check className="ml-auto h-4 w-4 text-emerald-300" />}
                     </button>
                   );
@@ -200,6 +331,56 @@ export function Onboarding() {
           )}
 
           {step === 3 && (
+            <Step title="Connect your channels" subtitle="Paste API tokens now, or skip and finish from Integrations later.">
+              {channels.length === 0 ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center text-sm text-muted-foreground">
+                  No channels selected — you can add and connect them anytime from the Integrations page.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {channels.map((chan) => {
+                    const meta = CHANNEL_META[chan];
+                    const filled = creds[chan] ?? {};
+                    const anyFilled = meta.fields.some((f) => (filled[f.key] ?? "").trim().length > 0);
+                    return (
+                      <div key={chan} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-primary">
+                            <meta.icon className="h-4 w-4" />
+                          </div>
+                          <div className="font-display text-sm font-bold">{meta.label}</div>
+                          <span className={"ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide " +
+                            (anyFilled ? "bg-emerald-500/15 text-emerald-300" : "bg-white/5 text-muted-foreground")}>
+                            {anyFilled ? "Ready" : "Skip / add later"}
+                          </span>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {meta.fields.map((f) => (
+                            <label key={f.key} className="block">
+                              <div className="mb-1 text-[11px] font-medium text-muted-foreground">{f.label}</div>
+                              <input
+                                type={f.type ?? "text"}
+                                value={filled[f.key] ?? ""}
+                                onChange={(e) => setCred(chan, f.key, e.target.value)}
+                                placeholder={f.placeholder ?? ""}
+                                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10"
+                              />
+                              {f.help && <div className="mt-1 text-[10px] text-muted-foreground">{f.help}</div>}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="text-[11px] text-muted-foreground">
+                    Tokens are stored encrypted. You can rotate or remove them from <span className="text-foreground">Integrations</span>.
+                  </div>
+                </div>
+              )}
+            </Step>
+          )}
+
+          {step === 4 && (
             <Step title="Hire your first AI employee" subtitle="Give them a name and a role. You can train them later.">
               <label className="block">
                 <div className="mb-2 text-xs font-medium text-muted-foreground">Employee name</div>
@@ -234,18 +415,25 @@ export function Onboarding() {
             </Step>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <Step title="Everything's ready." subtitle="Review and launch your workspace.">
               <div className="grid gap-2 text-sm">
                 {[
                   { k: "Workspace", v: workspace || "Unnamed workspace" },
                   { k: "Region", v: country + " · " + lang.toUpperCase() },
-                  { k: "Channels", v: channels.join(", ") || "none" },
+                  { k: "Channels", v: channels.length ? channels.map((c) => CHANNEL_META[c].label).join(", ") : "none (add later)" },
+                  {
+                    k: "Connected",
+                    v: (() => {
+                      const ready = channels.filter((c) => CHANNEL_META[c].fields.some((f) => (creds[c]?.[f.key] ?? "").trim().length > 0));
+                      return ready.length ? `${ready.length} of ${channels.length}` : "0 — configure in Integrations";
+                    })(),
+                  },
                   { k: "First AI", v: `${agentName} · ${agentRole}` },
                 ].map((r) => (
                   <div key={r.k} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2.5">
                     <span className="text-xs uppercase tracking-widest text-muted-foreground">{r.k}</span>
-                    <span className="font-medium">{r.v}</span>
+                    <span className="max-w-[60%] truncate text-right font-medium">{r.v}</span>
                   </div>
                 ))}
               </div>
@@ -254,32 +442,40 @@ export function Onboarding() {
                   <Rocket className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <div className="mt-4 font-display text-xl font-black">Ready for takeoff</div>
-                <p className="mt-1 text-sm text-muted-foreground">Your dashboard is waiting on the other side.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Your AI and channels will be saved to your workspace.</p>
               </div>
             </Step>
           )}
 
           {/* Actions */}
-          <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-6">
             <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}
               className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm transition hover:bg-white/10 disabled:opacity-40">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            {step < STEPS.length - 1 ? (
-              <button onClick={next}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98]">
-                Continue <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <button onClick={launch} disabled={launching}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60">
-                {launching ? (
-                  <><span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" /> Launching…</>
-                ) : (
-                  <>Launch workspace <Rocket className="h-4 w-4" /></>
-                )}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {skippableSteps.has(step) && step < STEPS.length - 1 && (
+                <button onClick={skipStep}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted-foreground transition hover:bg-white/10 hover:text-foreground">
+                  <SkipForward className="h-3.5 w-3.5" /> Skip
+                </button>
+              )}
+              {step < STEPS.length - 1 ? (
+                <button onClick={next}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98]">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button onClick={launch} disabled={launching}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60">
+                  {launching ? (
+                    <><span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" /> Launching…</>
+                  ) : (
+                    <>Launch workspace <Rocket className="h-4 w-4" /></>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
