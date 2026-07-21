@@ -372,6 +372,9 @@ export function Products() {
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Trash2 className="h-3 w-3" /> {t("prod.bulk")}
       </div>
+
+      <Modal
+        open={addOpen}
         onClose={() => setAddOpen(false)}
         title="Add product"
         description="Add a product to your catalog. AI employees will use it in conversations."
