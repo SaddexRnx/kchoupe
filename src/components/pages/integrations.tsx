@@ -135,6 +135,117 @@ function ProviderPicker({
   );
 }
 
+// ── Detailed status / diagnostics panel ─────────────────────
+const CODE_META: Record<PingCode, { label: string; tone: "emerald" | "rose" | "amber" | "sky" | "muted"; Icon: any }> = {
+  ok:           { label: "Connected",       tone: "emerald", Icon: CheckCircle2 },
+  network:      { label: "Network error",   tone: "rose",    Icon: Wifi },
+  auth:         { label: "Auth rejected",   tone: "rose",    Icon: KeyRound },
+  forbidden:    { label: "Missing scope",   tone: "amber",   Icon: Ban },
+  not_found:    { label: "Not found",       tone: "amber",   Icon: SearchX },
+  rate_limit:   { label: "Rate limited",    tone: "amber",   Icon: Gauge },
+  server_error: { label: "Provider 5xx",    tone: "amber",   Icon: ServerCrash },
+  bad_format:   { label: "Invalid field",   tone: "rose",    Icon: FileWarning },
+  unlinked:     { label: "Not linked",      tone: "amber",   Icon: Link2Off },
+  unknown:      { label: "Unknown error",   tone: "muted",   Icon: HelpCircle },
+};
+
+function fmtAgo(iso: string | null): string {
+  if (!iso) return "never";
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function StatusPanel({ conn, meta, busy }: { conn?: ProviderConnection; meta: ProviderMeta; busy?: boolean }) {
+  const toast = useToast();
+  const untested = !conn || !conn.last_test_status;
+  const ok = conn?.last_test_status === "ok";
+  const code: PingCode = (conn?.last_test_code as PingCode) ?? (ok ? "ok" : untested ? "unknown" : "unknown");
+  const c = CODE_META[code];
+  const missing = conn?.missing_keys ?? meta.requiredKeys;
+  const message = conn?.last_test_message;
+  const hint = conn?.last_test_hint;
+  const latency = conn?.last_test_latency_ms;
+  const at = conn?.last_test_at ?? null;
+
+  const barTone =
+    untested ? "border-white/10 bg-white/5"
+    : ok ? "border-emerald-500/30 bg-emerald-500/5"
+    : c.tone === "amber" ? "border-amber-500/30 bg-amber-500/5"
+    : "border-rose-500/30 bg-rose-500/5";
+  const iconTone =
+    untested ? "text-muted-foreground"
+    : ok ? "text-emerald-300"
+    : c.tone === "amber" ? "text-amber-300" : "text-rose-300";
+
+  const copy = () => {
+    if (!message) return;
+    navigator.clipboard?.writeText(message).then(
+      () => toast.push({ kind: "info", title: "Copied diagnostic message" }),
+      () => {}
+    );
+  };
+
+  return (
+    <div className={"rounded-xl border p-3 " + barTone}>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className={"flex items-center gap-1.5 text-sm font-medium " + iconTone}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <c.Icon className="h-4 w-4" />}
+          {untested ? "Awaiting first test" : c.label}
+        </div>
+        {!untested && (
+          <Chip tone={ok ? "emerald" : c.tone === "amber" ? "amber" : "rose"}>{code}</Chip>
+        )}
+        <div className="ml-auto flex items-center gap-3 text-[11px] text-muted-foreground">
+          {typeof latency === "number" && (
+            <span className="inline-flex items-center gap-1"><Timer className="h-3 w-3" />{latency} ms</span>
+          )}
+          {at && (
+            <span className="inline-flex items-center gap-1" title={new Date(at).toLocaleString()}>
+              <Clock className="h-3 w-3" />{fmtAgo(at)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {message && (
+        <div className="mt-2 flex items-start gap-2 rounded-lg bg-black/20 px-2.5 py-2 font-mono text-[11.5px] leading-relaxed text-foreground/80">
+          <span className="min-w-0 flex-1 break-words">{message}</span>
+          <button type="button" onClick={copy} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-white/10 hover:text-foreground" title="Copy">
+            <Copy className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
+      {!ok && hint && (
+        <div className="mt-2 text-xs text-foreground/85">
+          <span className="font-medium">Fix:</span> {hint}
+        </div>
+      )}
+
+      {missing.length > 0 && (
+        <div className="mt-2 text-[11px] text-muted-foreground">
+          <span className="font-medium text-amber-300/90">Missing fields:</span>{" "}
+          {missing.map((k, i) => {
+            const label = meta.fields.find((f) => f.key === k)?.label ?? k;
+            return <span key={k} className="font-mono">{i > 0 ? ", " : ""}{label}</span>;
+          })}
+        </div>
+      )}
+
+      {meta.helpUrl && !ok && !untested && (
+        <div className="mt-2">
+          <a href={meta.helpUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline">
+            Open {meta.title} docs <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── One card per provider ───────────────────────────────────
 function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initial?: ProviderConnection; onChanged: () => void }) {
   const toast = useToast();
