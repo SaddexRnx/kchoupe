@@ -433,32 +433,33 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
             Any OpenAI-compatible endpoint — OpenRouter, Gemini's OpenAI proxy, Groq, Together, self-hosted vLLM. We ping <code className="font-mono text-[11px]">/chat/completions</code> to verify.
           </p>
         </div>
-        <PrimaryButton onClick={() => setAddOpen((v) => !v)}>
+        <PrimaryButton onClick={() => (addOpen ? closeForm() : openAdd())}>
           <Plus className="h-4 w-4" /> {addOpen ? "Close" : "Add model"}
         </PrimaryButton>
       </div>
 
       {addOpen && (
         <Panel className="mb-4">
+          <div className="mb-3 text-sm font-medium">{editId ? "Edit model" : "Add a new model"}</div>
           <div className="grid gap-3 md:grid-cols-2">
             <TextField label="Display name" value={draft.label} onChange={(v) => setDraft({ ...draft, label: v })} placeholder="OpenRouter · gpt-4o-mini" />
             <TextField label="Base URL" value={draft.base_url} onChange={(v) => setDraft({ ...draft, base_url: v })} placeholder="https://openrouter.ai/api/v1" />
             <TextField label="Model id" value={draft.model_id} onChange={(v) => setDraft({ ...draft, model_id: v })} placeholder="openai/gpt-4o-mini" />
             <label className="block">
               <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                <span>API key</span>
+                <span>API key {editId && <span className="text-muted-foreground/70">(leave blank to keep current)</span>}</span>
                 <button type="button" onClick={() => setReveal((r) => !r)} className="rounded p-0.5 hover:bg-white/10">
                   {reveal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                 </button>
               </div>
               <input type={reveal ? "text" : "password"} value={draft.api_key} onChange={(e) => setDraft({ ...draft, api_key: e.target.value })}
-                placeholder="sk-…" className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
+                placeholder={editId ? "•••• keep existing ••••" : "sk-…"} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50" />
             </label>
           </div>
           <div className="mt-3 flex items-center justify-between">
             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Keys stay server-side and are shown masked.</div>
             <PrimaryButton onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />} Save & verify
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />} {editId ? "Update & verify" : "Save & verify"}
             </PrimaryButton>
           </div>
         </Panel>
