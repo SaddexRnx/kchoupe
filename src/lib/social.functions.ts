@@ -444,6 +444,7 @@ export const testProviderConnection = createServerFn({ method: "POST" })
     const latency = Date.now() - started;
     const merged: any = { ...((existing.credentials as Record<string, any>) || {}) };
     if (result.ok && result.meta?.handle) merged.__handle = result.meta.handle;
+    merged.__diag = { code: result.code, hint: result.hint ?? null, latency_ms: latency, checked_at: new Date().toISOString() };
     const { data: row, error } = await context.supabase
       .from("integrations")
       .update({
@@ -455,7 +456,7 @@ export const testProviderConnection = createServerFn({ method: "POST" })
         last_test_latency_ms: latency,
       })
       .eq("id", existing.id)
-      .select("id,status,credentials,assigned_employees,last_test_status,last_test_message,last_test_at")
+      .select(CONN_SELECT)
       .single();
     if (error) throw new Error(error.message);
     return rowToConn(data.provider, row);
