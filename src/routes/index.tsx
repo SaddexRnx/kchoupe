@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
       { title: "Atlas AI — Your AI Workforce for Commerce" },
       { name: "description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
       { property: "og:title", content: "Atlas AI — Your AI Workforce for Commerce" },
-      { property: "og:description", content: "AI employees that sell, support, and grow your store 24/7." },
+      { property: "og:description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
     ],
   }),
   component: Landing,
