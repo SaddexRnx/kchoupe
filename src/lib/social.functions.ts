@@ -781,7 +781,11 @@ export const configureMessagingWebhook = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!integ) throw new Error("Save credentials first.");
 
-    const origin = data.appOrigin.replace(/\/+$/, "");
+    // Telegram/Meta reject redirects (302), so rewrite Lovable's auth-bridged
+    // preview origin (…lovableproject.com or id-preview--…lovable.app) into
+    // the stable public host that serves the current build without auth.
+    const rawOrigin = data.appOrigin.replace(/\/+$/, "");
+    const origin = normalizePublicOrigin(rawOrigin);
     const creds: any = { ...(integ.credentials as any || {}) };
 
     if (data.provider === "telegram") {
