@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listNotifications, markNotificationsRead } from "@/lib/notifications.functions";
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 
 type NavKey =
   | "dashboard"
