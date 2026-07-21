@@ -28,6 +28,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listNotifications, markNotificationsRead } from "@/lib/notifications.functions";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { AdminAlertPopup } from "@/components/admin-alert-popup";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type NavKey =
   | "dashboard"
@@ -247,6 +248,7 @@ function TopBar() {
           </div>
         )}
       </div>
+      <ThemeToggle />
       <div className="hidden sm:block"><LangSwitcher lang={lang} onChange={setLang} /></div>
       <div ref={bellRef} className="relative shrink-0">
         <button onClick={() => setBellOpen((v) => !v)} className="glass-panel relative flex h-11 w-11 items-center justify-center rounded-xl transition hover:bg-white/10">
