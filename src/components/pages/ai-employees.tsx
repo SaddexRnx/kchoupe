@@ -36,11 +36,46 @@ export function AiEmployees() {
   const create = useServerFn(createAiEmployee);
   const update = useServerFn(updateAiEmployee);
   const del = useServerFn(deleteAiEmployee);
+  const listCM = useServerFn(listCustomModels);
+  const testCM = useServerFn(testCustomModel);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["ai_employees"],
     queryFn: () => list(),
   });
+  const { data: customModels = [] } = useQuery<CustomModelRow[]>({
+    queryKey: ["custom_models"],
+    queryFn: () => listCM(),
+  });
+
+  const modelOptions = useMemo(() => ([
+    ...BUILTIN_MODELS.map((m) => ({ id: m.id, label: m.label, group: "Built-in (Lovable AI)", status: "ok" as const, custom: false })),
+    ...customModels.map((m) => ({
+      id: `custom:${m.id}`,
+      label: `${m.label} · ${m.model_id}`,
+      group: "Your custom models",
+      status: (m.last_test_status ?? "untested") as "ok" | "fail" | "untested",
+      custom: true,
+    })),
+  ]), [customModels]);
+
+  const [testingCM, setTestingCM] = useState<string | null>(null);
+  const runTestCustom = async (rawModelId: string) => {
+    if (!rawModelId.startsWith("custom:")) return;
+    const id = rawModelId.slice(7);
+    setTestingCM(id);
+    try {
+      const r = await testCM({ data: { id } });
+      qc.setQueryData<CustomModelRow[]>(["custom_models"], (old) =>
+        (old ?? []).map((m) => (m.id === id ? r : m))
+      );
+      toast.push({ kind: r.last_test_status === "ok" ? "success" : "warn", title: `${r.label}: ${r.last_test_status}`, body: r.last_test_message ?? undefined });
+    } catch (e) {
+      toast.push({ kind: "warn", title: "Test failed", body: e instanceof Error ? e.message : String(e) });
+    } finally { setTestingCM(null); }
+  };
+
+  const currentModelStatus = (modelId: string) => modelOptions.find((m) => m.id === modelId)?.status ?? "ok";
 
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<AiEmployeeRow | null>(null);
