@@ -288,9 +288,13 @@ export type ProviderConnection = {
   last_test_status: string | null;
   last_test_message: string | null;
   last_test_at: string | null;
+  last_test_code: PingCode | null;
+  last_test_hint: string | null;
+  last_test_latency_ms: number | null;
   assigned_employees: string[];
   has_credentials: boolean;
-  present_keys: string[]; // which cred keys are stored (non-secret hint for UI)
+  present_keys: string[];       // which cred keys are stored
+  missing_keys: string[];       // required keys not yet provided
 };
 
 // Old export name kept so any lingering imports don't fail typecheck.
@@ -322,13 +326,15 @@ async function workspaceId(ctx: { supabase: any }): Promise<string> {
 
 function rowToConn(provider: ProviderId, r: any | null): ProviderConnection {
   const cat = CATEGORY_OF[provider];
+  const req = REQUIRED_OF[provider];
   if (!r) return {
     id: null, provider, category: cat, connected: false, status: "disconnected", handle: null,
     last_test_status: null, last_test_message: null, last_test_at: null,
-    assigned_employees: [], has_credentials: false, present_keys: [],
+    last_test_code: null, last_test_hint: null, last_test_latency_ms: null,
+    assigned_employees: [], has_credentials: false, present_keys: [], missing_keys: req,
   };
   const creds = r.credentials ?? {};
-  const req = REQUIRED_OF[provider];
+  const diag = creds.__diag ?? {};
   const hasAll = req.every((k) => !!creds[k]);
   return {
     id: r.id, provider, category: cat,
@@ -338,11 +344,17 @@ function rowToConn(provider: ProviderId, r: any | null): ProviderConnection {
     last_test_status: r.last_test_status,
     last_test_message: r.last_test_message,
     last_test_at: r.last_test_at,
+    last_test_code: (diag.code as PingCode) ?? null,
+    last_test_hint: diag.hint ?? null,
+    last_test_latency_ms: r.last_test_latency_ms ?? diag.latency_ms ?? null,
     assigned_employees: r.assigned_employees ?? [],
     has_credentials: hasAll,
-    present_keys: Object.keys(creds).filter((k) => k !== "__handle"),
+    present_keys: Object.keys(creds).filter((k) => k !== "__handle" && k !== "__diag"),
+    missing_keys: req.filter((k) => !creds[k]),
   };
 }
+
+const CONN_SELECT = "id,status,credentials,assigned_employees,last_test_status,last_test_message,last_test_at,last_test_latency_ms";
 
 // ── Server functions ─────────────────────────────────────────
 export const listProviderConnections = createServerFn({ method: "GET" })
@@ -353,7 +365,7 @@ export const listProviderConnections = createServerFn({ method: "GET" })
     for (const p of PROVIDERS) {
       const { data } = await context.supabase
         .from("integrations")
-        .select("id,status,credentials,assigned_employees,last_test_status,last_test_message,last_test_at")
+        .select(CONN_SELECT)
         .eq("workspace_id", ws).eq("integration_key", KEY_OF[p.id])
         .maybeSingle();
       out.push(rowToConn(p.id, data));
@@ -382,7 +394,6 @@ export const saveProviderConnection = createServerFn({ method: "POST" })
       if (v == null || v === "" || v === "__saved__") continue;
       merged[k] = v;
     }
-    // Ensure required keys are present before we ping.
     const missing = REQUIRED_OF[data.provider].filter((k) => !merged[k]);
     if (missing.length) throw new Error(`Missing required field(s): ${missing.join(", ")}`);
 
@@ -390,6 +401,7 @@ export const saveProviderConnection = createServerFn({ method: "POST" })
     const result = await ping(data.provider, merged);
     const latency = Date.now() - started;
     if (result.ok && result.meta?.handle) merged.__handle = result.meta.handle;
+    merged.__diag = { code: result.code, hint: result.hint ?? null, latency_ms: latency, checked_at: new Date().toISOString() };
 
     const category_id = CATEGORY_OF[data.provider] === "sales" ? "commerce" : "social";
     const { data: row, error } = await context.supabase
@@ -406,7 +418,7 @@ export const saveProviderConnection = createServerFn({ method: "POST" })
         last_test_at: new Date().toISOString(),
         last_test_latency_ms: latency,
       }, { onConflict: "workspace_id,integration_key" })
-      .select("id,status,credentials,assigned_employees,last_test_status,last_test_message,last_test_at")
+      .select(CONN_SELECT)
       .single();
     if (error) throw new Error(error.message);
     return rowToConn(data.provider, row);
