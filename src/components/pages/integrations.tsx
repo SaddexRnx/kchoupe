@@ -398,12 +398,26 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
                 Custom websites only expose product name, price, description and image. Stock levels can't be detected — imported items start at <span className="font-semibold">0 stock / draft</span>. Update them from the Products page.
               </div>
             )}
+            {isMessaging && (
+              <GhostButton onClick={handleRegisterHook}>
+                {busy === "hook" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                {meta.id === "telegram" ? "Register webhook" : "Get webhook URL"}
+              </GhostButton>
+            )}
             <GhostButton onClick={handleDisconnect} tone="danger">
               <Trash2 className="h-4 w-4" /> Disconnect
             </GhostButton>
           </>
         )}
       </div>
+      {hookInfo && (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-[11px] leading-relaxed">
+          <div className="mb-1 font-medium">{hookInfo.registered ? "✓ Webhook active" : "Webhook endpoint"}</div>
+          <div className="break-all font-mono text-[10.5px]">{hookInfo.url}</div>
+          {hookInfo.verify_token && <div className="mt-1">Verify token: <span className="font-mono">{hookInfo.verify_token}</span></div>}
+          <div className="mt-1 text-muted-foreground">{hookInfo.message}</div>
+        </div>
+      )}
       {node}
     </Panel>
   );
