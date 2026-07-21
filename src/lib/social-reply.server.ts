@@ -30,12 +30,12 @@ ABSOLUTE SCOPE — you may ONLY discuss:
 HARD REFUSAL — for any other topic reply EXACTLY (translated to customer's language):
   "I can only help with our store's products and orders. Would you like me to suggest something from our catalog?"
 
-TONE: warm, human, concise. 1–3 short sentences max. Use the customer's name once when known. Never repeat yourself. Never dump long bullet lists unless explicitly asked. Max 1 emoji per message.
+TONE: warm, human, concise. Keep replies to 1–2 short sentences. Use the customer's first name once when known. Never repeat yourself. Max 1 emoji per message. No long bullet lists unless asked.
 
 GREETINGS & SHORT MESSAGES — read RECENT ORDERS memory first, then:
-  • Just "hi/hello/salam/bonjour/hey" AND no active order → ONE warm welcome using their name + ONE open question ("What are you looking for today?"). Do NOT list products. Do NOT re-ask for anything from earlier.
-  • Has ACTIVE ORDER in RECENT ORDERS → greet + reference status ("Your order #ORD-XXXX is being prepared — anything else I can help with?"). Do NOT restart order flow.
-  • Returning customer, no active order → warm comeback: "Welcome back, {name}! 👋 Good to see you again."
+  • Just "hi/hello/salam/bonjour/hey" AND no active order → ONE friendly line: "Hey {name} 👋 what can I help you find today?" (translated to their language). Do NOT list products.
+  • Has ACTIVE ORDER in RECENT ORDERS → "Hey {name} 👋 your order #ORD-XXXX is {status} — anything else?". Do NOT restart order flow.
+  • Returning customer, no active order → "Welcome back, {name} 👋 good to see you again — looking for something today?"
 
 CATALOG RULES:
   1. Recommend ONLY items in the PRODUCT CATALOG. Never invent SKUs, names, prices, stock.
@@ -350,11 +350,11 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     reply = res.text?.trim() || "";
   } catch (e: any) {
     const em = String(e?.message || e);
-    reply = em.includes("429") ? "One moment — I'm getting a lot of messages. Please try again shortly."
-          : em.includes("402") ? "Our assistant is temporarily unavailable. A human will follow up."
-          : "Sorry, I ran into a problem. A team member will follow up shortly.";
+    reply = em.includes("429") ? "One sec 🙏 lots of messages right now — I'll be right with you."
+          : em.includes("402") ? "I'm briefly offline — a team member will jump in shortly. 🙌"
+          : "Hmm, something glitched on my side — a teammate will follow up in a moment. 🙏";
   }
-  if (!reply) reply = "Thanks for your message! We'll get right back to you.";
+  if (!reply) reply = "Thanks for reaching out! 🙌 How can I help?";
 
   // 8a) Parse [[ORDER ...]] tag — create the real order, then strip it from reply
   const orderTag = parseOrderTag(reply);
@@ -395,7 +395,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       let shortReply = reply;
       for (const re of dupPatterns) shortReply = shortReply.replace(re, "").trim();
       shortReply = shortReply.replace(/\s{2,}/g, " ").trim();
-      reply = `✅ Order confirmed, ${orderTag.name}! Your order **#${createdOrder.order_no}** is placed.\nWe'll contact you shortly on ${orderTag.phone} to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
+      const firstName = String(orderTag.name).trim().split(/\s+/)[0] || orderTag.name;
+      reply = `✅ All set, ${firstName}! Order **#${createdOrder.order_no}** confirmed.\n📞 We'll call ${orderTag.phone} shortly to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
     }
   }
 
@@ -458,8 +459,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
         for (const p of mentioned) {
           const img = extractImageUrl(p.description);
           const price = `${p.price} ${p.currency}`;
-          const caption = `🛍️ ${p.name}\n💰 ${price}${p.category ? `\n📂 ${p.category}` : ""}`;
-          const kb = { inline_keyboard: [[{ text: `🛒 Order — ${price}`, callback_data: `order:${p.sku}` }]] };
+          const caption = `🛍️ *${p.name}*\n💰 ${price}${p.category ? `  ·  ${p.category}` : ""}\n\nTap below to order in one click 👇`;
+          const kb = { inline_keyboard: [[{ text: `🛒 Order now — ${price}`, callback_data: `order:${p.sku}` }]] };
           if (img) await sendTelegramPhoto(token, threadId, img, caption, { reply_markup: kb });
           else await sendTelegram(token, threadId, caption, { reply_markup: kb });
         }
