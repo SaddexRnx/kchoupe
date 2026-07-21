@@ -6,7 +6,7 @@ import {
   Shield, Users, Building2, Bot, ShoppingCart, MessageSquare, BookOpen,
   Plug, Bell, Search, Trash2, Crown, UserMinus, Send, LogOut, Sparkles, ArrowUpRight,
   DollarSign, Command, ChevronRight, TrendingUp, TrendingDown, Radio, Layers, Gauge, ArrowRight,
-  LifeBuoy, Ban, ShieldOff, Shield,
+  LifeBuoy, Ban, ShieldOff,
 } from "lucide-react";
 import { SecurityDashboard } from "@/components/pages/security-dashboard";
 import {
