@@ -401,7 +401,7 @@ export function Playground() {
         description="Confirms as a pending order in your Orders page."
         footer={<>
           <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
-          <PrimaryButton onClick={submitOrder} disabled={placing}>
+          <PrimaryButton onClick={submitOrder} disabled={placing || Object.keys(orderErrors).length > 0 && !orderForm.customer_name}>
             {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
           </PrimaryButton>
         </>}
@@ -415,12 +415,15 @@ export function Playground() {
                 <div className="text-[11px] text-muted-foreground">{orderProduct.sku} · {Number(orderProduct.price).toLocaleString()} {orderProduct.currency} each</div>
               </div>
             </div>
-            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Sara Ait" />
-            <TextField label="Customer email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="sara@example.com" />
+            <TextField label="Customer name *" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Sara Ait" help={orderErrors.customer_name} />
+            <TextField label="Phone number *" value={orderForm.customer_phone} onChange={(v) => setOrderForm({ ...orderForm, customer_phone: v })} placeholder="+213 555 12 34 56" help={orderErrors.customer_phone} />
+            <TextField label="Delivery address *" value={orderForm.shipping_address} onChange={(v) => setOrderForm({ ...orderForm, shipping_address: v })} placeholder="Street, city, wilaya / country" help={orderErrors.shipping_address} />
+            <TextField label="Email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="sara@example.com" help={orderErrors.customer_email} />
             <label className="block">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity *</div>
               <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+              {orderErrors.qty && <div className="mt-1 text-[11px] text-rose-400">{orderErrors.qty}</div>}
             </label>
             <label className="block">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
