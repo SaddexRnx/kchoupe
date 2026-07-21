@@ -4,12 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Send, Bot, Loader2, MessageCircle, RefreshCw, Trash2, CheckCircle2, AlertTriangle,
   Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag,
-  ExternalLink, ChevronDown,
+  ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
+  FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection,
   disconnectProviderConnection, type ProviderConnection, type ProviderId, type ProviderMeta,
+  type PingCode,
 } from "@/lib/social.functions";
 import {
   listCustomModels, saveCustomModel, testCustomModel, deleteCustomModel,
