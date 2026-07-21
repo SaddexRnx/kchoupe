@@ -55,16 +55,15 @@ while (queue.length && seen.size < MAX_PAGES) {
   }
   if (depth >= MAX_DEPTH) continue;
 
-  const $ = load(res.text);
-  $("a[href]").each((_, el) => {
-    const href = $(el).attr("href");
-    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+  for (const m of res.text.matchAll(HREF_RE)) {
+    const href = m[1];
+    if (href.startsWith("mailto:") || href.startsWith("tel:")) continue;
     let next;
-    try { next = new URL(href, url); } catch { return; }
-    if (next.origin !== new URL(BASE).origin) return;
+    try { next = new URL(href, url); } catch { continue; }
+    if (next.origin !== new URL(BASE).origin) continue;
     next.hash = "";
     if (!seen.has(next.href)) queue.push({ url: next.href, depth: depth + 1, from: url });
-  });
+  }
 }
 
 // 2) also parse sitemap.xml
