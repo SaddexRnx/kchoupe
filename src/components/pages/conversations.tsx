@@ -79,9 +79,17 @@ export function Conversations() {
   const setStatus = useServerFn(updateConversationStatus);
 
   const listProd = useServerFn(listProducts);
+  const statsFn = useServerFn(conversationStats);
+  const learnFn = useServerFn(listLearnings);
   const { data: convos = [], isLoading } = useQuery({ queryKey: ["inbox_conversations"], queryFn: () => list() });
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => listProd() });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["inbox_conversations"] });
+  const { data: stats } = useQuery({ queryKey: ["conv_stats"], queryFn: () => statsFn(), refetchInterval: 30000 });
+  const { data: learnings = [] } = useQuery({ queryKey: ["conv_learnings"], queryFn: () => learnFn(), refetchInterval: 60000 });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["inbox_conversations"] });
+    qc.invalidateQueries({ queryKey: ["conv_stats"] });
+    qc.invalidateQueries({ queryKey: ["conv_learnings"] });
+  };
 
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string>("all");
