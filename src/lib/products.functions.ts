@@ -29,7 +29,7 @@ export const listProducts = createServerFn({ method: "GET" })
     const ws = await workspaceId(context);
     const { data, error } = await context.supabase
       .from("products")
-      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,created_at")
+      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,description,created_at")
       .eq("workspace_id", ws)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -61,7 +61,7 @@ export const createProduct = createServerFn({ method: "POST" })
         status: (data.stock ?? 0) > 0 ? "active" : "draft",
         image_emoji: data.image_emoji || "📦",
       })
-      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,created_at")
+      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,description,created_at")
       .single();
     if (error) throw new Error(error.message);
     return row as ProductRow;
@@ -79,7 +79,7 @@ export const updateProduct = createServerFn({ method: "POST" })
       .from("products")
       .update(patch)
       .eq("id", id)
-      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,created_at")
+      .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,description,created_at")
       .single();
     if (error) throw new Error(error.message);
     return row as ProductRow;
@@ -120,7 +120,7 @@ export const duplicateProduct = createServerFn({ method: "POST" })
       status: "draft",
       image_emoji: src.image_emoji,
     })
-    .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,created_at")
+    .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,description,created_at")
     .single();
     if (error) throw new Error(error.message);
     return row as ProductRow;
