@@ -236,7 +236,7 @@ export function AiEmployees() {
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
               <div>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><MessageSquare className="h-3 w-3" /> {t("emp.convos")}</div>
-                <div className="mt-0.5 font-display text-lg font-semibold">0</div>
+                <div className="mt-0.5 font-display text-lg font-semibold">{e.convos.toLocaleString()}</div>
               </div>
               <div>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> {t("emp.csat")}</div>
