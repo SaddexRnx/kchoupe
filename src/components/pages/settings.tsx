@@ -50,6 +50,7 @@ type SectionKey =
   | "shortcuts"
   | "activity"
   | "labs"
+  | "advanced"
   | "danger";
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "violet" | "emerald" | "amber" | "rose" }[] = [
