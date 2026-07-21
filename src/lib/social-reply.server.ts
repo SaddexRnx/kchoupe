@@ -299,8 +299,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     workspace_id: wsId, conversation_id: convoId, role: "user", sender: externalUserLabel, body: msg.body,
   });
 
-  // 6) Build AI context: catalog + history + memory + prior learnings
-  const [prodRes, histRes, learnRes] = await Promise.all([
+  // 6) Build AI context: catalog + history + memory + prior learnings + recent orders
+  const [prodRes, histRes, learnRes, recentOrdersRes] = await Promise.all([
     supabaseAdmin.from("products")
       .select("sku,name,category,price,currency,stock,status,description")
       .eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(200),
@@ -309,7 +309,14 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       .eq("conversation_id", convoId).order("created_at", { ascending: true }).limit(20),
     supabaseAdmin.from("workspace_learnings")
       .select("lesson").eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(8),
+    supabaseAdmin.from("orders")
+      .select("order_no,product_summary,amount,currency,status,created_at,notes")
+      .eq("workspace_id", wsId)
+      .ilike("notes", `%Customer: ${externalUserLabel}%`)
+      .order("created_at", { ascending: false }).limit(5),
   ]);
+
+  const recentOrders = (recentOrdersRes.data ?? []) as any[];
 
   const learningsBlock = (learnRes.data ?? []).length
     ? "\n\nLEARNED PLAYBOOK (from past confirmed orders — reuse these tactics when relevant):\n" +
@@ -319,8 +326,9 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
   const system = SYSTEM_GUARDRAIL
     + (empPrompt ? `\n\nEMPLOYEE INSTRUCTIONS:\n${empPrompt}` : "")
     + "\n\n" + buildCatalog(prodRes.data ?? [])
-    + buildCustomerMemory(customer)
+    + buildCustomerMemory(customer, recentOrders)
     + learningsBlock;
+
 
 
   const messages: any[] = ((histRes.data ?? []) as any[])
