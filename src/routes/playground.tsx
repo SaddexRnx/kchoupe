@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { setNoIndexHeader } from "@/lib/noindex";
 import { AppShell } from "@/components/app-shell";
 import { Playground } from "@/components/pages/playground";
 
 export const Route = createFileRoute("/playground")({
+  beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
       { title: "Playground — Atlas AI" },

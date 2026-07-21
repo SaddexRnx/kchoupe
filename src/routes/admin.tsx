@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { setNoIndexHeader } from "@/lib/noindex";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +9,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
       { title: "Admin — Atlas AI" },

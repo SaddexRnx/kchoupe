@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { setNoIndexHeader } from "@/lib/noindex";
 import { AppShell } from "@/components/app-shell";
 import { AiEmployees } from "@/components/pages/ai-employees";
 
 export const Route = createFileRoute("/ai-employees")({
+  beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
       { title: "AI Employees — Atlas AI" },

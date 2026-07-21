@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { setNoIndexHeader } from "@/lib/noindex";
 import { useEffect, useState } from "react";
 import { Sparkles, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/pages/_shared";
 
 export const Route = createFileRoute("/reset-password")({
+  beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
       { title: "Reset password — Atlas AI" },
