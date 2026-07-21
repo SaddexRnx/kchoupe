@@ -7,7 +7,7 @@ import {
   ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
   FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
-import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm } from "./_shared";
+import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm, HelpNote } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection, configureMessagingWebhook,
   disconnectProviderConnection, scrapeWebsiteProducts,
@@ -44,6 +44,12 @@ export function IntegrationsPage() {
         title="Connect your commerce & channels"
         description="Everything you need in one place — Shopify, WooCommerce, any website, WhatsApp, Facebook, Instagram, Telegram, plus your own AI model endpoints. Every save runs a real handshake so you know it works."
       />
+
+      <HelpNote>
+        The <b>Integrations hub</b> is where you plug Atlas into the tools you already use. Connect a shop to sync products,
+        add messaging channels so Atlas can reply to customers, add your own AI model endpoint (OpenAI-compatible), or
+        scrape a website into your knowledge base. Every save runs a live handshake so you know it works before going live.
+      </HelpNote>
 
       <ProviderPicker
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}

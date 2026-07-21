@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, FileText, Globe, Upload, Search, Trash2, Plus, Loader2, AlertCircle, Sparkles } from "lucide-react";
-import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm, HelpNote } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
   listKnowledgeSources,
@@ -163,6 +163,12 @@ export function Knowledge() {
           </div>
         }
       />
+
+      <HelpNote>
+        The <b>knowledge base</b> is what your AI employees read before replying. Add your website, help docs, FAQs, shipping
+        policy, or a plain-text snippet. Atlas splits it into chunks, indexes them semantically, and pulls the most relevant
+        pieces into every answer. Use <b>Test search</b> to preview what the AI will find for a given customer question.
+      </HelpNote>
 
       <Panel className="mb-4">
         <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, useToast } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, useToast, HelpNote } from "./_shared";
 import { Download, Mail, RefreshCcw, Plus, Loader2, Zap, Eye, EyeOff, Save, Trash2, CheckCircle2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { listOrders, createOrder, updateOrder, deleteOrder, type OrderRow, type OrderStatus } from "@/lib/orders.functions";
@@ -187,6 +187,12 @@ export function Orders() {
           </div>
         }
       />
+
+      <HelpNote>
+        Every order placed by an AI employee, imported from a shop, or created manually lives here. Filter by status,
+        select rows to bulk-mark seen or delete, and click a row to open the details drawer — you can add private notes,
+        update the status, and see the source channel (WhatsApp, IG, web, etc.).
+      </HelpNote>
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Panel><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Revenue (30d)</div><div className="mt-1 font-display text-2xl font-bold">{fmt(stats.mrr, "DZD")}</div></Panel>

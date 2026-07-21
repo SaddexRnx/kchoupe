@@ -11,7 +11,18 @@ export type AiEmployeeRow = {
   status: "active" | "training" | "paused";
   created_at: string;
   convos: number;
+  temperature: number;
+  top_p: number;
+  max_tokens: number;
+  language: string;
+  greeting: string | null;
+  escalate_to_human: boolean;
+  use_knowledge: boolean;
+  use_products: boolean;
 };
+
+const SELECT_COLS =
+  "id,name,role,model,system_prompt,avatar_emoji,status,created_at,temperature,top_p,max_tokens,language,greeting,escalate_to_human,use_knowledge,use_products";
 
 export const listAiEmployees = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -22,7 +33,7 @@ export const listAiEmployees = createServerFn({ method: "GET" })
     const [emps, convos] = await Promise.all([
       supabase
         .from("ai_employees")
-        .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
+        .select(SELECT_COLS)
         .eq("workspace_id", ws as string)
         .order("created_at", { ascending: false }),
       supabase
@@ -40,7 +51,7 @@ export const listAiEmployees = createServerFn({ method: "GET" })
 
 export const createAiEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { name: string; role: string; model: string; system_prompt?: string; avatar_emoji?: string }) => {
+  .inputValidator((input: { name: string; role: string; model: string; system_prompt?: string; avatar_emoji?: string; greeting?: string; language?: string; temperature?: number; top_p?: number; max_tokens?: number; escalate_to_human?: boolean; use_knowledge?: boolean; use_products?: boolean }) => {
     if (!input?.name?.trim() || !input?.role?.trim() || !input?.model?.trim()) {
       throw new Error("Name, role and model are required");
     }
@@ -61,8 +72,16 @@ export const createAiEmployee = createServerFn({ method: "POST" })
         system_prompt: data.system_prompt ?? null,
         avatar_emoji: data.avatar_emoji ?? "🤖",
         status: "active",
+        greeting: data.greeting ?? null,
+        language: data.language ?? "auto",
+        temperature: data.temperature ?? 0.7,
+        top_p: data.top_p ?? 0.9,
+        max_tokens: data.max_tokens ?? 1024,
+        escalate_to_human: data.escalate_to_human ?? true,
+        use_knowledge: data.use_knowledge ?? true,
+        use_products: data.use_products ?? true,
       })
-      .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
+      .select(SELECT_COLS)
       .single();
     if (error) throw new Error(error.message);
     return { ...(row as any), convos: 0 } as AiEmployeeRow;
@@ -70,7 +89,7 @@ export const createAiEmployee = createServerFn({ method: "POST" })
 
 export const updateAiEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; name?: string; role?: string; model?: string; system_prompt?: string | null; avatar_emoji?: string; status?: "active" | "training" | "paused" }) => {
+  .inputValidator((input: { id: string; name?: string; role?: string; model?: string; system_prompt?: string | null; avatar_emoji?: string; status?: "active" | "training" | "paused"; greeting?: string | null; language?: string; temperature?: number; top_p?: number; max_tokens?: number; escalate_to_human?: boolean; use_knowledge?: boolean; use_products?: boolean }) => {
     if (!input?.id) throw new Error("id required");
     return input;
   })
@@ -81,7 +100,7 @@ export const updateAiEmployee = createServerFn({ method: "POST" })
       .from("ai_employees")
       .update(patch)
       .eq("id", id)
-      .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
+      .select(SELECT_COLS)
       .single();
     if (error) throw new Error(error.message);
     return { ...(row as any), convos: 0 } as AiEmployeeRow;

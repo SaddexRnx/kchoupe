@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff, Loader2, ShoppingBag } from "lucide-react";
-import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast } from "./_shared";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, HelpNote } from "./_shared";
 import { useT } from "@/lib/i18n";
 import { sendPlaygroundMessage, resetPlaygroundConversation } from "@/lib/playground.functions";
 import { listAiEmployees } from "@/lib/ai-employees.functions";
@@ -214,6 +214,12 @@ export function Playground() {
           </button>
         }
       />
+
+      <HelpNote>
+        The <b>Playground</b> is a safe sandbox to test how your AI employees reply — nothing here is sent to real customers.
+        Pick an employee (or raw model), tweak parameters on the right, and try questions your customers would actually ask.
+        When it feels right, save the prompt/settings on the employee's <b>Configure</b> page.
+      </HelpNote>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
         <Panel className="flex h-[640px] flex-col p-0">

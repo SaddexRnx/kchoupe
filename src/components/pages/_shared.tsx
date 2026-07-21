@@ -1,5 +1,19 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { X, CheckCircle2, AlertTriangle, Info, XCircle } from "lucide-react";
+import { X, CheckCircle2, AlertTriangle, Info, XCircle, Lightbulb } from "lucide-react";
+
+/** Small inline explainer used at the top of a section to clarify what it does. */
+export function HelpNote({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warn" }) {
+  const cls =
+    tone === "warn"
+      ? "border-amber-400/20 bg-amber-400/5 text-amber-200"
+      : "border-primary/20 bg-primary/5 text-muted-foreground";
+  return (
+    <div className={"mb-4 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs " + cls}>
+      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <div className="leading-relaxed">{children}</div>
+    </div>
+  );
+}
 
 export function PageHeader({
   eyebrow,
