@@ -188,11 +188,16 @@ export const broadcastNotification = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { data: ws, error: wsErr } = await context.supabase.from("workspaces").select("id");
     if (wsErr) throw new Error(wsErr.message);
+    const requested = (data.kind ?? "broadcast").toLowerCase();
+    // Admin broadcasts must always surface as a popup — never plain "info"
+    // (which only shows in the notifications tray).
+    const popupKinds = new Set(["broadcast", "announcement", "warn", "warning", "error", "critical", "success"]);
+    const kind = popupKinds.has(requested) ? requested : "broadcast";
     const rows = (ws ?? []).map((w: any) => ({
       workspace_id: w.id,
       title: data.title,
       body: data.body ?? null,
-      kind: data.kind ?? "info",
+      kind,
     }));
     if (rows.length) {
       const { error } = await context.supabase.from("notifications").insert(rows);
