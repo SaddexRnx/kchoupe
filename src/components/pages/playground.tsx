@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff, Loader2, ShoppingBag } from "lucide-react";
@@ -102,6 +102,13 @@ export function Playground() {
   const productsByMessage = useMemo(() => {
     return messages.map((m) => (m.role === "assistant" ? findProductMatches(m.content, products) : []));
   }, [messages, products]);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages, sending]);
 
   const addModel = () => {
     if (!draft.label.trim() || !draft.model.trim()) { toast.push({ kind: "warn", title: "Name and model id required" }); return; }
@@ -233,7 +240,7 @@ export function Playground() {
             <Chip tone="emerald">{t("common.live")}</Chip>
             <div className="ml-auto truncate text-[10px] text-muted-foreground">{activeModel}</div>
           </div>
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto scroll-smooth px-4 py-6">
             {messages.length === 0 && (
               <div className="mx-auto max-w-md rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center text-sm text-muted-foreground">
                 Ask anything — {activeName} will reply using <span className="font-mono text-foreground">{activeModel}</span>.
