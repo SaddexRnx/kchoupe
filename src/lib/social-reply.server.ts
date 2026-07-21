@@ -395,7 +395,8 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       let shortReply = reply;
       for (const re of dupPatterns) shortReply = shortReply.replace(re, "").trim();
       shortReply = shortReply.replace(/\s{2,}/g, " ").trim();
-      reply = `✅ Order confirmed, ${orderTag.name}! Your order **#${createdOrder.order_no}** is placed.\nWe'll contact you shortly on ${orderTag.phone} to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
+      const firstName = String(orderTag.name).trim().split(/\s+/)[0] || orderTag.name;
+      reply = `✅ All set, ${firstName}! Order **#${createdOrder.order_no}** confirmed.\n📞 We'll call ${orderTag.phone} shortly to arrange delivery to ${orderTag.address}.` + (shortReply ? `\n\n${shortReply}` : "");
     }
   }
 
