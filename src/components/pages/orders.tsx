@@ -373,7 +373,7 @@ export function Orders() {
                 ))}
               </div>
             </div>
-            <ShipmentBlock order={viewing} onSaved={() => refetch?.()} />
+            <ShipmentBlock order={viewing} onSaved={invalidate} />
 
 
             <div>
