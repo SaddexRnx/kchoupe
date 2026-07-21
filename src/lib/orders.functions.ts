@@ -264,7 +264,7 @@ export const dashboardExtras = createServerFn({ method: "GET" })
     const products = (productsRes.data ?? []) as Array<{ id: string; name: string; sold_30: number | null; price: number; currency: string; image_emoji: string | null; stock: number; sku: string | null }>;
     const topProducts = [...products].sort((a, b) => (b.sold_30 ?? 0) - (a.sold_30 ?? 0)).slice(0, 5).map((p) => ({ id: p.id, name: p.name, sold_30: p.sold_30 ?? 0, price: p.price, currency: p.currency, image_emoji: p.image_emoji, stock: p.stock }));
     const lowStock = products.filter((p) => p.stock <= 5).sort((a, b) => a.stock - b.stock).slice(0, 5).map((p) => ({ id: p.id, name: p.name, stock: p.stock, sku: p.sku }));
-    const integrations = ((integRes.data ?? []) as Array<{ provider: string; status: string; connected_at: string | null }>);
+    const integrations = ((integRes.data ?? []) as Array<{ integration_key: string; status: string; last_test_status: string | null; last_test_at: string | null }>).map((i) => ({ provider: i.integration_key, status: i.status, last_test_status: i.last_test_status, last_test_at: i.last_test_at }));
 
     const recentOrders = (recentOrdersRes.data ?? []) as Array<{ id: string; order_no: string; customer_name: string; status: string; created_at: string; confirmed_by_ai: boolean; amount: number; currency: string }>;
     const activity = recentOrders.map((o) => ({
