@@ -1091,7 +1091,7 @@ function SystemTab() {
   const toast = useToast();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [kind, setKind] = useState("info");
+  const [kind, setKind] = useState("broadcast");
   const mut = useMutation({
     mutationFn: () => fn({ data: { title, body, kind } }),
     onSuccess: (r: any) => { toast.push({ kind: "success", title: "Broadcast sent", body: `Delivered to ${r.count} workspaces.` }); setTitle(""); setBody(""); },
