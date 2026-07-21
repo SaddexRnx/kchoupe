@@ -1,0 +1,14 @@
+{
+  "name": "Atlas AI — AI Workforce for Commerce",
+  "short_name": "Atlas AI",
+  "description": "Autonomous AI employees that answer, sell and close orders across WhatsApp, Instagram, Messenger and Telegram.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ]
+}

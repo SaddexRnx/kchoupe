@@ -34,6 +34,7 @@ import {
 import { PageHeader, Panel, Chip, Modal, PrimaryButton as BigPrimary, GhostButton as BigGhost, TextField, useToast, useConfirm } from "./_shared";
 import { usePrefs, THEMES, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
+import { AdvancedSection } from "./settings-advanced";
 
 type SectionKey =
   | "profile"
@@ -49,6 +50,7 @@ type SectionKey =
   | "shortcuts"
   | "activity"
   | "labs"
+  | "advanced"
   | "danger";
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "violet" | "emerald" | "amber" | "rose" }[] = [
@@ -65,6 +67,7 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof User; tone: "viol
   { key: "shortcuts", label: "Keyboard shortcuts", icon: Keyboard, tone: "violet" },
   { key: "activity", label: "Activity log", icon: Activity, tone: "amber" },
   { key: "labs", label: "Labs", icon: Sparkles, tone: "violet" },
+  { key: "advanced", label: "Advanced", icon: Zap, tone: "emerald" },
   { key: "danger", label: "Danger zone", icon: Trash2, tone: "rose" },
 ];
 
@@ -123,6 +126,7 @@ export function SettingsPage() {
           {active === "shortcuts" && <ShortcutsSection />}
           {active === "activity" && <ActivitySection />}
           {active === "labs" && <LabsSection />}
+          {active === "advanced" && <AdvancedSection />}
           {active === "danger" && <DangerSection />}
         </div>
       </div>

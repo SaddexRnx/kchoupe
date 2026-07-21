@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PreferencesProvider } from "../lib/preferences";
 import { ToastProvider } from "../components/pages/_shared";
 import { AutoTranslateProvider } from "../lib/auto-translate";
+import { PwaInstallPrompt } from "../components/pwa-prompt";
 
 function NotFoundComponent() {
   return (
@@ -109,6 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -169,6 +171,7 @@ function RootComponent() {
           <ToastProvider>
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
+            <PwaInstallPrompt />
           </ToastProvider>
         </AutoTranslateProvider>
       </PreferencesProvider>

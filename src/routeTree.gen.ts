@@ -37,8 +37,10 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as BlogFutureOfAiNorthAfricaRouteImport } from './routes/blog.future-of-ai-north-africa'
+import { Route as StoreSlugRouteImport } from './routes/store.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPublicWebhooksFulfillmentRouteImport } from './routes/api/public/webhooks/fulfillment'
 import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
 import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes/api/public/webhooks/meta/$integrationId'
 import { Route as ApiPublicWebhooksTelegramIntegrationIdRouteImport } from './routes/api/public/webhooks/telegram/$integrationId'
@@ -186,6 +188,11 @@ const BlogFutureOfAiNorthAfricaRoute =
     path: '/blog/future-of-ai-north-africa',
     getParentRoute: () => rootRouteImport,
   } as any)
+const StoreSlugRoute = StoreSlugRouteImport.update({
+  id: '/store/$slug',
+  path: '/store/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -195,6 +202,12 @@ const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksFulfillmentRoute =
+  ApiPublicWebhooksFulfillmentRouteImport.update({
+    id: '/api/public/webhooks/fulfillment',
+    path: '/api/public/webhooks/fulfillment',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicWebhooksInboundRoute =
@@ -245,8 +258,10 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/store/$slug': typeof StoreSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -280,8 +295,10 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/store/$slug': typeof StoreSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -316,8 +333,10 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/blog/future-of-ai-north-africa': typeof BlogFutureOfAiNorthAfricaRoute
+  '/store/$slug': typeof StoreSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/webhooks/fulfillment': typeof ApiPublicWebhooksFulfillmentRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
   '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
   '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -353,8 +372,10 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/store/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -388,8 +409,10 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/store/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -423,8 +446,10 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/blog/future-of-ai-north-africa'
+    | '/store/$slug'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/webhooks/fulfillment'
     | '/api/public/webhooks/inbound'
     | '/api/public/webhooks/meta/$integrationId'
     | '/api/public/webhooks/telegram/$integrationId'
@@ -459,8 +484,10 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   BlogFutureOfAiNorthAfricaRoute: typeof BlogFutureOfAiNorthAfricaRoute
+  StoreSlugRoute: typeof StoreSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicWebhooksFulfillmentRoute: typeof ApiPublicWebhooksFulfillmentRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
   ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
   ApiPublicWebhooksTelegramIntegrationIdRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRoute
@@ -664,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogFutureOfAiNorthAfricaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/store/$slug': {
+      id: '/store/$slug'
+      path: '/store/$slug'
+      fullPath: '/store/$slug'
+      preLoaderRoute: typeof StoreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
       path: '/.lovable/oauth/consent'
@@ -676,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/.mcp/invoke-tool/$tool'
       fullPath: '/.mcp/invoke-tool/$tool'
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/fulfillment': {
+      id: '/api/public/webhooks/fulfillment'
+      path: '/api/public/webhooks/fulfillment'
+      fullPath: '/api/public/webhooks/fulfillment'
+      preLoaderRoute: typeof ApiPublicWebhooksFulfillmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/inbound': {
@@ -732,8 +773,10 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   BlogFutureOfAiNorthAfricaRoute: BlogFutureOfAiNorthAfricaRoute,
+  StoreSlugRoute: StoreSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicWebhooksFulfillmentRoute: ApiPublicWebhooksFulfillmentRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
   ApiPublicWebhooksMetaIntegrationIdRoute:
     ApiPublicWebhooksMetaIntegrationIdRoute,
