@@ -2,6 +2,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 
 import { renderErrorPage } from "./lib/error-page";
+import { classifyPath } from "./lib/private-paths";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
@@ -19,21 +20,19 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
-// Block search engines from indexing API surfaces, MCP endpoints,
-// well-known metadata, and internal RPC. Applies to every server response
-// under these paths regardless of the handler's own headers.
-const NOINDEX_PREFIXES = ["/api/", "/mcp", "/.well-known/", "/_serverFn/"];
-const noIndexApiMiddleware = createMiddleware().server(async ({ next, request }) => {
-  let path = "";
+// Centralized noindex policy: any request path that isn't in the explicit
+// public allowlist (see src/lib/private-paths.ts) gets X-Robots-Tag set to
+// noindex, nofollow, noarchive, nosnippet. New authenticated pages inherit
+// the correct headers automatically — no per-route wiring needed.
+const noIndexMiddleware = createMiddleware().server(async ({ next, request }) => {
+  let pathname = "";
   try {
-    path = new URL(request.url).pathname;
+    pathname = new URL(request.url).pathname;
   } catch {
     /* ignore */
   }
-  const match = NOINDEX_PREFIXES.some(
-    (p) => path === p.replace(/\/$/, "") || path.startsWith(p),
-  );
-  if (match) {
+  const policy = classifyPath(pathname);
+  if (policy === "noindex") {
     try {
       setResponseHeader("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
     } catch {
@@ -45,5 +44,5 @@ const noIndexApiMiddleware = createMiddleware().server(async ({ next, request })
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [noIndexApiMiddleware, errorMiddleware],
+  requestMiddleware: [noIndexMiddleware, errorMiddleware],
 }));
