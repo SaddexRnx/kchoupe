@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff, Loader2 } from "lucide-react";
-import { PageHeader, Panel, Chip, useToast } from "./_shared";
+import { Send, Bot, User, Sparkles, RotateCcw, Sliders, Plus, Trash2, Cpu, Eye, EyeOff, Loader2, ShoppingBag } from "lucide-react";
+import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast } from "./_shared";
 import { useT } from "@/lib/i18n";
 import { sendPlaygroundMessage, resetPlaygroundConversation } from "@/lib/playground.functions";
 import { listAiEmployees } from "@/lib/ai-employees.functions";
+import { listProducts, type ProductRow } from "@/lib/products.functions";
+import { createOrder } from "@/lib/orders.functions";
 
 const MODELS: { id: string; label: string }[] = [
   { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, default)" },
@@ -18,16 +20,39 @@ const MODELS: { id: string; label: string }[] = [
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+function findProductMatches(text: string, products: ProductRow[]): ProductRow[] {
+  if (!text || !products.length) return [];
+  const lower = text.toLowerCase();
+  const seen = new Set<string>();
+  const out: ProductRow[] = [];
+  for (const p of products) {
+    const skuHit = p.sku && lower.includes(p.sku.toLowerCase());
+    const nameHit = p.name && p.name.length >= 4 && lower.includes(p.name.toLowerCase());
+    if ((skuHit || nameHit) && !seen.has(p.id)) {
+      seen.add(p.id);
+      out.push(p);
+      if (out.length >= 4) break;
+    }
+  }
+  return out;
+}
+
 export function Playground() {
   const t = useT();
   const toast = useToast();
   const send = useServerFn(sendPlaygroundMessage);
   const resetConvo = useServerFn(resetPlaygroundConversation);
   const listEmployees = useServerFn(listAiEmployees);
+  const listProd = useServerFn(listProducts);
+  const placeOrder = useServerFn(createOrder);
 
   const { data: employees = [] } = useQuery({
     queryKey: ["ai_employees"],
     queryFn: () => listEmployees(),
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => listProd(),
   });
 
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -40,10 +65,18 @@ export function Playground() {
   const [showAdd, setShowAdd] = useState(false);
   const [draft, setDraft] = useState({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
 
+  const [orderProduct, setOrderProduct] = useState<ProductRow | null>(null);
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [placing, setPlacing] = useState(false);
+
   const activeEmployee = employees.find((e) => e.id === selectedEmployeeId);
   const activeModel = activeEmployee?.model ?? selectedModel;
   const activePrompt = activeEmployee?.system_prompt ?? undefined;
   const activeName = activeEmployee?.name ?? "Atlas Playground";
+
+  const productsByMessage = useMemo(() => {
+    return messages.map((m) => (m.role === "assistant" ? findProductMatches(m.content, products) : []));
+  }, [messages, products]);
 
   const addModel = () => {
     if (!draft.label.trim() || !draft.model.trim()) { toast.push({ kind: "warn", title: "Name and model id required" }); return; }
@@ -87,6 +120,40 @@ export function Playground() {
     toast.push({ kind: "info", title: "Conversation reset" });
   };
 
+  const openOrder = (p: ProductRow) => {
+    setOrderProduct(p);
+    setOrderForm({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  };
+
+  const submitOrder = async () => {
+    if (!orderProduct) return;
+    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const qty = Math.max(1, Number(orderForm.qty) || 1);
+    setPlacing(true);
+    try {
+      const amount = Number(orderProduct.price) * qty;
+      const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const res = await placeOrder({ data: {
+        customer_name: orderForm.customer_name.trim(),
+        customer_email: orderForm.customer_email.trim() || undefined,
+        product_summary: summary,
+        amount,
+        currency: orderProduct.currency,
+        status: "pending",
+        confirmed_by_ai: true,
+        ai_employee_id: activeEmployee?.id ?? null,
+        notes: orderForm.notes.trim() || undefined,
+      }});
+      toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: `${summary} — ${amount.toLocaleString()} ${orderProduct.currency}` });
+      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** placed for ${orderForm.customer_name}: ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Status: pending confirmation.` }]);
+      setOrderProduct(null);
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Order failed", body: e?.message });
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -118,16 +185,54 @@ export function Playground() {
                 Ask anything — {activeName} will reply using <span className="font-mono text-foreground">{activeModel}</span>.
               </div>
             )}
-            {messages.map((m, i) => (
-              <div key={i} className={"flex gap-3 " + (m.role === "user" ? "flex-row-reverse" : "")}>
-                <div className={"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg " + (m.role === "user" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary")}>
-                  {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+            {messages.map((m, i) => {
+              const matches = productsByMessage[i] ?? [];
+              return (
+                <div key={i} className={"flex gap-3 " + (m.role === "user" ? "flex-row-reverse" : "")}>
+                  <div className={"flex h-8 w-8 shrink-0 items-center justify-center rounded-lg " + (m.role === "user" ? "bg-accent/15 text-accent" : "bg-primary/15 text-primary")}>
+                    {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  </div>
+                  <div className={"flex max-w-[75%] flex-col gap-2 " + (m.role === "user" ? "items-end" : "items-start")}>
+                    <div className={"whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm " + (m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white/5 text-foreground")}>
+                      {m.content}
+                    </div>
+                    {matches.length > 0 && (
+                      <div className="flex w-full flex-col gap-2">
+                        {matches.map((p) => {
+                          const unknown = p.status === "draft" || p.stock == null;
+                          const out = !unknown && (p.status === "out" || p.stock === 0);
+                          const cls = out ? "text-rose-300" : unknown ? "text-amber-300" : "text-emerald-300";
+                          const label = out ? "Out of stock" : unknown ? "Check website for stock" : `${p.stock} in stock`;
+                          return (
+                            <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{p.image_emoji}</div>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-semibold">{p.name}</div>
+                                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                                  <span className="font-mono">{p.sku}</span>
+                                  <span>·</span>
+                                  <span className={cls}>{label}</span>
+                                </div>
+                              </div>
+                              <div className="shrink-0 text-right">
+                                <div className="font-display text-sm font-bold">{Number(p.price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{p.currency}</span></div>
+                                <button
+                                  onClick={() => openOrder(p)}
+                                  disabled={out}
+                                  className="mt-1 inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30 hover:brightness-110 disabled:opacity-40"
+                                >
+                                  <ShoppingBag className="h-3 w-3" /> Order
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className={"max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm " + (m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white/5 text-foreground")}>
-                  {m.content}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {sending && (
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"><Bot className="h-4 w-4" /></div>
@@ -240,6 +345,51 @@ export function Playground() {
           </Panel>
         </div>
       </div>
+
+      <Modal
+        open={!!orderProduct}
+        onClose={() => setOrderProduct(null)}
+        title={orderProduct ? `Place order — ${orderProduct.name}` : "Place order"}
+        description="Confirms as a pending order in your Orders page."
+        footer={<>
+          <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
+          <PrimaryButton onClick={submitOrder} disabled={placing}>
+            {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
+          </PrimaryButton>
+        </>}
+      >
+        {orderProduct && (
+          <div className="grid gap-3">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{orderProduct.image_emoji}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{orderProduct.name}</div>
+                <div className="text-[11px] text-muted-foreground">{orderProduct.sku} · {Number(orderProduct.price).toLocaleString()} {orderProduct.currency} each</div>
+              </div>
+            </div>
+            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Sara Ait" />
+            <TextField label="Customer email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="sara@example.com" />
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
+              <textarea value={orderForm.notes} onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" placeholder="Shade, size, delivery notes…" />
+            </label>
+            <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-display text-lg font-bold">
+                  {(Number(orderProduct.price) * Math.max(1, Number(orderForm.qty) || 1)).toLocaleString()} {orderProduct.currency}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
