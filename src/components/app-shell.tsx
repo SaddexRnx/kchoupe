@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Zap,
+  LifeBuoy,
 } from "lucide-react";
 import { usePrefs, LANGS, type Lang } from "@/lib/preferences";
 import { useT } from "@/lib/i18n";
@@ -37,6 +38,7 @@ type NavKey =
   | "products"
   | "orders"
   | "integrations"
+  | "support"
   | "settings";
 
 const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
@@ -48,6 +50,7 @@ const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
   { key: "products", icon: Package, to: "/products" },
   { key: "orders", icon: ShoppingCart, to: "/orders" },
   { key: "integrations", icon: Plug, to: "/integrations" },
+  { key: "support", icon: LifeBuoy, to: "/support" },
   { key: "settings", icon: Settings, to: "/settings" },
 ];
 

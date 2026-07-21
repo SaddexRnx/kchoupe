@@ -185,3 +185,59 @@ export const broadcastNotification = createServerFn({ method: "POST" })
     }
     return { ok: true, count: rows.length };
   });
+
+export const adminSetBan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { userId: string; banned: boolean; reason?: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.rpc("admin_set_ban", {
+      _user_id: data.userId,
+      _banned: data.banned,
+      _reason: data.reason ?? undefined,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminListBanStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("profiles")
+      .select("id,banned_at,ban_reason");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{ id: string; banned_at: string | null; ban_reason: string | null }>;
+  });
+
+export const adminReplyToTicket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { ticketId: string; body: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: t, error: tErr } = await context.supabase
+      .from("support_tickets")
+      .select("id,workspace_id")
+      .eq("id", data.ticketId)
+      .maybeSingle();
+    if (tErr) throw new Error(tErr.message);
+    if (!t) throw new Error("Ticket not found");
+    const { error } = await context.supabase.from("support_messages").insert({
+      ticket_id: t.id,
+      workspace_id: t.workspace_id,
+      sender_id: context.userId,
+      sender_role: "admin",
+      body: data.body.slice(0, 4000),
+    });
+    if (error) throw new Error(error.message);
+    await context.supabase
+      .from("support_tickets")
+      .update({
+        last_message_at: new Date().toISOString(),
+        unread_for_user: true,
+        unread_for_admin: false,
+      })
+      .eq("id", t.id);
+    return { ok: true };
+  });

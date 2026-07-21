@@ -180,9 +180,12 @@ export type Database = {
           channel: string
           created_at: string
           customer_id: string | null
+          escalated_at: string | null
+          escalated_reason: string | null
           external_user: string
           id: string
           last_message: string | null
+          needs_human: boolean
           platform_thread_id: string | null
           status: string
           unread_count: number
@@ -195,9 +198,12 @@ export type Database = {
           channel?: string
           created_at?: string
           customer_id?: string | null
+          escalated_at?: string | null
+          escalated_reason?: string | null
           external_user: string
           id?: string
           last_message?: string | null
+          needs_human?: boolean
           platform_thread_id?: string | null
           status?: string
           unread_count?: number
@@ -210,9 +216,12 @@ export type Database = {
           channel?: string
           created_at?: string
           customer_id?: string | null
+          escalated_at?: string | null
+          escalated_reason?: string | null
           external_user?: string
           id?: string
           last_message?: string | null
+          needs_human?: boolean
           platform_thread_id?: string | null
           status?: string
           unread_count?: number
@@ -487,6 +496,7 @@ export type Database = {
         Row: {
           ai_employee_id: string | null
           amount: number
+          channel: string
           confirmed_by_ai: boolean
           created_at: string
           currency: string
@@ -504,6 +514,7 @@ export type Database = {
         Insert: {
           ai_employee_id?: string | null
           amount?: number
+          channel?: string
           confirmed_by_ai?: boolean
           created_at?: string
           currency?: string
@@ -521,6 +532,7 @@ export type Database = {
         Update: {
           ai_employee_id?: string | null
           amount?: number
+          channel?: string
           confirmed_by_ai?: boolean
           created_at?: string
           currency?: string
@@ -690,6 +702,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          ban_reason: string | null
+          banned_at: string | null
           country: string | null
           created_at: string
           display_name: string | null
@@ -699,6 +713,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
@@ -708,6 +724,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
@@ -716,6 +734,101 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+          workspace_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_role: string
+          ticket_id: string
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_role?: string
+          ticket_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_messages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          opened_by: string
+          priority: string
+          status: string
+          subject: string
+          unread_for_admin: boolean
+          unread_for_user: boolean
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          opened_by: string
+          priority?: string
+          status?: string
+          subject: string
+          unread_for_admin?: boolean
+          unread_for_user?: boolean
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          opened_by?: string
+          priority?: string
+          status?: string
+          subject?: string
+          unread_for_admin?: boolean
+          unread_for_user?: boolean
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -872,6 +985,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_support_tickets: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          last_message_at: string
+          message_count: number
+          opened_by: string
+          opener_email: string
+          opener_name: string
+          priority: string
+          status: string
+          subject: string
+          unread_for_admin: boolean
+          workspace_id: string
+          workspace_name: string
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -902,7 +1033,14 @@ export type Database = {
         }[]
       }
       admin_platform_stats: { Args: never; Returns: Json }
+      admin_set_ban: {
+        Args: { _banned: boolean; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
       admin_timeseries: { Args: never; Returns: Json }
+      channel_summary:
+        | { Args: { _workspace_id: string }; Returns: Json }
+        | { Args: { _since?: string; _workspace_id: string }; Returns: Json }
       conversation_stats: { Args: { _workspace_id: string }; Returns: Json }
       ensure_default_workspace: { Args: { _user_id?: string }; Returns: string }
       has_role: {
@@ -912,6 +1050,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_banned: { Args: { _user_id: string }; Returns: boolean }
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean

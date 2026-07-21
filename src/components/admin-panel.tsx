@@ -6,12 +6,15 @@ import {
   Shield, Users, Building2, Bot, ShoppingCart, MessageSquare, BookOpen,
   Plug, Bell, Search, Trash2, Crown, UserMinus, Send, LogOut, Sparkles, ArrowUpRight,
   DollarSign, Command, ChevronRight, TrendingUp, TrendingDown, Radio, Layers, Gauge, ArrowRight,
+  LifeBuoy, Ban, ShieldOff,
 } from "lucide-react";
 import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
   deleteWorkspace, deleteUser, broadcastNotification,
+  adminSetBan, adminListBanStatus, adminReplyToTicket,
 } from "@/lib/admin.functions";
+import { listAllTickets, listTicketMessages, closeTicket } from "@/lib/support.functions";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell,
@@ -19,7 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
 
-type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "system";
+type Tab = "overview" | "users" | "workspaces" | "employees" | "orders" | "conversations" | "integrations" | "support" | "system";
 
 const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "overview",      label: "Overview",      icon: Gauge,         hint: "Pulse" },
@@ -29,6 +32,7 @@ const NAV: { key: Tab; label: string; icon: typeof Users; hint: string }[] = [
   { key: "orders",        label: "Orders",        icon: ShoppingCart,  hint: "Commerce" },
   { key: "conversations", label: "Conversations", icon: MessageSquare, hint: "Inbox" },
   { key: "integrations",  label: "Integrations",  icon: Plug,          hint: "Wiring" },
+  { key: "support",       label: "Support",       icon: LifeBuoy,      hint: "Tickets" },
   { key: "system",        label: "System",        icon: Radio,         hint: "Ops" },
 ];
 
@@ -157,6 +161,7 @@ export function AdminPanel() {
           {tab === "orders" && <SimpleListTab kind="orders" />}
           {tab === "conversations" && <SimpleListTab kind="conversations" />}
           {tab === "integrations" && <SimpleListTab kind="integrations" />}
+          {tab === "support" && <AdminSupportTab />}
           {tab === "system" && <SystemTab />}
         </main>
       </div>
