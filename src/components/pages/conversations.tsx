@@ -8,6 +8,7 @@ import {
   listConversations, listMessages, createConversation, sendReply, updateConversationStatus,
   type InboxConvo,
 } from "@/lib/inbox.functions";
+import { listProducts } from "@/lib/products.functions";
 
 const tones = { won: "emerald", open: "violet", risk: "rose", resolved: "muted" } as const;
 const statusKey = { won: "common.won", open: "common.open", risk: "common.risk", resolved: "common.resolved" } as const;
