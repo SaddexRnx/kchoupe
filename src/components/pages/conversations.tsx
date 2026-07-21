@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageSquare, Search, Filter, ChevronRight, Send, X, Check, CheckCheck, Plus, Loader2 } from "lucide-react";
+import { MessageSquare, Search, Filter, ChevronRight, Send, X, Check, CheckCheck, Plus, Loader2, ShoppingBag } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
@@ -9,6 +9,7 @@ import {
   type InboxConvo,
 } from "@/lib/inbox.functions";
 import { listProducts } from "@/lib/products.functions";
+import { createOrder } from "@/lib/orders.functions";
 
 const tones = { won: "emerald", open: "violet", risk: "rose", resolved: "muted" } as const;
 const statusKey = { won: "common.won", open: "common.open", risk: "common.risk", resolved: "common.resolved" } as const;
@@ -89,6 +90,47 @@ export function Conversations() {
   const [addOpen, setAddOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newDraft, setNewDraft] = useState({ external_user: "", channel: "web", first_message: "" });
+
+  const placeOrder = useServerFn(createOrder);
+  const [orderProduct, setOrderProduct] = useState<ProductLite | null>(null);
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [placing, setPlacing] = useState(false);
+
+  const openOrder = (p: ProductLite) => {
+    setOrderProduct(p);
+    setOrderForm({
+      customer_name: open?.external_user ?? "",
+      customer_email: (open?.external_user ?? "").includes("@") ? (open?.external_user ?? "") : "",
+      qty: 1,
+      notes: "",
+    });
+  };
+  const submitOrder = async () => {
+    if (!orderProduct) return;
+    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const qty = Math.max(1, Number(orderForm.qty) || 1);
+    setPlacing(true);
+    try {
+      const amount = Number(orderProduct.price) * qty;
+      const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const res = await placeOrder({ data: {
+        customer_name: orderForm.customer_name.trim(),
+        customer_email: orderForm.customer_email.trim() || undefined,
+        product_summary: summary,
+        amount,
+        currency: orderProduct.currency,
+        status: "pending",
+        confirmed_by_ai: false,
+        notes: orderForm.notes.trim() || undefined,
+      }});
+      toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: summary });
+      setOrderProduct(null);
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Order failed", body: e?.message });
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   const open = convos.find((c) => c.id === openId) || null;
   const { data: messages = [] } = useQuery({
@@ -280,6 +322,18 @@ export function Conversations() {
                             </div>
                             <div className="shrink-0 text-right">
                               <div className="font-display text-sm font-bold">{Number(p.price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{p.currency}</span></div>
+                              {(() => {
+                                const out = p.status === "out" || (p.status !== "draft" && p.stock === 0);
+                                return (
+                                  <button
+                                    onClick={() => openOrder(p)}
+                                    disabled={out}
+                                    className="mt-1 inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30 hover:brightness-110 disabled:opacity-40"
+                                  >
+                                    <ShoppingBag className="h-3 w-3" /> Order
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </div>
                         ))}
@@ -327,6 +381,44 @@ export function Conversations() {
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
           </label>
         </div>
+      </Modal>
+
+      <Modal open={!!orderProduct} onClose={() => setOrderProduct(null)}
+        title={orderProduct ? `Order — ${orderProduct.name}` : "Place order"}
+        description="Confirm the customer details to record this order."
+        footer={<>
+          <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
+          <PrimaryButton onClick={submitOrder} disabled={placing}>
+            {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
+          </PrimaryButton>
+        </>}>
+        {orderProduct && (
+          <div className="grid gap-3">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 text-xl">{orderProduct.image_emoji}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{orderProduct.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{orderProduct.sku}</div>
+              </div>
+              <div className="text-right"><div className="font-display text-sm font-bold">{Number(orderProduct.price).toLocaleString()} <span className="text-[10px] text-muted-foreground">{orderProduct.currency}</span></div></div>
+            </div>
+            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" />
+            <TextField label="Customer email" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" />
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <label className="block">
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
+              <textarea value={orderForm.notes} onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+            </label>
+            <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2 text-xs text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">{(Number(orderProduct.price) * Math.max(1, Number(orderForm.qty) || 1)).toLocaleString()} {orderProduct.currency}</span>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
