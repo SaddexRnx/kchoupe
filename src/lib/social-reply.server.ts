@@ -17,6 +17,7 @@ export type InboundMessage = {
   body: string;
   platformThreadId?: string | null; // where to reply on the platform (chat_id, thread id, PSID)
   botToken?: string | null;         // when already known (webhook route already loaded creds)
+  suppressProductCards?: boolean;   // when true, don't re-send product cards (e.g. after an Order button tap)
 };
 
 // ── Guardrail (mirrors customer-chat.functions but adds customer memory) ─────
