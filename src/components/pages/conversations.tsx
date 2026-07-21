@@ -21,6 +21,28 @@ function ago(iso: string) {
   return Math.floor(s / 86400) + "d";
 }
 
+type ProductLite = {
+  id: string; name: string; sku: string; price: number | string; currency: string;
+  stock: number; image_emoji: string;
+};
+
+function findProductMatches(text: string, products: ProductLite[]): ProductLite[] {
+  if (!text || !products.length) return [];
+  const lower = text.toLowerCase();
+  const seen = new Set<string>();
+  const out: ProductLite[] = [];
+  for (const p of products) {
+    const skuHit = p.sku && lower.includes(p.sku.toLowerCase());
+    const nameHit = p.name && p.name.length >= 4 && lower.includes(p.name.toLowerCase());
+    if ((skuHit || nameHit) && !seen.has(p.id)) {
+      seen.add(p.id);
+      out.push(p);
+      if (out.length >= 4) break;
+    }
+  }
+  return out;
+}
+
 export function Conversations() {
   const t = useT();
   const toast = useToast();
