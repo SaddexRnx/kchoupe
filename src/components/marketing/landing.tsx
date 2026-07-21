@@ -174,11 +174,16 @@ export function Landing() {
       {/* PRICING */}
       <section id="pricing" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Pricing" title="Local prices for local shops." />
+        <div className="mx-auto mt-4 flex justify-center">
+          <div className="animate-glow inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+            🎉 Launch offer — 50% off your first 3 months. Ends soon.
+          </div>
+        </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { n: "Starter", plan: "starter", p: "0", sub: "14-day trial", f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
-            { n: "Growth", plan: "growth", p: "4,900", sub: "DZD / month", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
-            { n: "Scale", plan: "scale", p: "14,900", sub: "DZD / month", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
+            { n: "Starter", plan: "starter", old: null as string | null, p: "0", sub: "14-day trial", off: null as string | null, f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
+            { n: "Growth", plan: "growth", old: "4,900", p: "2,450", sub: "DZD / month · first 3 months", off: "-50%", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
+            { n: "Scale", plan: "scale", old: "14,900", p: "7,450", sub: "DZD / month · first 3 months", off: "-50%", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
           ].map((t) => (
             <div key={t.n}
               className={"glass-panel animate-fade-up relative rounded-2xl p-6 " +
@@ -186,11 +191,20 @@ export function Landing() {
               {t.featured && (
                 <div className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">Most popular</div>
               )}
+              {t.off && (
+                <div className="absolute -top-3 right-6 rounded-full bg-emerald-500/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/30">{t.off}</div>
+              )}
               <div className="font-display text-lg font-bold">{t.n}</div>
-              <div className="mt-3 flex items-baseline gap-1">
+              <div className="mt-3 flex items-baseline gap-2">
+                {t.old && (
+                  <span className="font-display text-lg font-semibold text-muted-foreground line-through decoration-rose-400/70">{t.old}</span>
+                )}
                 <span className="font-display text-4xl font-black">{t.p}</span>
                 <span className="text-xs text-muted-foreground">{t.sub}</span>
               </div>
+              {t.old && (
+                <div className="mt-1 text-[11px] font-medium text-emerald-400">Save 50% for 90 days, then {t.old} DZD/mo. Cancel anytime.</div>
+              )}
               <ul className="mt-5 space-y-2 text-sm">
                 {t.f.map((x) => (
                   <li key={x} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {x}</li>
