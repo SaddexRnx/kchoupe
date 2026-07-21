@@ -355,15 +355,15 @@ export const installTemplate = createServerFn({ method: "POST" })
     const { data: tpl } = await supabaseAdmin.from("ai_employee_templates")
       .select("*").eq("slug", data.templateSlug).maybeSingle();
     if (!tpl) throw new Error("Template not found");
-    const { data: emp, error } = await supabase.from("ai_employees").insert({
+    const { data: emp, error } = await (supabase.from("ai_employees") as any).insert({
       workspace_id: data.workspaceId,
+      created_by: userId,
       name: tpl.title,
       role: tpl.category,
       status: "active",
       model: tpl.suggested_model ?? undefined,
       avatar_emoji: tpl.avatar_emoji ?? undefined,
       system_prompt: tpl.system_prompt,
-      tone: tpl.tone,
     }).select("id,name").single();
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("ai_employee_templates")
