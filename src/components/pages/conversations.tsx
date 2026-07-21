@@ -91,6 +91,47 @@ export function Conversations() {
   const [saving, setSaving] = useState(false);
   const [newDraft, setNewDraft] = useState({ external_user: "", channel: "web", first_message: "" });
 
+  const placeOrder = useServerFn(createOrder);
+  const [orderProduct, setOrderProduct] = useState<ProductLite | null>(null);
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [placing, setPlacing] = useState(false);
+
+  const openOrder = (p: ProductLite) => {
+    setOrderProduct(p);
+    setOrderForm({
+      customer_name: open?.external_user ?? "",
+      customer_email: (open?.external_user ?? "").includes("@") ? (open?.external_user ?? "") : "",
+      qty: 1,
+      notes: "",
+    });
+  };
+  const submitOrder = async () => {
+    if (!orderProduct) return;
+    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const qty = Math.max(1, Number(orderForm.qty) || 1);
+    setPlacing(true);
+    try {
+      const amount = Number(orderProduct.price) * qty;
+      const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const res = await placeOrder({ data: {
+        customer_name: orderForm.customer_name.trim(),
+        customer_email: orderForm.customer_email.trim() || undefined,
+        product_summary: summary,
+        amount,
+        currency: orderProduct.currency,
+        status: "pending",
+        confirmed_by_ai: false,
+        notes: orderForm.notes.trim() || undefined,
+      }});
+      toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: summary });
+      setOrderProduct(null);
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Order failed", body: e?.message });
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   const open = convos.find((c) => c.id === openId) || null;
   const { data: messages = [] } = useQuery({
     queryKey: ["inbox_messages", openId],
