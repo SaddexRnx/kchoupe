@@ -486,10 +486,11 @@ function CustomModelsSection({ models }: { models: CustomModelRow[] }) {
                     {m.last_test_message && <div className={"mt-2 text-[11px] " + (ok ? "text-emerald-300" : "text-rose-300")}>{m.last_test_message}</div>}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <GhostButton onClick={() => handleTest(m.id)}>
                     {testing === m.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube2 className="h-4 w-4" />} Test
                   </GhostButton>
+                  <GhostButton onClick={() => openEdit(m)}><Pencil className="h-4 w-4" /> Edit</GhostButton>
                   <GhostButton onClick={() => handleDelete(m)} tone="danger"><Trash2 className="h-4 w-4" /> Delete</GhostButton>
                 </div>
               </Panel>
