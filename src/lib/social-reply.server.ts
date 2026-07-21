@@ -277,20 +277,29 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     workspace_id: wsId, conversation_id: convoId, role: "user", sender: externalUserLabel, body: msg.body,
   });
 
-  // 6) Build AI context: catalog + history + memory
-  const [prodRes, histRes] = await Promise.all([
+  // 6) Build AI context: catalog + history + memory + prior learnings
+  const [prodRes, histRes, learnRes] = await Promise.all([
     supabaseAdmin.from("products")
       .select("sku,name,category,price,currency,stock,status,description")
       .eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(200),
     supabaseAdmin.from("inbox_messages")
       .select("role,body")
       .eq("conversation_id", convoId).order("created_at", { ascending: true }).limit(20),
+    supabaseAdmin.from("workspace_learnings")
+      .select("lesson").eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(8),
   ]);
+
+  const learningsBlock = (learnRes.data ?? []).length
+    ? "\n\nLEARNED PLAYBOOK (from past confirmed orders — reuse these tactics when relevant):\n" +
+      (learnRes.data as any[]).map((l, i) => `${i + 1}. ${l.lesson}`).join("\n")
+    : "";
 
   const system = SYSTEM_GUARDRAIL
     + (empPrompt ? `\n\nEMPLOYEE INSTRUCTIONS:\n${empPrompt}` : "")
     + "\n\n" + buildCatalog(prodRes.data ?? [])
-    + buildCustomerMemory(customer);
+    + buildCustomerMemory(customer)
+    + learningsBlock;
+
 
   const messages: any[] = ((histRes.data ?? []) as any[])
     .slice(-12)
@@ -350,6 +359,33 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
       reply = (reply || `✅ Order confirmed, ${orderTag.name}!`) + `\n\n🧾 Order #${createdOrder.order_no} — we'll contact you on ${orderTag.phone}.`;
     }
   }
+
+  // 8b) Learning loop — when an order was just confirmed, distill a short lesson
+  //     from the last few turns and store it so future chats reuse the pattern.
+  if (createdOrder) {
+    try {
+      const turns = ((histRes.data ?? []) as any[]).slice(-10)
+        .map((m) => `${m.role === "agent" ? "AGENT" : "CUSTOMER"}: ${m.body}`).join("\n");
+      const distill = await generateText({
+        model,
+        system: "You extract ONE short reusable sales lesson (max 220 chars) from a customer chat that ended in a confirmed order. Focus on: what objection/hesitation appeared, what phrasing or product suggestion unlocked the sale, and any decisive info. Reply with the lesson only — no preface, no quotes.",
+        messages: [{ role: "user", content: `Channel: ${msg.channel}\nProduct: ${orderTag?.sku}\n\nTranscript:\n${turns}\n\nAGENT: ${reply}` }],
+      });
+      const lesson = (distill.text || "").trim().slice(0, 240);
+      if (lesson.length > 20) {
+        await supabaseAdmin.from("workspace_learnings").insert({
+          workspace_id: wsId,
+          channel: msg.channel,
+          customer_id: customer.id,
+          conversation_id: convoId,
+          lesson,
+          outcome: "order_confirmed",
+          score: 1,
+        });
+      }
+    } catch { /* learning is best-effort */ }
+  }
+
 
   // Strip [SKU] tokens from the visible reply (they're for our parser)
   const visibleReply = reply.replace(/\[[A-Z0-9\-_]{3,}\]/g, "").replace(/\s{2,}/g, " ").trim();

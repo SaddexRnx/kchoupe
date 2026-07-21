@@ -6,6 +6,7 @@ import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, 
 import { useT } from "@/lib/i18n";
 import {
   listConversations, listMessages, createConversation, sendReply, updateConversationStatus,
+  conversationStats, listLearnings,
   type InboxConvo,
 } from "@/lib/inbox.functions";
 import { listProducts } from "@/lib/products.functions";
@@ -78,9 +79,17 @@ export function Conversations() {
   const setStatus = useServerFn(updateConversationStatus);
 
   const listProd = useServerFn(listProducts);
+  const statsFn = useServerFn(conversationStats);
+  const learnFn = useServerFn(listLearnings);
   const { data: convos = [], isLoading } = useQuery({ queryKey: ["inbox_conversations"], queryFn: () => list() });
   const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => listProd() });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["inbox_conversations"] });
+  const { data: stats } = useQuery({ queryKey: ["conv_stats"], queryFn: () => statsFn(), refetchInterval: 30000 });
+  const { data: learnings = [] } = useQuery({ queryKey: ["conv_learnings"], queryFn: () => learnFn(), refetchInterval: 60000 });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["inbox_conversations"] });
+    qc.invalidateQueries({ queryKey: ["conv_stats"] });
+    qc.invalidateQueries({ queryKey: ["conv_learnings"] });
+  };
 
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string>("all");
@@ -222,6 +231,67 @@ export function Conversations() {
         description={t("conv.desc")}
         actions={<PrimaryButton onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> New conversation</PrimaryButton>}
       />
+
+      {/* Message + learning statistics */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {[
+          { label: "Conversations", value: stats?.conversations ?? 0 },
+          { label: "Total messages", value: stats?.messages ?? 0 },
+          { label: "Customer msgs", value: stats?.user_messages ?? 0 },
+          { label: "Atlas replies", value: stats?.agent_messages ?? 0 },
+          { label: "Confirmed orders", value: stats?.confirmed_orders ?? 0, accent: true },
+          { label: "AI learnings", value: stats?.learnings ?? 0 },
+        ].map((s) => (
+          <div key={s.label} className={`rounded-2xl border px-3 py-3 transition ${s.accent ? "border-primary/40 bg-primary/10" : "border-white/10 bg-white/5"}`}>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
+            <div className="mt-1 text-xl font-semibold tabular-nums">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {(stats?.top_customers?.length || learnings.length > 0) && (
+        <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <Panel className="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-sm font-semibold">Best customers</div>
+              <span className="text-[11px] text-muted-foreground">by message volume</span>
+            </div>
+            {stats?.top_customers?.length ? (
+              <ul className="space-y-2">
+                {stats.top_customers.map((c, i) => (
+                  <li key={i} className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-sm">
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">{i + 1}</span>
+                      <span className="truncate">{c.name}</span>
+                      <span className="text-[10px] uppercase text-muted-foreground">{c.channel}</span>
+                    </div>
+                    <span className="tabular-nums text-muted-foreground">{c.messages} msgs</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <div className="text-sm text-muted-foreground">No customers yet.</div>}
+          </Panel>
+          <Panel className="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-sm font-semibold">What Atlas learned</div>
+              <span className="text-[11px] text-muted-foreground">auto-distilled from confirmed orders</span>
+            </div>
+            {learnings.length ? (
+              <ul className="max-h-56 space-y-2 overflow-auto pr-1">
+                {learnings.slice(0, 6).map((l) => (
+                  <li key={l.id} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm">
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-emerald-300/80">
+                      <Check className="h-3 w-3" /> {l.channel || "chat"} · {new Date(l.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="mt-1 leading-snug">{l.lesson}</div>
+                  </li>
+                ))}
+              </ul>
+            ) : <div className="text-sm text-muted-foreground">Atlas will save a lesson here after each confirmed order and reuse it in future chats.</div>}
+          </Panel>
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
         <Panel className="p-0">
