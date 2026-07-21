@@ -7,9 +7,13 @@ export const Route = createFileRoute("/security")({
     meta: [
       { title: "Security — Atlas AI" },
       { name: "description", content: "How Atlas AI protects your workspace, your data and your customers." },
-      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Security — Atlas AI" },
+      { property: "og:description", content: "How Atlas AI protects your workspace, your data and your customers." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/security" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/security" }],
   }),
+
   component: SecurityPage,
 });
 

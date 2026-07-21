@@ -6,9 +6,13 @@ export const Route = createFileRoute("/terms")({
     meta: [
       { title: "Terms of Service — Atlas AI" },
       { name: "description", content: "The terms that govern your use of Atlas AI." },
-      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Terms of Service — Atlas AI" },
+      { property: "og:description", content: "The terms that govern your use of Atlas AI." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/terms" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/terms" }],
   }),
+
   component: TermsPage,
 });
 
