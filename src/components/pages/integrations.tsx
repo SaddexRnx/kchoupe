@@ -257,9 +257,11 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
   const test = useServerFn(testProviderConnection);
   const disc = useServerFn(disconnectProviderConnection);
   const scrape = useServerFn(scrapeWebsiteProducts);
+  const cfgHook = useServerFn(configureMessagingWebhook);
   const [creds, setCreds] = useState<Record<string, string>>({});
   const [reveal, setReveal] = useState<Record<string, boolean>>({});
-  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | null>(null);
+  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | "hook" | null>(null);
+  const [hookInfo, setHookInfo] = useState<{ url: string; verify_token: string | null; registered: boolean; message: string } | null>(null);
 
   const connected = !!initial?.connected;
   const hasCreds = !!initial?.has_credentials;
