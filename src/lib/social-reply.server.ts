@@ -73,17 +73,72 @@ function buildCustomerMemory(customer: any | null): string {
 }
 
 // ── Platform senders ────────────────────────────────────────────────────────
-async function sendTelegram(botToken: string, chatId: string, text: string) {
+async function sendTelegram(botToken: string, chatId: string, text: string, extra: Record<string, unknown> = {}) {
   const r = await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: undefined }),
+    body: JSON.stringify({ chat_id: chatId, text, ...extra }),
   });
   if (!r.ok) {
     const j = await r.text().catch(() => "");
     throw new Error(`telegram sendMessage failed [${r.status}]: ${j}`);
   }
 }
+
+async function sendTelegramPhoto(botToken: string, chatId: string, photoUrl: string, caption: string, extra: Record<string, unknown> = {}) {
+  const r = await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendPhoto`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, photo: photoUrl, caption, ...extra }),
+  });
+  if (!r.ok) {
+    // Fallback: photo url might be blocked — send text card instead.
+    await sendTelegram(botToken, chatId, caption, extra);
+  }
+}
+
+function extractImageUrl(desc: string | null | undefined): string | null {
+  if (!desc) return null;
+  const m = desc.match(/Image:\s*(https?:\/\/\S+)/i);
+  return m ? m[1] : null;
+}
+
+function findMentionedProducts(reply: string, products: any[], limit = 3): any[] {
+  const lower = reply.toLowerCase();
+  const out: any[] = [];
+  const seen = new Set<string>();
+  // First pass: explicit [SKU] tokens
+  for (const p of products) {
+    const sku = String(p.sku || "");
+    if (sku && lower.includes(`[${sku.toLowerCase()}]`)) {
+      if (!seen.has(p.id)) { out.push(p); seen.add(p.id); }
+    }
+  }
+  // Second pass: name match
+  for (const p of products) {
+    if (out.length >= limit) break;
+    if (seen.has(p.id)) continue;
+    const name = String(p.name || "").toLowerCase();
+    if (name.length >= 5 && lower.includes(name)) { out.push(p); seen.add(p.id); }
+  }
+  return out.slice(0, limit);
+}
+
+const ORDER_TAG_RE = /\[\[ORDER\s+([^\]]+?)\]\]/i;
+function parseOrderTag(text: string): null | { sku: string; qty: number; name: string; phone: string; address: string } {
+  const m = text.match(ORDER_TAG_RE);
+  if (!m) return null;
+  const body = m[1];
+  const pick = (k: string) => {
+    const r = new RegExp(`${k}\\s*=\\s*"([^"]*)"`, "i").exec(body) || new RegExp(`${k}\\s*=\\s*([^\\s]+)`, "i").exec(body);
+    return r ? r[1] : "";
+  };
+  const sku = pick("sku"); const name = pick("name"); const phone = pick("phone"); const address = pick("address");
+  const qty = parseInt(pick("qty") || "1", 10) || 1;
+  if (!sku || !name || !phone || !address) return null;
+  return { sku, qty, name, phone, address };
+}
+
 
 async function sendMessenger(pageToken: string, psid: string, text: string) {
   const r = await fetch(`https://graph.facebook.com/v20.0/me/messages?access_token=${encodeURIComponent(pageToken)}`, {
