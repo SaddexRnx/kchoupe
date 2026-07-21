@@ -117,8 +117,8 @@ console.log(`\n== Crawl simulation @ ${BASE} ==`);
 console.log(`Pages visited: ${seen.size}`);
 console.log(`Sitemap URLs : ${sitemapUrls.length}`);
 
-console.log("\n[1] Private URLs linked from public pages:");
-if (publicLeaks.length === 0) console.log("  ✅ none — search engines cannot discover authenticated routes.");
+console.log("\n[1] Authenticated URLs linked from public pages:");
+if (publicLeaks.length === 0) console.log("  ✅ none — crawlers cannot discover authenticated app surfaces.");
 else { publicLeaks.forEach((l) => console.log("  ❌", l.url, "← linked from", l.from)); bad.push("public-link-leak"); }
 
 console.log("\n[2] Private URLs advertised in sitemap.xml:");
