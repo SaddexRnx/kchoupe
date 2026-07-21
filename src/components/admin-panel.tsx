@@ -869,3 +869,102 @@ function SystemTab() {
     </div>
   );
 }
+
+function AdminSupportTab() {
+  const listFn = useServerFn(listAllTickets);
+  const msgFn = useServerFn(listTicketMessages);
+  const replyFn = useServerFn(adminReplyToTicket);
+  const closeFn = useServerFn(closeTicket);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const { data: tickets = [], isLoading } = useQuery({ queryKey: ["admin", "tickets"], queryFn: () => listFn() });
+  const [selected, setSelected] = useState<string | null>(null);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-support")
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, () => qc.invalidateQueries({ queryKey: ["admin", "tickets"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_messages" }, () => { qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); qc.invalidateQueries({ queryKey: ["admin", "ticket-thread"] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
+  const { data: thread = [] } = useQuery({
+    queryKey: ["admin", "ticket-thread", selected],
+    queryFn: () => msgFn({ data: { ticketId: selected! } }),
+    enabled: !!selected,
+    refetchInterval: 4000,
+  });
+
+  const reply = useMutation({
+    mutationFn: () => replyFn({ data: { ticketId: selected!, body: text } }),
+    onSuccess: () => { setText(""); qc.invalidateQueries({ queryKey: ["admin", "ticket-thread", selected] }); qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); },
+    onError: (e: any) => toast.push({ kind: "error", title: "Send failed", body: e?.message }),
+  });
+  const close = useMutation({
+    mutationFn: (status: "open" | "closed") => closeFn({ data: { ticketId: selected!, status } }),
+    onSuccess: () => { toast.push({ kind: "success", title: "Updated" }); qc.invalidateQueries({ queryKey: ["admin", "tickets"] }); },
+  });
+
+  return (
+    <div className="animate-fade-up grid gap-4 lg:grid-cols-[340px,1fr]">
+      <div className="rounded-2xl border border-white/[0.06] bg-card/40 p-3 backdrop-blur-xl">
+        <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">All tickets</div>
+        {isLoading && <div className="p-4 text-center text-xs text-muted-foreground">Loading…</div>}
+        {!isLoading && tickets.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">No tickets yet.</div>}
+        <ul className="space-y-1">
+          {tickets.map((t: any) => (
+            <li key={t.id}>
+              <button
+                onClick={() => setSelected(t.id)}
+                className={"w-full rounded-xl border px-3 py-2.5 text-left transition " + (selected === t.id ? "border-primary/40 bg-primary/[0.06]" : "border-transparent hover:bg-white/[0.04]")}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate text-sm font-semibold">{t.subject}</span>
+                  {t.unread_for_admin && <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span className={t.priority === "urgent" ? "text-red-300" : t.priority === "high" ? "text-amber-300" : ""}>{t.priority}</span>
+                  <span>{t.status}</span>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-xl">
+        {!selected ? (
+          <div className="flex h-full min-h-[400px] items-center justify-center text-sm text-muted-foreground">Select a ticket.</div>
+        ) : (
+          <div className="flex h-[560px] flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <div className="text-xs text-muted-foreground">Replying as Atlas team</div>
+              <button onClick={() => close.mutate("closed")} className="text-[11px] text-muted-foreground hover:text-foreground">Close ticket</button>
+            </div>
+            <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              {thread.map((m: any) => (
+                <div key={m.id} className={"flex " + (m.sender_role === "admin" ? "justify-end" : "justify-start")}>
+                  <div className={"max-w-[78%] rounded-2xl px-3 py-2 text-sm " + (m.sender_role === "admin" ? "bg-primary/15" : "bg-white/5")}>
+                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{m.sender_role === "admin" ? "Atlas team" : "User"}</div>
+                    <div className="whitespace-pre-wrap">{m.body}</div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-white/[0.06] p-3">
+              <div className="flex items-end gap-2">
+                <textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="Reply to the user…" className="min-h-[44px] flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                <button onClick={() => text.trim() && reply.mutate()} disabled={reply.isPending || !text.trim()} className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-sm font-semibold text-background disabled:opacity-60">
+                  <Send className="h-4 w-4" /> Send
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
