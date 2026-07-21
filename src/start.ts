@@ -43,7 +43,6 @@ const noIndexMiddleware = createMiddleware().server(async ({ next, request }) =>
   }
 
   const result = await next();
-  console.log("[noindex-mw] result", pathname, typeof result, result && Object.keys(result as object));
 
   // Fallback: mutate the returned Response headers for handlers that build
   // their own Response (MCP, custom 404s, JSON handlers).
