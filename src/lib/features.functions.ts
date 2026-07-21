@@ -360,8 +360,8 @@ export const installTemplate = createServerFn({ method: "POST" })
       name: tpl.title,
       role: tpl.category,
       status: "active",
-      model: tpl.suggested_model,
-      avatar_emoji: tpl.avatar_emoji,
+      model: tpl.suggested_model ?? undefined,
+      avatar_emoji: tpl.avatar_emoji ?? undefined,
       system_prompt: tpl.system_prompt,
       tone: tpl.tone,
     }).select("id,name").single();
