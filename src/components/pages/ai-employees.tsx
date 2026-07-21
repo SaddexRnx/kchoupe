@@ -326,13 +326,16 @@ export function AiEmployees() {
           <div className="grid gap-4 md:grid-cols-2">
             <TextField label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
             <TextField label="Role" value={editing.role} onChange={(v) => setEditing({ ...editing, role: v })} />
-            <label className="block md:col-span-2">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
-              <select value={editing.model} onChange={(e) => setEditing({ ...editing, model: e.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none">
-                {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-              </select>
-            </label>
+            <div className="md:col-span-2">
+              <ModelPicker
+                value={editing.model}
+                onChange={(v) => setEditing({ ...editing, model: v })}
+                options={modelOptions}
+                onTest={runTestCustom}
+                testing={testingCM}
+              />
+            </div>
+
             <label className="block md:col-span-2">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">System prompt</div>
               <textarea value={editing.system_prompt ?? ""} onChange={(e) => setEditing({ ...editing, system_prompt: e.target.value })}
