@@ -11,8 +11,11 @@ export const Route = createFileRoute("/contact")({
       { name: "description", content: "Talk to the Atlas AI team about your store, integrations or a demo." },
       { property: "og:title", content: "Contact Atlas AI" },
       { property: "og:description", content: "Reach the team — sales, support, partnerships." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/contact" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/contact" }],
   }),
+
   component: ContactPage,
 });
 
@@ -65,13 +68,21 @@ function ContactPage() {
 
       <form onSubmit={submit} className="not-prose mt-8 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@store.com"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10" />
+          <div>
+            <label htmlFor="contact-name" className="sr-only">Your name</label>
+            <input id="contact-name" aria-label="Your name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10" />
+          </div>
+          <div>
+            <label htmlFor="contact-email" className="sr-only">Email address</label>
+            <input id="contact-email" aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@store.com"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10" />
+          </div>
         </div>
-        <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} placeholder="How can we help?"
+        <label htmlFor="contact-message" className="sr-only">Message</label>
+        <textarea id="contact-message" aria-label="Message" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} placeholder="How can we help?"
           className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm outline-none transition focus:border-primary/50 focus:bg-white/10" />
+
         <button type="submit" disabled={sending}
           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:brightness-110 disabled:opacity-60">
           <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send message"}
