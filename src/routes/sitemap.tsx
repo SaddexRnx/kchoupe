@@ -38,7 +38,7 @@ export const Route = createFileRoute("/sitemap")({
   head: () => ({
     meta: [
       { title: "Sitemap — Atlas AI" },
-      { name: "description", content: "Every public page on Atlas AI: product, marketing, legal and support." },
+      { name: "description", content: "Every public page on Atlas AI: marketing, sign-in and legal." },
       { property: "og:title", content: "Atlas AI · Sitemap" },
       { property: "og:description", content: "Every public page on Atlas AI." },
       { property: "og:type", content: "website" },
