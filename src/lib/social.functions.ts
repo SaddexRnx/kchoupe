@@ -795,7 +795,7 @@ export const configureMessagingWebhook = createServerFn({ method: "POST" })
       const r = await fetch(`https://api.telegram.org/bot${encodeURIComponent(creds.botToken)}/setWebhook`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url, secret_token: creds.webhookSecret, allowed_updates: ["message", "edited_message"] }),
+        body: JSON.stringify({ url, secret_token: creds.webhookSecret, allowed_updates: ["message", "edited_message", "callback_query"] }),
       });
       const j: any = await r.json().catch(() => ({}));
       const ok = r.ok && j?.ok;
