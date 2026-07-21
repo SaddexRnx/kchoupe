@@ -19,39 +19,63 @@ export type Database = {
           avatar_emoji: string
           created_at: string
           created_by: string
+          escalate_to_human: boolean
+          greeting: string | null
           id: string
+          language: string
+          max_tokens: number
           model: string
           name: string
           role: string
           status: string
           system_prompt: string | null
+          temperature: number
+          top_p: number
           updated_at: string
+          use_knowledge: boolean
+          use_products: boolean
           workspace_id: string
         }
         Insert: {
           avatar_emoji?: string
           created_at?: string
           created_by: string
+          escalate_to_human?: boolean
+          greeting?: string | null
           id?: string
+          language?: string
+          max_tokens?: number
           model?: string
           name: string
           role: string
           status?: string
           system_prompt?: string | null
+          temperature?: number
+          top_p?: number
           updated_at?: string
+          use_knowledge?: boolean
+          use_products?: boolean
           workspace_id: string
         }
         Update: {
           avatar_emoji?: string
           created_at?: string
           created_by?: string
+          escalate_to_human?: boolean
+          greeting?: string | null
           id?: string
+          language?: string
+          max_tokens?: number
           model?: string
           name?: string
           role?: string
           status?: string
           system_prompt?: string | null
+          temperature?: number
+          top_p?: number
           updated_at?: string
+          use_knowledge?: boolean
+          use_products?: boolean
           workspace_id?: string
         }
         Relationships: [
