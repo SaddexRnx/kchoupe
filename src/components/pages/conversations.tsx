@@ -322,6 +322,18 @@ export function Conversations() {
                             </div>
                             <div className="shrink-0 text-right">
                               <div className="font-display text-sm font-bold">{Number(p.price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{p.currency}</span></div>
+                              {(() => {
+                                const out = p.status === "out" || (p.status !== "draft" && p.stock === 0);
+                                return (
+                                  <button
+                                    onClick={() => openOrder(p)}
+                                    disabled={out}
+                                    className="mt-1 inline-flex items-center gap-1 rounded-lg bg-gradient-to-br from-primary to-accent px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30 hover:brightness-110 disabled:opacity-40"
+                                  >
+                                    <ShoppingBag className="h-3 w-3" /> Order
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </div>
                         ))}
