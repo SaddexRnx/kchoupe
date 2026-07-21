@@ -5,6 +5,7 @@ import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, 
 import { Download, Mail, RefreshCcw, Plus, Loader2, Zap, Eye, EyeOff, Save, Trash2, CheckCircle2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { listOrders, createOrder, updateOrder, deleteOrder, type OrderRow, type OrderStatus } from "@/lib/orders.functions";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 
 const STATUS_META: Record<OrderStatus, { label: string; tone: "emerald" | "amber" | "rose" | "muted" | "sky" | "violet" }> = {
   pending:   { label: "Pending",   tone: "amber" },
