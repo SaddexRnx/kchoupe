@@ -7,7 +7,9 @@ export const Route = createFileRoute("/integrations")({
     meta: [
       { title: "Integrations · Atlas AI" },
       { name: "description", content: "Connect your shops, socials, inboxes, knowledge and automations so Atlas AI employees can act on your behalf." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/integrations" }],
   }),
   component: () => (
     <AppShell active="integrations">
