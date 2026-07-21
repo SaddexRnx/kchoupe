@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PreferencesProvider } from "../lib/preferences";
 import { ToastProvider } from "../components/pages/_shared";
+import { AutoTranslateProvider } from "../lib/auto-translate";
 
 function NotFoundComponent() {
   return (
@@ -143,10 +144,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <PreferencesProvider>
-        <ToastProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </ToastProvider>
+        <AutoTranslateProvider>
+          <ToastProvider>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </ToastProvider>
+        </AutoTranslateProvider>
       </PreferencesProvider>
     </QueryClientProvider>
   );
