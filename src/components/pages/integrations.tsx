@@ -10,7 +10,8 @@ import {
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection,
-  disconnectProviderConnection, type ProviderConnection, type ProviderId, type ProviderMeta,
+  disconnectProviderConnection, scrapeWebsiteProducts,
+  type ProviderConnection, type ProviderId, type ProviderMeta,
   type PingCode,
 } from "@/lib/social.functions";
 import {
@@ -253,9 +254,10 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
   const save = useServerFn(saveProviderConnection);
   const test = useServerFn(testProviderConnection);
   const disc = useServerFn(disconnectProviderConnection);
+  const scrape = useServerFn(scrapeWebsiteProducts);
   const [creds, setCreds] = useState<Record<string, string>>({});
   const [reveal, setReveal] = useState<Record<string, boolean>>({});
-  const [busy, setBusy] = useState<"save" | "test" | "disc" | null>(null);
+  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | null>(null);
 
   const connected = !!initial?.connected;
   const hasCreds = !!initial?.has_credentials;
@@ -293,6 +295,19 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
       onChanged();
     } catch (e: any) {
       toast.push({ kind: "error", title: "Disconnect failed", body: e?.message });
+    } finally { setBusy(null); }
+  };
+  const handleScrape = async () => {
+    setBusy("scrape");
+    try {
+      const r = await scrape({ data: {} as any });
+      if (r.found === 0) {
+        toast.push({ kind: "error", title: "No products found", body: `Scanned ${r.pages_scanned} page(s). The site may not expose product data (JSON-LD / OG / Shopify).` });
+      } else {
+        toast.push({ kind: "success", title: `Imported ${r.inserted} product${r.inserted === 1 ? "" : "s"}`, body: `Found ${r.found} across ${r.pages_scanned} page(s)${r.sample.length ? ` · ${r.sample.slice(0, 3).join(", ")}${r.sample.length > 3 ? "…" : ""}` : ""}` });
+      }
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Scrape failed", body: e?.message });
     } finally { setBusy(null); }
   };
 
@@ -355,6 +370,12 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
               {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube2 className="h-4 w-4" />}
               Test
             </GhostButton>
+            {meta.id === "website" && (
+              <GhostButton onClick={handleScrape}>
+                {busy === "scrape" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
+                Scrape products
+              </GhostButton>
+            )}
             <GhostButton onClick={handleDisconnect} tone="danger">
               <Trash2 className="h-4 w-4" /> Disconnect
             </GhostButton>

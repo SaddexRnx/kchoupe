@@ -480,3 +480,223 @@ export const disconnectProviderConnection = createServerFn({ method: "POST" })
     return { ok: true };
   });
 export const disconnectSocialChannel = disconnectProviderConnection;
+
+// ── Website product scraping ─────────────────────────────────
+// Fetches the site + a few linked product pages, extracts JSON-LD Product
+// entries (Shopify, WooCommerce, Squarespace, most CMSs emit these) plus
+// OpenGraph product tags, and bulk-imports them into the products table.
+
+type ScrapedProduct = {
+  name: string;
+  price: number;
+  currency: string;
+  description?: string;
+  image?: string;
+  sku?: string;
+  url?: string;
+};
+
+function absUrl(href: string, base: string): string | null {
+  try { return new URL(href, base).toString(); } catch { return null; }
+}
+
+function parsePrice(v: any): number | null {
+  if (v == null) return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const n = Number(String(v).replace(/[^0-9.,-]/g, "").replace(/,(?=\d{3}\b)/g, "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function extractJsonLdProducts(html: string, pageUrl: string): ScrapedProduct[] {
+  const out: ScrapedProduct[] = [];
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    let parsed: any;
+    try { parsed = JSON.parse(m[1].trim()); } catch { continue; }
+    const nodes: any[] = [];
+    const walk = (n: any) => {
+      if (!n) return;
+      if (Array.isArray(n)) { n.forEach(walk); return; }
+      if (typeof n !== "object") return;
+      if (n["@graph"]) walk(n["@graph"]);
+      nodes.push(n);
+    };
+    walk(parsed);
+    for (const n of nodes) {
+      const type = n["@type"];
+      const isProduct = type === "Product" || (Array.isArray(type) && type.includes("Product"));
+      if (!isProduct) continue;
+      const offers = Array.isArray(n.offers) ? n.offers[0] : n.offers;
+      const price = parsePrice(offers?.price ?? offers?.lowPrice ?? n.price);
+      const currency = offers?.priceCurrency || n.priceCurrency || "";
+      const name = typeof n.name === "string" ? n.name.trim() : "";
+      if (!name || price == null) continue;
+      const image = Array.isArray(n.image) ? n.image[0] : n.image;
+      out.push({
+        name, price, currency: currency || "",
+        description: typeof n.description === "string" ? n.description.slice(0, 500) : undefined,
+        image: typeof image === "string" ? image : image?.url,
+        sku: typeof n.sku === "string" ? n.sku : undefined,
+        url: typeof n.url === "string" ? absUrl(n.url, pageUrl) ?? pageUrl : pageUrl,
+      });
+    }
+  }
+  return out;
+}
+
+function extractOgProduct(html: string, pageUrl: string): ScrapedProduct | null {
+  const meta = (prop: string) => {
+    const r = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, "i");
+    const m = html.match(r); return m ? m[1] : null;
+  };
+  const type = meta("og:type");
+  if (!type || !/product/i.test(type)) return null;
+  const name = meta("og:title") || meta("twitter:title");
+  const price = parsePrice(meta("product:price:amount") || meta("og:price:amount"));
+  if (!name || price == null) return null;
+  return {
+    name: name.trim(), price,
+    currency: meta("product:price:currency") || meta("og:price:currency") || "",
+    description: meta("og:description") || undefined,
+    image: meta("og:image") || undefined,
+    url: pageUrl,
+  };
+}
+
+function discoverProductLinks(html: string, baseUrl: string, maxLinks: number): string[] {
+  const links = new Set<string>();
+  const re = /<a[^>]+href=["']([^"']+)["']/gi;
+  const baseHost = new URL(baseUrl).host;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && links.size < maxLinks * 3) {
+    const abs = absUrl(m[1], baseUrl);
+    if (!abs) continue;
+    try {
+      const u = new URL(abs);
+      if (u.host !== baseHost) continue;
+      if (/\/(products?|shop|item|collections?\/[^/]+\/products?)\//i.test(u.pathname)) {
+        u.hash = ""; u.search = "";
+        links.add(u.toString());
+      }
+    } catch {}
+  }
+  return Array.from(links).slice(0, maxLinks);
+}
+
+async function fetchText(url: string, timeoutMs = 10000): Promise<string | null> {
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    const r = await fetch(url, { redirect: "follow", signal: ctl.signal, headers: { "User-Agent": "AtlasAI/1.0 (+https://atlas.ai)" } });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    return await r.text();
+  } catch { return null; }
+}
+
+export const scrapeWebsiteProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ found: number; inserted: number; skipped: number; pages_scanned: number; sample: string[] }> => {
+    const ws = await workspaceId(context);
+    const { data: integ } = await context.supabase
+      .from("integrations")
+      .select("credentials")
+      .eq("workspace_id", ws).eq("integration_key", KEY_OF.website)
+      .maybeSingle();
+    const url = (integ?.credentials as any)?.url;
+    if (!url) throw new Error("Connect a website URL first.");
+
+    // Also try /products.json (Shopify) as a fast-path.
+    const scraped: ScrapedProduct[] = [];
+    try {
+      const host = new URL(url).origin;
+      const sj = await fetchText(host + "/products.json?limit=250", 8000);
+      if (sj) {
+        try {
+          const j = JSON.parse(sj);
+          if (Array.isArray(j.products)) {
+            for (const p of j.products) {
+              const variant = p.variants?.[0];
+              const price = parsePrice(variant?.price ?? p.price);
+              if (!p.title || price == null) continue;
+              scraped.push({
+                name: String(p.title).trim(),
+                price,
+                currency: variant?.presentment_prices?.[0]?.price?.currency_code || "",
+                description: p.body_html ? p.body_html.replace(/<[^>]+>/g, " ").slice(0, 500) : undefined,
+                image: p.images?.[0]?.src,
+                sku: variant?.sku,
+                url: host + "/products/" + p.handle,
+              });
+            }
+          }
+        } catch {}
+      }
+    } catch {}
+
+    const pages = new Set<string>([url]);
+    const html = await fetchText(url);
+    let scanned = 0;
+    if (html) {
+      scanned++;
+      scraped.push(...extractJsonLdProducts(html, url));
+      const og = extractOgProduct(html, url);
+      if (og) scraped.push(og);
+      const links = discoverProductLinks(html, url, 24);
+      links.forEach((l) => pages.add(l));
+    }
+
+    // Fetch discovered product pages (concurrency 5).
+    const list = Array.from(pages).slice(1);
+    for (let i = 0; i < list.length; i += 5) {
+      const batch = list.slice(i, i + 5);
+      const results = await Promise.all(batch.map((u) => fetchText(u)));
+      results.forEach((h, idx) => {
+        if (!h) return;
+        scanned++;
+        scraped.push(...extractJsonLdProducts(h, batch[idx]));
+        const og = extractOgProduct(h, batch[idx]);
+        if (og) scraped.push(og);
+      });
+    }
+
+    // Deduplicate by name (case-insensitive), prefer entries with images.
+    const dedup = new Map<string, ScrapedProduct>();
+    for (const p of scraped) {
+      const key = p.name.toLowerCase();
+      const prev = dedup.get(key);
+      if (!prev || (!prev.image && p.image)) dedup.set(key, p);
+    }
+    const unique = Array.from(dedup.values());
+    if (unique.length === 0) {
+      return { found: 0, inserted: 0, skipped: 0, pages_scanned: scanned, sample: [] };
+    }
+
+    // Insert into products table (upsert on sku).
+    const rows = unique.map((p) => ({
+      workspace_id: ws,
+      sku: (p.sku && p.sku.trim()) || "WEB-" + Math.floor(Math.random() * 1e9).toString(36).toUpperCase(),
+      name: p.name.slice(0, 200),
+      category: "Website",
+      price: p.price,
+      currency: p.currency || "DZD",
+      stock: 0,
+      status: "draft" as const,
+      image_emoji: "🛍️",
+      description: [p.description, p.url ? `Source: ${p.url}` : null].filter(Boolean).join("\n\n") || null,
+    }));
+    const { data: inserted, error } = await context.supabase
+      .from("products")
+      .upsert(rows, { onConflict: "workspace_id,sku" })
+      .select("id");
+    if (error) throw new Error(error.message);
+
+    return {
+      found: unique.length,
+      inserted: inserted?.length ?? 0,
+      skipped: unique.length - (inserted?.length ?? 0),
+      pages_scanned: scanned,
+      sample: unique.slice(0, 5).map((p) => p.name),
+    };
+  });
