@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Send, Bot, Loader2, MessageCircle, RefreshCw, Trash2, CheckCircle2, AlertTriangle,
   Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag,
-  ExternalLink,
+  ExternalLink, ChevronDown,
 } from "lucide-react";
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import {
@@ -40,29 +40,25 @@ export function IntegrationsPage() {
         description="Everything you need in one place — Shopify, WooCommerce, any website, WhatsApp, Facebook, Instagram, Telegram, plus your own AI model endpoints. Every save runs a real handshake so you know it works."
       />
 
-      <Section
+      <ProviderPicker
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}
         title="Sales channels"
         blurb="Where your products live. Atlas syncs catalog, stock and orders from here."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {salesProviders.map((p) => (
-            <ProviderCard key={p.id} meta={p} initial={conns.find((c) => c.provider === p.id)} onChanged={invalidate} />
-          ))}
-        </div>
-      </Section>
+        providers={salesProviders}
+        conns={conns}
+        onChanged={invalidate}
+        placeholder="Select a sales channel to connect…"
+      />
 
-      <Section
+      <ProviderPicker
         icon={<MessageCircle className="h-5 w-5 text-primary" />}
         title="Messaging channels"
         blurb="Where your customers talk to you. Atlas replies here on your behalf."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {messagingProviders.map((p) => (
-            <ProviderCard key={p.id} meta={p} initial={conns.find((c) => c.provider === p.id)} onChanged={invalidate} />
-          ))}
-        </div>
-      </Section>
+        providers={messagingProviders}
+        conns={conns}
+        onChanged={invalidate}
+        placeholder="Select a messaging channel to connect…"
+      />
 
       <CustomModelsSection models={customModels} />
 
@@ -83,6 +79,56 @@ function Section({ icon, title, blurb, children }: { icon: React.ReactNode; titl
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{blurb}</p>
       </div>
       {children}
+    </section>
+  );
+}
+
+// ── Dropdown picker: one provider at a time ─────────────────
+function ProviderPicker({
+  icon, title, blurb, providers, conns, onChanged, placeholder,
+}: {
+  icon: React.ReactNode; title: string; blurb: string;
+  providers: ProviderMeta[]; conns: ProviderConnection[];
+  onChanged: () => void; placeholder: string;
+}) {
+  const connectedIds = new Set(conns.filter((c) => c.connected).map((c) => c.provider));
+  const firstConnected = providers.find((p) => connectedIds.has(p.id))?.id ?? "";
+  const [selected, setSelected] = useState<ProviderId | "">(firstConnected);
+  const meta = providers.find((p) => p.id === selected);
+  const initial = meta ? conns.find((c) => c.provider === meta.id) : undefined;
+
+  return (
+    <section>
+      <div className="mb-3">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">{icon} {title}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{blurb}</p>
+      </div>
+
+      <div className="relative mb-4 max-w-md">
+        <select
+          value={selected}
+          onChange={(e) => setSelected(e.target.value as ProviderId | "")}
+          className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 pr-9 text-sm outline-none focus:border-primary/50"
+        >
+          <option value="">{placeholder}</option>
+          {providers.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title}{connectedIds.has(p.id) ? "  ✓ connected" : ""}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      </div>
+
+      {meta ? (
+        <div className="max-w-2xl animate-in fade-in slide-in-from-top-1 duration-200">
+          <ProviderCard key={meta.id} meta={meta} initial={initial} onChanged={onChanged} />
+        </div>
+      ) : (
+        <Panel className="max-w-2xl text-sm text-muted-foreground">
+          Pick a channel above to see the fields you need to fill in.
+        </Panel>
+      )}
     </section>
   );
 }
