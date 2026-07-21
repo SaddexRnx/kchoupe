@@ -437,8 +437,17 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     .update({ last_message: visibleReply, unread_count: 0, updated_at: new Date().toISOString() })
     .eq("id", convoId);
 
-  // 9) Dispatch reply back to the originating platform
-  const mentioned = (!createdOrder && !msg.suppressProductCards) ? findMentionedProducts(reply, prodRes.data ?? []) : [];
+  // 9) Dispatch reply back to the originating platform.
+  // Only send product cards when the current user message shows product intent
+  // (not on greetings, not on confirmations, not right after an order was placed).
+  const userAsksProducts =
+    !isGreeting(msg.body) &&
+    !msg.suppressProductCards &&
+    !createdOrder &&
+    // reply must EXPLICITLY tag a SKU — prevents cards from surfacing on
+    // "hi" replies that only reference a name from catalog memory.
+    /\[[A-Z0-9\-_]{3,}\]/.test(reply);
+  const mentioned = userAsksProducts ? findMentionedProducts(reply, prodRes.data ?? []).slice(0, 2) : [];
   try {
     const threadId = msg.platformThreadId ?? msg.externalId;
     if (msg.channel === "telegram") {
