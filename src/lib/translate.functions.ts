@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({
   lang: z.enum(["fr", "ar"]),
@@ -13,9 +14,24 @@ const LANG_NAME: Record<"fr" | "ar", string> = {
   ar: "Arabic (العربية)",
 };
 
+// Simple in-process per-user rate limit to prevent credit drain via scripted
+// calls. Signed-in only; window is best-effort per server instance.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 20;
+const rateHits = new Map<string, number[]>();
+function checkRate(userId: string) {
+  const now = Date.now();
+  const arr = (rateHits.get(userId) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (arr.length >= RATE_MAX) throw new Error("Too many translation requests. Please slow down.");
+  arr.push(now);
+  rateHits.set(userId, arr);
+}
+
 export const translateBatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => Input.parse(input))
-  .handler(async ({ data }): Promise<{ translations: string[] }> => {
+  .handler(async ({ data, context }): Promise<{ translations: string[] }> => {
+    checkRate(context.userId);
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
     const gateway = createLovableAiGatewayProvider(key);

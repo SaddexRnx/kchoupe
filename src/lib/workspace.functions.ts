@@ -25,12 +25,17 @@ export const getMyWorkspace = createServerFn({ method: "GET" })
     return data as WorkspaceInfo;
   });
 
-const VALID_PLANS = new Set(["trial", "starter", "growth", "scale"]);
+// Only 'trial' can be self-activated. Paid tiers (starter/growth/scale)
+// require a verified billing event and must be set server-side by the
+// billing webhook handler — not accepted from the client.
+const SELF_SERVE_PLANS = new Set(["trial"]);
 
 export const activatePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { plan: string }) => {
-    if (!input?.plan || !VALID_PLANS.has(input.plan)) throw new Error("Invalid plan");
+    if (!input?.plan || !SELF_SERVE_PLANS.has(input.plan)) {
+      throw new Error("Paid plans require checkout. Please complete payment to upgrade.");
+    }
     return input;
   })
   .handler(async ({ data, context }): Promise<WorkspaceInfo> => {
