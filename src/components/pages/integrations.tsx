@@ -40,29 +40,25 @@ export function IntegrationsPage() {
         description="Everything you need in one place — Shopify, WooCommerce, any website, WhatsApp, Facebook, Instagram, Telegram, plus your own AI model endpoints. Every save runs a real handshake so you know it works."
       />
 
-      <Section
+      <ProviderPicker
         icon={<ShoppingBag className="h-5 w-5 text-primary" />}
         title="Sales channels"
         blurb="Where your products live. Atlas syncs catalog, stock and orders from here."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {salesProviders.map((p) => (
-            <ProviderCard key={p.id} meta={p} initial={conns.find((c) => c.provider === p.id)} onChanged={invalidate} />
-          ))}
-        </div>
-      </Section>
+        providers={salesProviders}
+        conns={conns}
+        onChanged={invalidate}
+        placeholder="Select a sales channel to connect…"
+      />
 
-      <Section
+      <ProviderPicker
         icon={<MessageCircle className="h-5 w-5 text-primary" />}
         title="Messaging channels"
         blurb="Where your customers talk to you. Atlas replies here on your behalf."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {messagingProviders.map((p) => (
-            <ProviderCard key={p.id} meta={p} initial={conns.find((c) => c.provider === p.id)} onChanged={invalidate} />
-          ))}
-        </div>
-      </Section>
+        providers={messagingProviders}
+        conns={conns}
+        onChanged={invalidate}
+        placeholder="Select a messaging channel to connect…"
+      />
 
       <CustomModelsSection models={customModels} />
 
