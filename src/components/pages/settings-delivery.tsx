@@ -7,8 +7,8 @@ import { useT } from "@/lib/i18n";
 
 export function DeliverySection() {
   const t = useT();
-  const toast = useToast();
-  const confirm = useConfirm();
+  const { push: toast } = useToast();
+  const { ask: confirm } = useConfirm();
   const qc = useQueryClient();
 
   const carriers = useQuery({ queryKey: ["carriers"], queryFn: () => listCarriers() });
@@ -177,7 +177,7 @@ export function DeliverySection() {
       )}
 
       {bulkOpen && (
-        <Modal onClose={() => setBulkOpen(false)} title={t("delivery.bulkPricing") || "Bulk pricing"}>
+        <Modal open={true} onClose={() => setBulkOpen(false)} title={t("delivery.bulkPricing") || "Bulk pricing"}>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{t("delivery.bulkDesc") || "Set the same fee for every Algerian wilaya. You can then fine-tune individual wilayas."}</p>
             <TextField label={t("delivery.homeFee") || "Home delivery fee (DZD)"} value={bulkFee} onChange={setBulkFee} />
@@ -203,7 +203,7 @@ function CarrierModal({ initial, onClose, onSave }: { initial: Partial<Carrier>;
   const [notes, setNotes] = useState(initial.notes ?? "");
   const [isDefault, setIsDefault] = useState(!!initial.is_default);
   return (
-    <Modal onClose={onClose} title={initial.id ? t("delivery.editCarrier") || "Edit carrier" : t("delivery.newCarrier") || "New carrier"}>
+    <Modal open={true} onClose={onClose} title={initial.id ? t("delivery.editCarrier") || "Edit carrier" : t("delivery.newCarrier") || "New carrier"}>
       <div className="space-y-3">
         <TextField label={t("delivery.name") || "Name"} value={name} onChange={setName} placeholder="Yalidine Alger, ZR Express, Manual…" />
         <div>
@@ -239,7 +239,7 @@ function ZoneModal({ initial, wilayas, existing, onClose, onSave }: {
   const [free, setFree] = useState(initial.free_shipping_threshold != null ? String(initial.free_shipping_threshold) : "");
   const [days, setDays] = useState(initial.estimated_days != null ? String(initial.estimated_days) : "");
   return (
-    <Modal onClose={onClose} title={initial.id ? "Edit zone" : t("delivery.addZone") || "Add zone"}>
+    <Modal open={true} onClose={onClose} title={initial.id ? "Edit zone" : t("delivery.addZone") || "Add zone"}>
       <div className="space-y-3">
         <div>
           <div className="mb-1.5 text-xs font-medium text-muted-foreground">{t("delivery.wilaya") || "Wilaya"}</div>
