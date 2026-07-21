@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHmac, timingSafeEqual } from "crypto";
+import { timingSafeEqual } from "crypto";
 
 // Telegram webhook per integration.
 // Register with Telegram: POST https://api.telegram.org/bot<TOKEN>/setWebhook
 //   { url: "<host>/api/public/webhooks/telegram/<integrationId>",
 //     secret_token: "<webhookSecret>" }
-// Telegram then sends every update with header
-//   X-Telegram-Bot-Api-Secret-Token: <webhookSecret>
 export const Route = createFileRoute("/api/public/webhooks/telegram/$integrationId")({
   server: {
     handlers: {
@@ -17,9 +15,10 @@ export const Route = createFileRoute("/api/public/webhooks/telegram/$integration
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: integ } = await supabaseAdmin.from("integrations")
-          .select("id,workspace_id,credentials,integration_key").eq("id", params.integrationId).maybeSingle();
+          .select("id,workspace_id,credentials,integration_key")
+          .eq("id", params.integrationId).maybeSingle();
         if (!integ || integ.integration_key !== "Telegram Bot") {
-          // Always 200 to Telegram so it doesn't disable the webhook.
+          // Always 200 so Telegram doesn't disable the webhook.
           return json({ ok: true });
         }
 
@@ -63,6 +62,3 @@ export const Route = createFileRoute("/api/public/webhooks/telegram/$integration
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json" } });
 }
-// helper referenced above
-const _unused = createHmac;
-void _unused;
