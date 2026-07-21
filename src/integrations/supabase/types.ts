@@ -119,26 +119,47 @@ export type Database = {
       }
       customers: {
         Row: {
+          channel: string | null
           created_at: string
+          display_name: string | null
           email: string | null
+          external_id: string | null
           id: string
+          last_seen_at: string | null
+          message_count: number
+          metadata: Json
           name: string | null
+          notes: string | null
           phone: string | null
           workspace_id: string
         }
         Insert: {
+          channel?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
+          external_id?: string | null
           id?: string
+          last_seen_at?: string | null
+          message_count?: number
+          metadata?: Json
           name?: string | null
+          notes?: string | null
           phone?: string | null
           workspace_id: string
         }
         Update: {
+          channel?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
+          external_id?: string | null
           id?: string
+          last_seen_at?: string | null
+          message_count?: number
+          metadata?: Json
           name?: string | null
+          notes?: string | null
           phone?: string | null
           workspace_id?: string
         }
@@ -158,9 +179,11 @@ export type Database = {
           ai_employee_name: string | null
           channel: string
           created_at: string
+          customer_id: string | null
           external_user: string
           id: string
           last_message: string | null
+          platform_thread_id: string | null
           status: string
           unread_count: number
           updated_at: string
@@ -171,9 +194,11 @@ export type Database = {
           ai_employee_name?: string | null
           channel?: string
           created_at?: string
+          customer_id?: string | null
           external_user: string
           id?: string
           last_message?: string | null
+          platform_thread_id?: string | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -184,9 +209,11 @@ export type Database = {
           ai_employee_name?: string | null
           channel?: string
           created_at?: string
+          customer_id?: string | null
           external_user?: string
           id?: string
           last_message?: string | null
+          platform_thread_id?: string | null
           status?: string
           unread_count?: number
           updated_at?: string
@@ -198,6 +225,13 @@ export type Database = {
             columns: ["ai_employee_id"]
             isOneToOne: false
             referencedRelation: "ai_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
