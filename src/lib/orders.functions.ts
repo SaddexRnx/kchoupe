@@ -246,7 +246,7 @@ export const dashboardExtras = createServerFn({ method: "GET" })
     const [ordersRes, productsRes, integRes, learnRes, ticketsRes, msgCountRes, recentOrdersRes] = await Promise.all([
       context.supabase.from("orders").select("status,amount,confirmed_by_ai,created_at").eq("workspace_id", ws),
       context.supabase.from("products").select("id,name,sold_30,price,currency,image_emoji,stock,sku").eq("workspace_id", ws),
-      context.supabase.from("integrations").select("provider,status,connected_at").eq("workspace_id", ws),
+      context.supabase.from("integrations").select("integration_key,status,last_test_status,last_test_at").eq("workspace_id", ws),
       context.supabase.from("workspace_learnings").select("id", { count: "exact", head: true }).eq("workspace_id", ws),
       context.supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("workspace_id", ws).in("status", ["open", "pending"]),
       context.supabase.from("inbox_messages").select("id", { count: "exact", head: true }).eq("workspace_id", ws),
