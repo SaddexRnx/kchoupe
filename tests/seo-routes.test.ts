@@ -60,6 +60,16 @@ function loadRoutes(): Route[] {
     if (!/createFileRoute\(/.test(src)) continue;
     const top = slug.split(/[/.]/)[0];
     const canonicalMatch = src.match(/rel:\s*['"]canonical['"]\s*,\s*href:\s*['"]([^'"]+)['"]/i);
+    // Fallback: `href: URL` referencing a top-level `const URL = "https://..."`.
+    let canonicalHref = canonicalMatch ? canonicalMatch[1] : null;
+    if (!canonicalHref && /rel:\s*['"]canonical['"]\s*,\s*href:\s*[A-Za-z_$][\w$]*/i.test(src)) {
+      const varMatch = src.match(/rel:\s*['"]canonical['"]\s*,\s*href:\s*([A-Za-z_$][\w$]*)/i);
+      if (varMatch) {
+        const constRe = new RegExp(`const\\s+${varMatch[1]}\\s*=\\s*['"]([^'"]+)['"]`);
+        const constMatch = src.match(constRe);
+        if (constMatch) canonicalHref = constMatch[1];
+      }
+    }
     routes.push({
       file: rel,
       slug,
