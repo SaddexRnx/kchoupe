@@ -36,7 +36,7 @@ export function Products() {
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [editing, setEditing] = useState<Row | null>(null);
-  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<{ id: string; x: number; y: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState({ name: "", category: "Beauty", price: "", stock: "", image: "📦" });
 
