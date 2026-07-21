@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Send, Bot, Loader2, MessageCircle, RefreshCw, Trash2, CheckCircle2, AlertTriangle,
-  Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag,
+  Plus, Cpu, Eye, EyeOff, PlugZap, ShieldCheck, TestTube2, Save, ShoppingBag, Pencil,
   ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
   FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
