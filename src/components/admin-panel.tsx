@@ -12,7 +12,7 @@ import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
   listAllConversations, listAllIntegrations, setUserAdmin, updateWorkspacePlan,
   deleteWorkspace, deleteUser, broadcastNotification,
-  adminSetBan, adminListBanStatus, adminReplyToTicket,
+  adminSetBan, adminListBanStatus, adminReplyToTicket, getUserDetails,
 } from "@/lib/admin.functions";
 import { listAllTickets, listTicketMessages, closeTicket } from "@/lib/support.functions";
 import {
@@ -556,7 +556,21 @@ function UsersTab() {
   const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => listFn() });
   const { data: bans = [] } = useQuery({ queryKey: ["admin", "bans"], queryFn: () => banStatusFn() });
   const banMap = new Map(bans.map((b: any) => [b.id, b]));
-  const { q, setQ, filtered } = useSearch(data ?? [], ["email", "display_name"]);
+  const { q, setQ, filtered } = useSearch(data ?? [], ["email", "display_name", "plans", "countries"]);
+  const [detailUser, setDetailUser] = useState<any | null>(null);
+
+  const totals = useMemo(() => {
+    const arr = (data ?? []) as any[];
+    return {
+      users: arr.length,
+      admins: arr.filter((u) => u.is_admin).length,
+      banned: arr.filter((u) => u.banned_at).length,
+      workspaces: arr.reduce((a, u) => a + Number(u.workspace_count ?? 0), 0),
+      revenue: arr.reduce((a, u) => a + Number(u.revenue ?? 0), 0),
+      orders: arr.reduce((a, u) => a + Number(u.order_count ?? 0), 0),
+      messages: arr.reduce((a, u) => a + Number(u.message_count ?? 0), 0),
+    };
+  }, [data]);
 
   const toggleAdmin = useMutation({
     mutationFn: (v: { userId: string; makeAdmin: boolean }) => setAdminFn({ data: v }),
@@ -574,91 +588,341 @@ function UsersTab() {
     onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
   });
 
+  const chip = (v: any) => <span className="tabular-nums font-semibold">{Number(v ?? 0).toLocaleString()}</span>;
+
   return (
     <div className="animate-fade-up space-y-4">
-      <SearchBar value={q} onChange={setQ} placeholder="Search by name or email…" />
+      {/* Rollup KPI rail across all users */}
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7">
+        {[
+          { label: "Users", value: totals.users },
+          { label: "Admins", value: totals.admins },
+          { label: "Banned", value: totals.banned },
+          { label: "Workspaces", value: totals.workspaces },
+          { label: "Orders", value: totals.orders },
+          { label: "Messages", value: totals.messages },
+          { label: "Revenue", value: totals.revenue },
+        ].map((k) => (
+          <div key={k.label} className="rounded-xl border border-white/[0.06] bg-card/40 px-3 py-2.5 backdrop-blur-xl">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{k.label}</div>
+            <div className="mt-0.5 font-display text-lg font-black tabular-nums leading-tight">{Number(k.value).toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+
+      <SearchBar value={q} onChange={setQ} placeholder="Search by name, email, plan or country…" />
       <TableShell>
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[1280px] text-sm">
           <thead className="border-b border-white/[0.06] text-left text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             <tr>
               <th className="px-4 py-3.5">User</th>
-              <th className="px-4 py-3.5">Joined</th>
-              <th className="px-4 py-3.5">Last seen</th>
-              <th className="px-4 py-3.5">Workspaces</th>
-              <th className="px-4 py-3.5">Role</th>
-              <th className="px-4 py-3.5 text-right">Actions</th>
+              <th className="px-3 py-3.5">Plan</th>
+              <th className="px-3 py-3.5">Country</th>
+              <th className="px-3 py-3.5 text-right">WS</th>
+              <th className="px-3 py-3.5 text-right">Bots</th>
+              <th className="px-3 py-3.5 text-right">Products</th>
+              <th className="px-3 py-3.5 text-right">Orders</th>
+              <th className="px-3 py-3.5 text-right">Revenue</th>
+              <th className="px-3 py-3.5 text-right">Conv.</th>
+              <th className="px-3 py-3.5 text-right">Msgs</th>
+              <th className="px-3 py-3.5 text-right">Integr.</th>
+              <th className="px-3 py-3.5 text-right">Tix</th>
+              <th className="px-3 py-3.5">Joined</th>
+              <th className="px-3 py-3.5">Last activity</th>
+              <th className="px-3 py-3.5">Role</th>
+              <th className="px-3 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-muted-foreground">Loading…</td></tr>}
-            {!isLoading && filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-muted-foreground">No users yet.</td></tr>}
-            {filtered.map((u) => (
-              <tr key={u.id} className="border-b border-white/[0.04] transition hover:bg-white/[0.03]">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 font-display text-xs font-bold uppercase">
-                      {(u.display_name || u.email || "?").slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">{u.display_name || "—"}</div>
-                      <div className="truncate text-xs text-muted-foreground">{u.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}</td>
-                <td className="px-4 py-3 tabular-nums">{u.workspace_count}</td>
-                <td className="px-4 py-3">
-                  {u.is_admin ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"><Crown className="h-3 w-3" /> Admin</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Member</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1.5">
-                    {banMap.get(u.id)?.banned_at && (
-                      <span title={banMap.get(u.id)?.ban_reason ?? "Banned"} className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-300">
-                        <Ban className="h-3 w-3" /> Banned
-                      </span>
+            {isLoading && <tr><td colSpan={16} className="px-4 py-8 text-center text-xs text-muted-foreground">Loading…</td></tr>}
+            {!isLoading && filtered.length === 0 && <tr><td colSpan={16} className="px-4 py-8 text-center text-xs text-muted-foreground">No users yet.</td></tr>}
+            {filtered.map((u: any) => {
+              const trialLeft = u.trial_ends_at ? Math.ceil((new Date(u.trial_ends_at).getTime() - Date.now()) / 86400_000) : null;
+              const last = u.last_activity_at ? new Date(u.last_activity_at) : null;
+              return (
+                <tr key={u.id} className="border-b border-white/[0.04] transition hover:bg-white/[0.03]">
+                  <td className="px-4 py-3">
+                    <button onClick={() => setDetailUser(u)} className="flex items-center gap-3 text-left">
+                      <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 font-display text-xs font-bold uppercase">
+                        {(u.display_name || u.email || "?").slice(0, 2)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{u.display_name || "—"}</div>
+                        <div className="truncate text-xs text-muted-foreground">{u.email}</div>
+                      </div>
+                    </button>
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="text-xs font-semibold capitalize">{u.plans || "—"}</div>
+                    {trialLeft !== null && u.plans?.includes("trial") && (
+                      <div className={`text-[10px] ${trialLeft < 3 ? "text-red-300" : "text-muted-foreground"}`}>{trialLeft > 0 ? `${trialLeft}d trial` : "expired"}</div>
                     )}
-                    <button
-                      onClick={() => toggleAdmin.mutate({ userId: u.id, makeAdmin: !u.is_admin })}
-                      className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] transition hover:-translate-y-0.5 hover:bg-white/[0.08]"
-                    >
-                      {u.is_admin ? <><UserMinus className="h-3 w-3" /> Demote</> : <><Crown className="h-3 w-3" /> Promote</>}
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const isBanned = !!banMap.get(u.id)?.banned_at;
-                        if (isBanned) { setBan.mutate({ userId: u.id, banned: false }); return; }
-                        const reason = window.prompt(`Ban ${u.email}?\nOptional reason:`);
-                        if (reason === null) return;
-                        setBan.mutate({ userId: u.id, banned: true, reason: reason || undefined });
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-300 transition hover:-translate-y-0.5 hover:bg-amber-500/20"
-                    >
-                      {banMap.get(u.id)?.banned_at ? <><ShieldOff className="h-3 w-3" /> Unban</> : <><Ban className="h-3 w-3" /> Ban</>}
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const ok = await confirm({ title: "Delete user?", body: `${u.email} will be permanently removed.`, danger: true });
-                        if (ok) del.mutate(u.id);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-300 transition hover:-translate-y-0.5 hover:bg-red-500/20"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{u.countries || "—"}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.workspace_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.employee_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.product_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.order_count)}</td>
+                  <td className="px-3 py-3 text-right font-semibold text-primary">{Number(u.revenue ?? 0).toLocaleString()}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.conversation_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.message_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.integration_count)}</td>
+                  <td className="px-3 py-3 text-right">{chip(u.ticket_count)}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className="px-3 py-3 text-xs text-muted-foreground">{last ? last.toLocaleDateString() : "Never"}</td>
+                  <td className="px-3 py-3">
+                    {u.is_admin ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"><Crown className="h-3 w-3" /> Admin</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Member</span>
+                    )}
+                    {banMap.get(u.id)?.banned_at && (
+                      <div className="mt-1"><span title={banMap.get(u.id)?.ban_reason ?? "Banned"} className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-300"><Ban className="h-3 w-3" /> Banned</span></div>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex justify-end gap-1.5">
+                      <button onClick={() => setDetailUser(u)} className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] transition hover:-translate-y-0.5 hover:bg-white/[0.08]">View</button>
+                      <button
+                        onClick={() => toggleAdmin.mutate({ userId: u.id, makeAdmin: !u.is_admin })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] transition hover:-translate-y-0.5 hover:bg-white/[0.08]"
+                      >
+                        {u.is_admin ? <UserMinus className="h-3 w-3" /> : <Crown className="h-3 w-3" />}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const isBanned = !!banMap.get(u.id)?.banned_at;
+                          if (isBanned) { setBan.mutate({ userId: u.id, banned: false }); return; }
+                          const reason = window.prompt(`Ban ${u.email}?\nOptional reason:`);
+                          if (reason === null) return;
+                          setBan.mutate({ userId: u.id, banned: true, reason: reason || undefined });
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-300 transition hover:-translate-y-0.5 hover:bg-amber-500/20"
+                      >
+                        {banMap.get(u.id)?.banned_at ? <ShieldOff className="h-3 w-3" /> : <Ban className="h-3 w-3" />}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const ok = await confirm({ title: "Delete user?", body: `${u.email} will be permanently removed.`, danger: true });
+                          if (ok) del.mutate(u.id);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-300 transition hover:-translate-y-0.5 hover:bg-red-500/20"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </TableShell>
+
+      {detailUser && (
+        <Modal open onClose={() => setDetailUser(null)} title={`${detailUser.display_name || detailUser.email}`}>
+          <UserDetails user={detailUser} />
+        </Modal>
+      )}
       {confirmNode}
     </div>
   );
+}
+
+function UserDetails({ user }: { user: any }) {
+  const fn = useServerFn(getUserDetails);
+  const { data, isLoading } = useQuery({ queryKey: ["admin", "user-details", user.id], queryFn: () => fn({ data: { userId: user.id } }) });
+
+  if (isLoading) return <div className="py-10 text-center text-sm text-muted-foreground">Loading full profile…</div>;
+  const d = (data ?? {}) as any;
+  const t = d.totals ?? {};
+  const wss = (d.workspaces ?? []) as any[];
+  const emps = (d.employees ?? []) as any[];
+  const orders = (d.recent_orders ?? []) as any[];
+  const convs = (d.recent_conversations ?? []) as any[];
+  const integs = (d.integrations ?? []) as any[];
+  const tix = (d.tickets ?? []) as any[];
+  const p = d.profile ?? {};
+
+  const Stat = ({ label, value, tone = "" }: { label: string; value: any; tone?: string }) => (
+    <div className="rounded-xl border border-white/[0.06] bg-card/40 px-3 py-2">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 font-display text-base font-black tabular-nums ${tone}`}>{typeof value === "number" ? value.toLocaleString() : (value ?? "—")}</div>
+    </div>
+  );
+
+  return (
+    <div className="max-h-[70vh] space-y-5 overflow-y-auto pr-1 text-sm">
+      {/* Identity */}
+      <div className="rounded-2xl border border-white/[0.06] bg-black/20 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-display text-lg font-bold">{p.display_name || user.display_name || "—"}</div>
+            <div className="text-xs text-muted-foreground">{p.email || user.email}</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              ID <span className="font-mono">{user.id.slice(0, 8)}…</span> · joined {new Date(user.created_at).toLocaleString()}
+              {p.email_confirmed_at ? " · email confirmed" : " · email unconfirmed"}
+            </div>
+            {p.locale && <div className="text-[11px] text-muted-foreground">Locale: {p.locale}</div>}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {p.is_admin && <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"><Crown className="h-3 w-3" /> Admin</span>}
+            {p.banned_at && <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-300"><Ban className="h-3 w-3" /> {p.ban_reason || "Banned"}</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Lifetime totals */}
+      <div>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Lifetime totals</div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+          <Stat label="Workspaces" value={t.workspaces} />
+          <Stat label="Employees" value={t.employees} />
+          <Stat label="Products" value={t.products} />
+          <Stat label="Orders" value={t.orders} />
+          <Stat label="Revenue" value={t.revenue} tone="text-primary" />
+          <Stat label="Conversations" value={t.conversations} />
+          <Stat label="Messages" value={t.messages} />
+          <Stat label="Integrations" value={t.integrations} />
+          <Stat label="Tickets" value={t.tickets} />
+          <Stat label="Knowledge" value={t.knowledge_sources} />
+        </div>
+      </div>
+
+      {/* Workspaces */}
+      <Section title={`Workspaces (${wss.length})`}>
+        {wss.length === 0 && <Empty>No workspaces.</Empty>}
+        <div className="space-y-2">
+          {wss.map((w) => (
+            <div key={w.id} className="rounded-xl border border-white/[0.06] bg-card/40 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-semibold">{w.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{w.country ?? "—"} · {w.currency} · <span className="capitalize">{w.plan}</span></div>
+                </div>
+                <div className="flex flex-wrap gap-2 text-[11px] tabular-nums">
+                  <Pill>{w.employees} bots</Pill>
+                  <Pill>{w.products} products</Pill>
+                  <Pill>{w.orders} orders</Pill>
+                  <Pill tone="primary">{Number(w.revenue).toLocaleString()} rev</Pill>
+                  <Pill>{w.conversations} conv</Pill>
+                  <Pill>{w.integrations} integr</Pill>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Employees */}
+      <Section title={`AI Employees (${emps.length})`}>
+        {emps.length === 0 && <Empty>No employees.</Empty>}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {emps.slice(0, 12).map((e) => (
+            <div key={e.id} className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-card/40 p-2.5 text-xs">
+              <span className="text-lg">{e.avatar_emoji || "🤖"}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold">{e.name}</div>
+                <div className="truncate text-[10px] text-muted-foreground">{e.role} · {e.model}</div>
+              </div>
+              <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] capitalize">{e.status}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Recent orders */}
+      <Section title={`Recent orders (${orders.length})`}>
+        {orders.length === 0 && <Empty>No orders.</Empty>}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-xs">
+            <thead className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+              <tr><th className="py-1.5">Order</th><th>Customer</th><th>Channel</th><th>Status</th><th className="text-right">Amount</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => (
+                <tr key={o.id} className="border-t border-white/[0.04]">
+                  <td className="py-1.5 font-mono text-[11px]">{o.order_no || o.id.slice(0, 6)}</td>
+                  <td className="text-muted-foreground">{o.customer_name || o.customer_email || "—"}</td>
+                  <td className="capitalize">{o.channel || "—"}</td>
+                  <td><span className="rounded-full bg-white/5 px-1.5 py-0.5 capitalize">{o.status}</span></td>
+                  <td className="text-right font-semibold tabular-nums">{Number(o.amount).toLocaleString()} {o.currency}</td>
+                  <td className="text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* Recent conversations */}
+      <Section title={`Recent conversations (${convs.length})`}>
+        {convs.length === 0 && <Empty>No conversations.</Empty>}
+        <div className="space-y-1.5">
+          {convs.map((c) => (
+            <div key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.04] bg-card/40 px-3 py-2 text-xs">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] capitalize">{c.channel}</span>
+                  <span className="truncate font-medium">{c.external_user || "—"}</span>
+                  {c.unread_count > 0 && <span className="rounded-full bg-accent/20 px-1.5 py-0.5 text-[10px] text-accent">{c.unread_count}</span>}
+                </div>
+                <div className="mt-0.5 truncate text-muted-foreground">{c.last_message || "—"}</div>
+              </div>
+              <div className="shrink-0 text-[10px] text-muted-foreground">{new Date(c.updated_at).toLocaleDateString()}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Integrations */}
+      <Section title={`Integrations (${integs.length})`}>
+        {integs.length === 0 && <Empty>No integrations connected.</Empty>}
+        <div className="flex flex-wrap gap-1.5">
+          {integs.map((i) => (
+            <span key={i.id} className="inline-flex items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[11px]">
+              <Plug className="h-3 w-3" /> {i.integration_key}
+              <span className={`ml-1 text-[10px] ${i.status === "connected" ? "text-emerald-300" : "text-muted-foreground"}`}>· {i.status}</span>
+            </span>
+          ))}
+        </div>
+      </Section>
+
+      {/* Tickets */}
+      <Section title={`Support tickets (${tix.length})`}>
+        {tix.length === 0 && <Empty>No tickets.</Empty>}
+        <div className="space-y-1.5">
+          {tix.map((t: any) => (
+            <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.04] bg-card/40 px-3 py-2 text-xs">
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{t.subject}</div>
+                <div className="text-[10px] text-muted-foreground">{new Date(t.created_at).toLocaleDateString()}</div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] capitalize ${t.priority === "urgent" ? "bg-red-500/10 text-red-300" : t.priority === "high" ? "bg-amber-500/10 text-amber-300" : "bg-white/5"}`}>{t.priority}</span>
+                <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] capitalize">{t.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{title}</div>
+      {children}
+    </div>
+  );
+}
+function Empty({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl border border-dashed border-white/[0.06] px-3 py-4 text-center text-xs text-muted-foreground">{children}</div>;
+}
+function Pill({ children, tone }: { children: React.ReactNode; tone?: "primary" }) {
+  return <span className={`rounded-full border px-2 py-0.5 ${tone === "primary" ? "border-primary/30 bg-primary/10 text-primary" : "border-white/[0.08] bg-white/[0.04]"}`}>{children}</span>;
 }
 
 function WorkspacesTab() {

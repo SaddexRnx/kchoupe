@@ -41,7 +41,22 @@ export const listAllUsers = createServerFn({ method: "GET" })
     return (data ?? []) as Array<{
       id: string; email: string; display_name: string | null; avatar_url: string | null;
       created_at: string; last_sign_in_at: string | null; is_admin: boolean; workspace_count: number;
+      employee_count: number; product_count: number; order_count: number; revenue: number;
+      conversation_count: number; message_count: number; integration_count: number; ticket_count: number;
+      plans: string | null; currencies: string | null; countries: string | null;
+      trial_ends_at: string | null; banned_at: string | null; ban_reason: string | null;
+      last_activity_at: string | null;
     }>;
+  });
+
+export const getUserDetails = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { userId: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data: res, error } = await context.supabase.rpc("admin_user_details", { _user_id: data.userId });
+    if (error) throw new Error(error.message);
+    return res as Record<string, any>;
   });
 
 export const listAllWorkspaces = createServerFn({ method: "GET" })
