@@ -5,6 +5,7 @@ import { PageHeader, Panel, Chip, Modal, GhostButton, PrimaryButton, TextField, 
 import { Download, Mail, RefreshCcw, Plus, Loader2, Zap, Eye, EyeOff, Save, Trash2, CheckCircle2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { listOrders, createOrder, updateOrder, deleteOrder, type OrderRow, type OrderStatus } from "@/lib/orders.functions";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 
 const STATUS_META: Record<OrderStatus, { label: string; tone: "emerald" | "amber" | "rose" | "muted" | "sky" | "violet" }> = {
   pending:   { label: "Pending",   tone: "amber" },
@@ -55,6 +56,31 @@ export function Orders() {
     const unseen = orders.filter((o) => !o.seen).length;
     return { mrr, week, counts, unseen, total: orders.length };
   }, [orders]);
+
+  const chartData = useMemo(() => {
+    const days = 14;
+    const buckets: { key: string; label: string; revenue: number; orders: number }[] = [];
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(start); d.setDate(start.getDate() - i);
+      buckets.push({ key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }), revenue: 0, orders: 0 });
+    }
+    const map = new Map(buckets.map((b) => [b.key, b]));
+    orders.forEach((o) => {
+      const k = new Date(o.created_at).toISOString().slice(0, 10);
+      const b = map.get(k); if (!b) return;
+      b.orders += 1;
+      if (o.status === "paid" || o.status === "delivered") b.revenue += Number(o.amount);
+    });
+    return buckets;
+  }, [orders]);
+
+  const pieData = useMemo(() =>
+    STATUS_ORDER.map((s) => ({ name: STATUS_META[s].label, value: stats.counts[s], status: s })).filter((d) => d.value > 0),
+    [stats.counts]);
+  const PIE_COLORS: Record<OrderStatus, string> = {
+    pending: "#f59e0b", paid: "#10b981", delivered: "#0ea5e9", cancelled: "#6b7280", returned: "#8b5cf6", refunded: "#f43f5e",
+  };
 
   const filtered = useMemo(() => {
     if (filter === "all") return orders;
@@ -169,7 +195,73 @@ export function Orders() {
         <Panel><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Unseen</div><div className="mt-1 font-display text-2xl font-bold">{stats.unseen}</div></Panel>
       </div>
 
-      {/* Status filter chips */}
+      <div className="mb-4 grid gap-3 lg:grid-cols-3">
+        <Panel className="lg:col-span-2">
+          <div className="mb-3 flex items-baseline justify-between">
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Revenue & orders</div>
+              <div className="font-display text-sm text-foreground/90">Last 14 days</div>
+            </div>
+            <div className="flex gap-3 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Revenue</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Orders</span>
+            </div>
+          </div>
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradOrd" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="rev" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} width={44} />
+                <YAxis yAxisId="ord" orientation="right" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
+                <Tooltip contentStyle={{ background: "rgba(15,15,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }} labelStyle={{ color: "rgba(255,255,255,0.7)" }} />
+                <Area yAxisId="rev" type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gradRev)" name="Revenue" />
+                <Area yAxisId="ord" type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={2} fill="url(#gradOrd)" name="Orders" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-3">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Status breakdown</div>
+            <div className="font-display text-sm text-foreground/90">{stats.total} orders</div>
+          </div>
+          {pieData.length === 0 ? (
+            <div className="flex h-56 items-center justify-center text-xs text-muted-foreground">No orders yet</div>
+          ) : (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2} stroke="none">
+                    {pieData.map((d) => <Cell key={d.status} fill={PIE_COLORS[d.status as OrderStatus]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "rgba(15,15,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+            {pieData.map((d) => (
+              <span key={d.status} className="inline-flex items-center gap-1 text-muted-foreground">
+                <span className="h-2 w-2 rounded-full" style={{ background: PIE_COLORS[d.status as OrderStatus] }} />
+                {d.name} <span className="opacity-60">{d.value}</span>
+              </span>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
       <div className="mb-4 flex flex-wrap gap-2">
         <button onClick={() => setFilter("all")} className={`rounded-full border px-3 py-1.5 text-xs transition ${filter === "all" ? "border-primary bg-primary/20 text-primary" : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10"}`}>
           All <span className="ml-1 opacity-70">{stats.total}</span>
