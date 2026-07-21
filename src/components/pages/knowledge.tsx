@@ -164,6 +164,12 @@ export function Knowledge() {
         }
       />
 
+      <HelpNote>
+        The <b>knowledge base</b> is what your AI employees read before replying. Add your website, help docs, FAQs, shipping
+        policy, or a plain-text snippet. Atlas splits it into chunks, indexes them semantically, and pulls the most relevant
+        pieces into every answer. Use <b>Test search</b> to preview what the AI will find for a given customer question.
+      </HelpNote>
+
       <Panel className="mb-4">
         <div className="flex items-center gap-3">
           <Search className="h-4 w-4 text-muted-foreground" />
