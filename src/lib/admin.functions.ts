@@ -147,6 +147,8 @@ export const setUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((i: { userId: string; makeAdmin: boolean }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
+    await enforceRateLimit(context.supabase, "auth_sensitive", { limit: 20, windowSeconds: 300 });
     if (data.makeAdmin) {
       const { error } = await context.supabase
         .from("user_roles")
@@ -161,6 +163,7 @@ export const setUserAdmin = createServerFn({ method: "POST" })
         .eq("role", "admin");
       if (error) throw new Error(error.message);
     }
+    await logAdmin(context.supabase, "admin_action", { action: "setUserAdmin", target: data.userId, makeAdmin: data.makeAdmin });
     return { ok: true };
   });
 
@@ -169,12 +172,14 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
   .inputValidator((i: { workspaceId: string; plan: string; extendDays?: number }) => i)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    await assert2FAFresh(context.supabase, context.userId);
     const patch: Record<string, any> = { plan: data.plan };
     if (data.extendDays && data.extendDays > 0) {
       patch.trial_ends_at = new Date(Date.now() + data.extendDays * 86400_000).toISOString();
     }
     const { error } = await (context.supabase.from("workspaces") as any).update(patch).eq("id", data.workspaceId);
     if (error) throw new Error(error.message);
+    await logAdmin(context.supabase, "admin_action", { action: "updateWorkspacePlan", target: data.workspaceId, plan: data.plan });
     return { ok: true };
   });
 
