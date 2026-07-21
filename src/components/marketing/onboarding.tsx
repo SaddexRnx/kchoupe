@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import {
   Sparkles, ArrowRight, ArrowLeft, Check, Store, MessageCircle, Instagram, Facebook,
-  Globe, Bot, Rocket, Languages, DollarSign, Send, SkipForward,
+  Globe, Bot, Rocket, Languages, DollarSign, Send, SkipForward, Loader2, TestTube2, X,
 } from "lucide-react";
 import { useToast } from "@/components/pages/_shared";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -90,6 +90,37 @@ export function Onboarding() {
   const [agentName, setAgentName] = useState("Nova");
   const [agentRole, setAgentRole] = useState("sales");
   const [launching, setLaunching] = useState(false);
+  const [tests, setTests] = useState<Record<string, { status: "idle" | "testing" | "ok" | "fail"; msg?: string }>>({});
+
+  const testChannel = async (chan: ChannelId) => {
+    const meta = CHANNEL_META[chan];
+    const filled = creds[chan] ?? {};
+    const missing = meta.fields.filter((f) => !(filled[f.key] ?? "").trim()).map((f) => f.label);
+    if (missing.length) {
+      setTests((t) => ({ ...t, [chan]: { status: "fail", msg: `Fill in: ${missing.join(", ")}` } }));
+      return;
+    }
+    setTests((t) => ({ ...t, [chan]: { status: "testing" } }));
+    // Lightweight local format checks per channel; full handshake happens on the Integrations page.
+    let ok = true; let msg = "Fields look valid — final handshake happens on Integrations.";
+    if (chan === "website") {
+      const url = (filled.domain ?? "").trim();
+      try { const u = new URL(url); if (!/^https?:$/.test(u.protocol)) throw new Error(); msg = `Format OK · ${u.hostname}`; }
+      catch { ok = false; msg = "Enter a full URL like https://your-shop.com"; }
+    } else if (chan === "telegram") {
+      const tok = (filled.botToken ?? "").trim();
+      if (!/^\d{6,}:[A-Za-z0-9_-]{20,}$/.test(tok)) { ok = false; msg = "Bot token should look like 123456:AA... from @BotFather"; }
+    } else if (chan === "shopify") {
+      const d = (filled.shopDomain ?? "").trim();
+      if (!/\.myshopify\.com$/i.test(d) && !/\./.test(d)) { ok = false; msg = "Use your-store.myshopify.com or your live domain"; }
+    } else if (chan === "whatsapp" || chan === "instagram" || chan === "facebook") {
+      const tok = (filled.accessToken ?? "").trim();
+      if (tok.length < 20) { ok = false; msg = "Access token looks too short — copy the full value from Meta"; }
+    }
+    await new Promise((r) => setTimeout(r, 400));
+    setTests((t) => ({ ...t, [chan]: { status: ok ? "ok" : "fail", msg } }));
+    toast.push({ kind: ok ? "success" : "warn", title: `${meta.label}: ${ok ? "looks good" : "issue"}`, body: msg });
+  };
 
   const toggleChannel = (c: ChannelId) =>
     setChannels((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
