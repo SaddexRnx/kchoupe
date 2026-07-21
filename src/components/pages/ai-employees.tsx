@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2, Loader2 } from "lucide-react";
+import { Bot, Plus, Sparkles, MessageSquare, TrendingUp, Zap, Play, Pause, Trash2, Settings2, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { PageHeader, Panel, Chip, Modal, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import { useT } from "@/lib/i18n";
 import {
@@ -11,9 +11,10 @@ import {
   deleteAiEmployee,
   type AiEmployeeRow,
 } from "@/lib/ai-employees.functions";
+import { listCustomModels, testCustomModel, type CustomModelRow } from "@/lib/custom-models.functions";
 
 const EMOJI = ["🚀", "🛎️", "🌿", "📡", "🪐", "💡", "🤖", "🧠", "✨", "🎯", "📚", "🛍️"];
-export const MODELS: { id: string; label: string }[] = [
+const BUILTIN_MODELS: { id: string; label: string }[] = [
   { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (fast, default)" },
   { id: "google/gemini-3.5-flash", label: "Gemini 3.5 Flash" },
   { id: "google/gemini-3.1-pro-preview", label: "Gemini 3.1 Pro" },
@@ -21,6 +22,7 @@ export const MODELS: { id: string; label: string }[] = [
   { id: "openai/gpt-5.5", label: "GPT-5.5" },
   { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra" },
 ];
+export const MODELS = BUILTIN_MODELS;
 
 const toneFor = (status: AiEmployeeRow["status"]): "violet" | "emerald" | "amber" | "muted" =>
   status === "active" ? "emerald" : status === "training" ? "amber" : "muted";
