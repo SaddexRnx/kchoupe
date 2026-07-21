@@ -48,30 +48,27 @@ function BlogPost() {
     <MarketingPage
       eyebrow="Guide · 8 min read"
       title="The future of AI in North African e-commerce"
-      intro="Conversational commerce on WhatsApp and Instagram is quietly rewriting how Algeria, Tunisia and Morocco buy online. Here is what merchants in the Maghreb need to know."
+      intro="Conversational commerce on WhatsApp and Instagram is quietly rewriting how Algeria, Tunisia and Morocco buy online. Here is the honest field report for Maghreb merchants — what changed, what works, and what to build next."
     >
       <p>
-        Walk through a souk in Algiers, Tunis or Casablanca and you will notice something a Shopify
-        dashboard will never capture: most sales happen in a conversation. A photo on Instagram, a
-        voice note on WhatsApp, a quick <em>"c'est combien ?"</em> in Darija. That same behaviour has
-        moved online — and it is the reason <strong>conversational AI e-commerce</strong> is
-        becoming the default operating model for North African shops.
+        In Algiers, Tunis and Casablanca, the storefront is a chat window. The customer scrolls
+        Instagram, taps a product, sends <em>"c'est combien ?"</em> in Darija — and expects a real
+        answer within minutes. That single behaviour, more than any Shopify template, is what
+        drives online sales in North Africa. It is also why <strong>conversational AI in
+        e-commerce</strong> stopped being a Silicon Valley demo and became a survival tool for
+        Maghreb shops.
       </p>
 
       <h2>Why the Maghreb skipped the classic web store</h2>
       <p>
-        In North America and Europe, e-commerce grew on top of desktop web stores, then bolted on
-        chat. In Algeria, Tunisia and Morocco the order was reversed. Buyers were already on
-        WhatsApp and Instagram before they were on any storefront. According to regional operators,
-        60–80% of online orders in the Maghreb start in a DM, not on a product page. Cash on
-        delivery still dominates, and shipping is negotiated, not automated.
+        Europe and North America grew e-commerce on top of desktop web stores and bolted chat on
+        later. The Maghreb did the opposite. Buyers were already on WhatsApp and Instagram before
+        they trusted any storefront. Regional operators put 60–80% of online orders inside a DM,
+        not on a product page. Cash on delivery still wins, and shipping is negotiated per wilaya,
+        not automated. The winning merchants in 2026 are the ones whose AI can answer in Arabic,
+        French and Darija without breaking character — at 2am, on a public holiday, in a group DM.
       </p>
-      <p>
-        That is exactly the environment where <strong>AI in e-commerce</strong> stops being a
-        gimmick and becomes essential. The store is a chat window. The bottleneck is human replies
-        at 11pm. And the winning merchants are the ones whose AI can answer in Arabic, French and
-        Darija without breaking character.
-      </p>
+
 
       <h2>What conversational commerce actually looks like in 2026</h2>
       <ul>
