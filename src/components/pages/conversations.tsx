@@ -31,7 +31,9 @@ export function Conversations() {
   const send = useServerFn(sendReply);
   const setStatus = useServerFn(updateConversationStatus);
 
+  const listProd = useServerFn(listProducts);
   const { data: convos = [], isLoading } = useQuery({ queryKey: ["inbox_conversations"], queryFn: () => list() });
+  const { data: products = [] } = useQuery({ queryKey: ["products"], queryFn: () => listProd() });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["inbox_conversations"] });
 
   const [q, setQ] = useState("");
