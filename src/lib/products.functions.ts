@@ -39,7 +39,7 @@ export const listProducts = createServerFn({ method: "GET" })
 export const createProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
-    name: string; category: string; price: number; stock: number; currency?: string; image_emoji?: string; sku?: string;
+    name: string; category: string; price: number; stock: number; currency?: string; image_emoji?: string; sku?: string; description?: string;
   }) => {
     if (!input?.name?.trim()) throw new Error("Name required");
     if (!Number.isFinite(input.price) || input.price < 0) throw new Error("Price required");
@@ -60,12 +60,47 @@ export const createProduct = createServerFn({ method: "POST" })
         stock: data.stock ?? 0,
         status: (data.stock ?? 0) > 0 ? "active" : "draft",
         image_emoji: data.image_emoji || "📦",
+        description: data.description ?? null,
       })
       .select("id,sku,name,category,price,currency,stock,status,image_emoji,sold_30,ai_sold,description,created_at")
       .single();
     if (error) throw new Error(error.message);
     return row as ProductRow;
   });
+
+export const bulkImportProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    items: { sku?: string; name: string; category?: string; price: number; stock?: number; currency?: string; image_emoji?: string; description?: string }[];
+  }) => {
+    if (!Array.isArray(input?.items) || !input.items.length) throw new Error("No rows to import");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number }> => {
+    const ws = await workspaceId(context);
+    const rows = data.items
+      .filter((r) => r.name?.trim() && Number.isFinite(r.price) && r.price >= 0)
+      .map((r) => ({
+        workspace_id: ws,
+        sku: r.sku?.trim() || "AT-" + Math.floor(1000 + Math.random() * 9000),
+        name: r.name.trim(),
+        category: r.category?.trim() || "Other",
+        price: r.price,
+        currency: r.currency?.trim() || "DZD",
+        stock: r.stock ?? 0,
+        status: ((r.stock ?? 0) > 0 ? "active" : "draft") as "active" | "draft",
+        image_emoji: r.image_emoji || "📦",
+        description: r.description ?? null,
+      }));
+    if (!rows.length) return { inserted: 0, skipped: data.items.length };
+    const { data: inserted, error } = await context.supabase
+      .from("products")
+      .upsert(rows, { onConflict: "workspace_id,sku" })
+      .select("id");
+    if (error) throw new Error(error.message);
+    return { inserted: inserted?.length ?? 0, skipped: data.items.length - (inserted?.length ?? 0) };
+  });
+
 
 export const updateProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
