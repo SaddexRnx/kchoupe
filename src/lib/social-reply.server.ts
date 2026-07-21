@@ -360,6 +360,33 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     }
   }
 
+  // 8b) Learning loop — when an order was just confirmed, distill a short lesson
+  //     from the last few turns and store it so future chats reuse the pattern.
+  if (createdOrder) {
+    try {
+      const turns = ((histRes.data ?? []) as any[]).slice(-10)
+        .map((m) => `${m.role === "agent" ? "AGENT" : "CUSTOMER"}: ${m.body}`).join("\n");
+      const distill = await generateText({
+        model,
+        system: "You extract ONE short reusable sales lesson (max 220 chars) from a customer chat that ended in a confirmed order. Focus on: what objection/hesitation appeared, what phrasing or product suggestion unlocked the sale, and any decisive info. Reply with the lesson only — no preface, no quotes.",
+        messages: [{ role: "user", content: `Channel: ${msg.channel}\nProduct: ${orderTag?.sku}\n\nTranscript:\n${turns}\n\nAGENT: ${reply}` }],
+      });
+      const lesson = (distill.text || "").trim().slice(0, 240);
+      if (lesson.length > 20) {
+        await supabaseAdmin.from("workspace_learnings").insert({
+          workspace_id: wsId,
+          channel: msg.channel,
+          customer_id: customer.id,
+          conversation_id: convoId,
+          lesson,
+          outcome: "order_confirmed",
+          score: 1,
+        });
+      }
+    } catch { /* learning is best-effort */ }
+  }
+
+
   // Strip [SKU] tokens from the visible reply (they're for our parser)
   const visibleReply = reply.replace(/\[[A-Z0-9\-_]{3,}\]/g, "").replace(/\s{2,}/g, " ").trim();
 
