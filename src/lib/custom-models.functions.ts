@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { safeFetch, SsrfBlockedError } from "@/lib/ssrf-guard.server";
 
 export type CustomModelRow = {
   id: string;
