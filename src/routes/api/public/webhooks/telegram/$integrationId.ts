@@ -30,6 +30,38 @@ export const Route = createFileRoute("/api/public/webhooks/telegram/$integration
           if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false }, 401);
         }
 
+        // Handle inline "Order" button taps
+        const cq = update.callback_query;
+        if (cq) {
+          const data: string = cq.data || "";
+          const chatId = cq.message?.chat?.id;
+          const token = creds.botToken;
+          if (token && chatId && data.startsWith("order:")) {
+            const sku = data.slice(6);
+            // ack the tap
+            await fetch(`https://api.telegram.org/bot${encodeURIComponent(token)}/answerCallbackQuery`, {
+              method: "POST", headers: { "content-type": "application/json" },
+              body: JSON.stringify({ callback_query_id: cq.id, text: "Great choice! 🛒" }),
+            }).catch(() => {});
+            // funnel back through the AI so it asks for details + emits the ORDER tag
+            try {
+              const { handleInbound } = await import("@/lib/social-reply.server");
+              const from = cq.from || {};
+              await handleInbound({
+                integrationId: integ.id,
+                channel: "telegram",
+                externalId: String(from.id ?? chatId),
+                displayName: [from.first_name, from.last_name].filter(Boolean).join(" ") || from.username || `chat ${chatId}`,
+                handle: from.username ? `@${from.username}` : null,
+                body: `I want to order [${sku}]. Please guide me.`,
+                platformThreadId: String(chatId),
+                botToken: token,
+              });
+            } catch (e: any) { console.error("telegram callback handle:", e?.message || e); }
+          }
+          return json({ ok: true });
+        }
+
         const message = update.message ?? update.edited_message ?? update.channel_post;
         const chatId = message?.chat?.id;
         const text: string = (message?.text ?? message?.caption ?? "").toString();
