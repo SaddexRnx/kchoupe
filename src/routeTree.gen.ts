@@ -31,6 +31,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicWebhooksInboundRouteImport } from './routes/api/public/webhooks/inbound'
+import { Route as ApiPublicWebhooksTelegramIntegrationIdRouteImport } from './routes/api/public/webhooks/telegram/$integrationId'
+import { Route as ApiPublicWebhooksMetaIntegrationIdRouteImport } from './routes/api/public/webhooks/meta/$integrationId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -143,6 +145,18 @@ const ApiPublicWebhooksInboundRoute =
     path: '/api/public/webhooks/inbound',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksTelegramIntegrationIdRoute =
+  ApiPublicWebhooksTelegramIntegrationIdRouteImport.update({
+    id: '/api/public/webhooks/telegram/$integrationId',
+    path: '/api/public/webhooks/telegram/$integrationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksMetaIntegrationIdRoute =
+  ApiPublicWebhooksMetaIntegrationIdRouteImport.update({
+    id: '/api/public/webhooks/meta/$integrationId',
+    path: '/api/public/webhooks/meta/$integrationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -167,6 +181,8 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
+  '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
+  '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,6 +207,8 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
+  '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
+  '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -216,6 +234,8 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/api/public/webhooks/inbound': typeof ApiPublicWebhooksInboundRoute
+  '/api/public/webhooks/meta/$integrationId': typeof ApiPublicWebhooksMetaIntegrationIdRoute
+  '/api/public/webhooks/telegram/$integrationId': typeof ApiPublicWebhooksTelegramIntegrationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -242,6 +262,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/api/public/webhooks/inbound'
+    | '/api/public/webhooks/meta/$integrationId'
+    | '/api/public/webhooks/telegram/$integrationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -266,6 +288,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/api/public/webhooks/inbound'
+    | '/api/public/webhooks/meta/$integrationId'
+    | '/api/public/webhooks/telegram/$integrationId'
   id:
     | '__root__'
     | '/'
@@ -290,6 +314,8 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/api/public/webhooks/inbound'
+    | '/api/public/webhooks/meta/$integrationId'
+    | '/api/public/webhooks/telegram/$integrationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,6 +341,8 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   ApiPublicWebhooksInboundRoute: typeof ApiPublicWebhooksInboundRoute
+  ApiPublicWebhooksMetaIntegrationIdRoute: typeof ApiPublicWebhooksMetaIntegrationIdRoute
+  ApiPublicWebhooksTelegramIntegrationIdRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -473,6 +501,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksInboundRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/telegram/$integrationId': {
+      id: '/api/public/webhooks/telegram/$integrationId'
+      path: '/api/public/webhooks/telegram/$integrationId'
+      fullPath: '/api/public/webhooks/telegram/$integrationId'
+      preLoaderRoute: typeof ApiPublicWebhooksTelegramIntegrationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/meta/$integrationId': {
+      id: '/api/public/webhooks/meta/$integrationId'
+      path: '/api/public/webhooks/meta/$integrationId'
+      fullPath: '/api/public/webhooks/meta/$integrationId'
+      preLoaderRoute: typeof ApiPublicWebhooksMetaIntegrationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -499,6 +541,10 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   ApiPublicWebhooksInboundRoute: ApiPublicWebhooksInboundRoute,
+  ApiPublicWebhooksMetaIntegrationIdRoute:
+    ApiPublicWebhooksMetaIntegrationIdRoute,
+  ApiPublicWebhooksTelegramIntegrationIdRoute:
+    ApiPublicWebhooksTelegramIntegrationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

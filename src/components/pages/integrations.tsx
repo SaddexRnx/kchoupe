@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm } from "./_shared";
 import {
-  PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection,
+  PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection, configureMessagingWebhook,
   disconnectProviderConnection, scrapeWebsiteProducts,
   type ProviderConnection, type ProviderId, type ProviderMeta,
   type PingCode,
@@ -257,9 +257,11 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
   const test = useServerFn(testProviderConnection);
   const disc = useServerFn(disconnectProviderConnection);
   const scrape = useServerFn(scrapeWebsiteProducts);
+  const cfgHook = useServerFn(configureMessagingWebhook);
   const [creds, setCreds] = useState<Record<string, string>>({});
   const [reveal, setReveal] = useState<Record<string, boolean>>({});
-  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | null>(null);
+  const [busy, setBusy] = useState<"save" | "test" | "disc" | "scrape" | "hook" | null>(null);
+  const [hookInfo, setHookInfo] = useState<{ url: string; verify_token: string | null; registered: boolean; message: string } | null>(null);
 
   const connected = !!initial?.connected;
   const hasCreds = !!initial?.has_credentials;
@@ -313,6 +315,17 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
       toast.push({ kind: "error", title: "Scrape failed", body: e?.message });
     } finally { setBusy(null); }
   };
+  const handleRegisterHook = async () => {
+    setBusy("hook");
+    try {
+      const r = await cfgHook({ data: { provider: meta.id as any, appOrigin: window.location.origin } });
+      setHookInfo({ url: r.webhook_url, verify_token: r.verify_token, registered: r.registered, message: r.message });
+      toast.push({ kind: r.registered || meta.id !== "telegram" ? "success" : "error", title: r.registered ? "Webhook registered" : "Webhook ready", body: r.message });
+    } catch (e: any) {
+      toast.push({ kind: "error", title: "Webhook setup failed", body: e?.message });
+    } finally { setBusy(null); }
+  };
+  const isMessaging = meta.id === "telegram" || meta.id === "instagram" || meta.id === "facebook_page";
 
   return (
     <Panel className="flex flex-col gap-4">
@@ -385,12 +398,26 @@ function ProviderCard({ meta, initial, onChanged }: { meta: ProviderMeta; initia
                 Custom websites only expose product name, price, description and image. Stock levels can't be detected — imported items start at <span className="font-semibold">0 stock / draft</span>. Update them from the Products page.
               </div>
             )}
+            {isMessaging && (
+              <GhostButton onClick={handleRegisterHook}>
+                {busy === "hook" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                {meta.id === "telegram" ? "Register webhook" : "Get webhook URL"}
+              </GhostButton>
+            )}
             <GhostButton onClick={handleDisconnect} tone="danger">
               <Trash2 className="h-4 w-4" /> Disconnect
             </GhostButton>
           </>
         )}
       </div>
+      {hookInfo && (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-[11px] leading-relaxed">
+          <div className="mb-1 font-medium">{hookInfo.registered ? "✓ Webhook active" : "Webhook endpoint"}</div>
+          <div className="break-all font-mono text-[10.5px]">{hookInfo.url}</div>
+          {hookInfo.verify_token && <div className="mt-1">Verify token: <span className="font-mono">{hookInfo.verify_token}</span></div>}
+          <div className="mt-1 text-muted-foreground">{hookInfo.message}</div>
+        </div>
+      )}
       {node}
     </Panel>
   );

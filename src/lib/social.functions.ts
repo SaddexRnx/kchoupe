@@ -753,3 +753,83 @@ export const scrapeWebsiteProducts = createServerFn({ method: "POST" })
       log,
     };
   });
+
+// ── Messaging webhook configuration (Telegram + Meta) ──────────
+import { randomBytes } from "crypto";
+
+export type WebhookInfo = {
+  provider: ProviderId;
+  webhook_url: string;
+  verify_token: string | null;   // meta only
+  registered: boolean;
+  message: string;
+};
+
+export const configureMessagingWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { provider: ProviderId; appOrigin: string }) => {
+    if (!input?.provider) throw new Error("provider required");
+    if (!/^https?:\/\//.test(input.appOrigin || "")) throw new Error("appOrigin required (https://…)");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<WebhookInfo> => {
+    const ws = await workspaceId(context);
+    const { data: integ } = await context.supabase
+      .from("integrations")
+      .select("id,credentials")
+      .eq("workspace_id", ws).eq("integration_key", KEY_OF[data.provider])
+      .maybeSingle();
+    if (!integ) throw new Error("Save credentials first.");
+
+    const origin = data.appOrigin.replace(/\/+$/, "");
+    const creds: any = { ...(integ.credentials as any || {}) };
+
+    if (data.provider === "telegram") {
+      if (!creds.botToken) throw new Error("Missing bot token.");
+      if (!creds.webhookSecret) creds.webhookSecret = randomBytes(24).toString("hex");
+      const url = `${origin}/api/public/webhooks/telegram/${integ.id}`;
+      const r = await fetch(`https://api.telegram.org/bot${encodeURIComponent(creds.botToken)}/setWebhook`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url, secret_token: creds.webhookSecret, allowed_updates: ["message", "edited_message"] }),
+      });
+      const j: any = await r.json().catch(() => ({}));
+      const ok = r.ok && j?.ok;
+      await context.supabase.from("integrations").update({ credentials: creds }).eq("id", integ.id);
+      return {
+        provider: data.provider, webhook_url: url, verify_token: null,
+        registered: !!ok, message: ok ? `Telegram is now delivering messages here.` : (j?.description || `Telegram rejected the webhook (HTTP ${r.status}).`),
+      };
+    }
+
+    if (data.provider === "instagram" || data.provider === "facebook_page") {
+      if (!creds.webhookVerifyToken) creds.webhookVerifyToken = randomBytes(16).toString("hex");
+      const url = `${origin}/api/public/webhooks/meta/${integ.id}`;
+      await context.supabase.from("integrations").update({ credentials: creds }).eq("id", integ.id);
+      return {
+        provider: data.provider, webhook_url: url, verify_token: creds.webhookVerifyToken,
+        registered: false,
+        message: `Add this URL + Verify Token in Meta Developers → Webhooks (${data.provider === "instagram" ? "instagram" : "messenger"} product).`,
+      };
+    }
+
+    throw new Error("Provider does not support inbound webhooks.");
+  });
+
+export const getMessagingWebhookInfo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { provider: ProviderId }) => input)
+  .handler(async ({ data, context }) => {
+    const ws = await workspaceId(context);
+    const { data: integ } = await context.supabase
+      .from("integrations").select("id,credentials")
+      .eq("workspace_id", ws).eq("integration_key", KEY_OF[data.provider]).maybeSingle();
+    if (!integ) return null;
+    const creds: any = integ.credentials || {};
+    return {
+      integration_id: integ.id,
+      has_webhook_secret: !!creds.webhookSecret,
+      has_verify_token: !!creds.webhookVerifyToken,
+      verify_token: creds.webhookVerifyToken ?? null,
+    };
+  });
