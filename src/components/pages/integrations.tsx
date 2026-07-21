@@ -7,7 +7,7 @@ import {
   ExternalLink, ChevronDown, Wifi, KeyRound, Ban, SearchX, Gauge, ServerCrash,
   FileWarning, Link2Off, HelpCircle, Clock, Timer, Copy,
 } from "lucide-react";
-import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm } from "./_shared";
+import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, Modal, useToast, useConfirm, HelpNote } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection, configureMessagingWebhook,
   disconnectProviderConnection, scrapeWebsiteProducts,
