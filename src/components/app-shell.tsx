@@ -81,6 +81,7 @@ function AppShellInner({ active, children }: { active: NavKey; children: ReactNo
           <div className="mt-6">{children}</div>
         </main>
       </div>
+      <AdminAlertPopup />
     </div>
   );
 }
