@@ -548,10 +548,14 @@ function UsersTab() {
   const listFn = useServerFn(listAllUsers);
   const setAdminFn = useServerFn(setUserAdmin);
   const deleteFn = useServerFn(deleteUser);
+  const banFn = useServerFn(adminSetBan);
+  const banStatusFn = useServerFn(adminListBanStatus);
   const qc = useQueryClient();
   const toast = useToast();
   const { ask: confirm, node: confirmNode } = useConfirm();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => listFn() });
+  const { data: bans = [] } = useQuery({ queryKey: ["admin", "bans"], queryFn: () => banStatusFn() });
+  const banMap = new Map(bans.map((b: any) => [b.id, b]));
   const { q, setQ, filtered } = useSearch(data ?? [], ["email", "display_name"]);
 
   const toggleAdmin = useMutation({
@@ -559,10 +563,16 @@ function UsersTab() {
     onSuccess: () => { toast.push({ kind: "success", title: "Role updated" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
     onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
   });
+  const setBan = useMutation({
+    mutationFn: (v: { userId: string; banned: boolean; reason?: string }) => banFn({ data: v }),
+    onSuccess: (_r, v) => { toast.push({ kind: "success", title: v.banned ? "User banned" : "User unbanned" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
+    onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
+  });
   const del = useMutation({
     mutationFn: (userId: string) => deleteFn({ data: { userId } }),
     onSuccess: () => { toast.push({ kind: "success", title: "User deleted" }); qc.invalidateQueries({ queryKey: ["admin"] }); },
     onError: (e: any) => toast.push({ kind: "error", title: "Failed", body: e?.message }),
+  });
   });
 
   return (
