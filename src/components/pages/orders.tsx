@@ -373,6 +373,8 @@ export function Orders() {
                 ))}
               </div>
             </div>
+            <ShipmentBlock order={viewing} onSaved={() => refetch?.()} />
+
 
             <div>
               <div className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">Private note</div>
