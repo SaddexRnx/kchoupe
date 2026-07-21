@@ -1,379 +1,466 @@
 <div align="center">
 
-# ✨ KC
+# KC
 
-### The AI workforce for North African commerce.
+**The AI workforce for North African commerce.**
 
-Trilingual (🇬🇧 English · 🇫🇷 Français · 🇩🇿 العربية) AI employees that answer, upsell and close orders across WhatsApp, Instagram, Telegram and your store — while you sleep.
+Trilingual AI employees (Arabic · French · English) that sell, support, and grow
+your store 24/7 across WhatsApp, Instagram, Messenger and Telegram.
 
-[![TanStack Start](https://img.shields.io/badge/TanStack-Start-EF4444?style=flat-square)](https://tanstack.com/start)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
-[![Tailwind v4](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-black?style=flat-square)](#-license)
+<sub>Built with TanStack Start · React 19 · Tailwind v4 · Supabase · Cloudflare Workers</sub>
 
 </div>
 
 ---
 
-## 📚 Table of contents
+## Table of contents
 
-- [What is KC?](#-what-is-kc-ai)
-- [Dual theme — dark & light](#-dual-theme--dark--light)
-- [Marketing surfaces](#-marketing-surfaces)
-- [Authentication](#-authentication)
-- [In-app pages, one by one](#-in-app-pages-one-by-one)
-- [Admin panel](#-admin-panel)
-- [Tech stack](#-tech-stack)
-- [Getting started](#-getting-started)
-- [Project structure](#-project-structure)
-- [One-click publish to GitHub](#-one-click-publish-to-github)
-- [Scripts](#-scripts)
-- [License](#-license)
-
----
-
-## 🌍 What is KC?
-
-KC is an all-in-one commerce cockpit built for shops in **Algeria, Tunisia and Morocco**. It gives every store an AI workforce that:
-
-- **Answers** customer DMs in Arabic, Darija, French and English — round the clock.
-- **Recommends** real products from your catalog, with tap-to-order product cards.
-- **Closes** orders with local payment rails (CIB, BaridiMob, Flouci, CMI, Cash on Delivery).
-- **Learns** from every confirmed sale so the whole workforce gets sharper.
-- **Reports** revenue, CSAT, escalations and channel performance in real time.
-
-Everything is designed to feel native to the region — RTL Arabic, DZD/TND/MAD, WhatsApp-first — not a Silicon Valley SaaS translated as an afterthought.
+- [What is KC?](#what-is-kc)
+- [Screenshots](#screenshots)
+- [Feature tour](#feature-tour)
+  - [Marketing site](#marketing-site)
+  - [Auth & onboarding](#auth--onboarding)
+  - [Dashboard](#dashboard)
+  - [AI Employees](#ai-employees)
+  - [Products & catalog](#products--catalog)
+  - [Orders & delivery](#orders--delivery)
+  - [Conversations & inbox](#conversations--inbox)
+  - [Integrations hub](#integrations-hub)
+  - [Knowledge base](#knowledge-base)
+  - [Playground](#playground)
+  - [Settings](#settings)
+  - [Support](#support)
+  - [Admin panel](#admin-panel)
+- [Architecture](#architecture)
+- [Local development](#local-development)
+- [Environment variables](#environment-variables)
+- [Project structure](#project-structure)
+- [Security & privacy](#security--privacy)
+- [License](#license)
 
 ---
 
-## 🎨 Dual theme — dark & light
+## What is KC?
 
-Both modes are first-class. Toggle with the sun/moon button in any navigation surface; the choice persists per user.
+KC is a full-stack conversational-commerce platform tailored for shops in
+Algeria, Tunisia and Morocco. Store owners build **AI employees** that answer
+customers, recommend products from their catalog, take orders, and hand off to
+humans when needed — all in the customer's own language, on the channels the
+customer already uses.
 
-<table>
-  <tr>
-    <td align="center"><b>🌙 Dark</b></td>
-    <td align="center"><b>☀️ Light</b></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/landing-dark.png" alt="Landing — dark" /></td>
-    <td><img src="docs/screenshots/landing-light.png" alt="Landing — light" /></td>
-  </tr>
-</table>
+Highlights:
+
+- **Native to the region** — 58 Algerian wilayas, COD/CIB/BaridiMob/Flouci/CMI,
+  Arabic (Darija-aware), French, English out of the box.
+- **Bring-your-own model** — OpenAI-compatible endpoints, Claude, Mistral,
+  Gemini, or the built-in Lovable AI Gateway.
+- **Everything in one workspace** — catalog, orders, conversations, delivery,
+  knowledge, analytics, billing and admin.
+- **Real-time & offline-friendly** — Supabase Realtime, PWA install prompt,
+  optimistic UI.
 
 ---
 
-## 🚀 Marketing surfaces
+## Screenshots
 
-Fully SSR-rendered, indexable, with per-route metadata + JSON-LD, robots.txt, sitemap.xml and an llms.txt for AI crawlers.
+Every surface ships in both a dark and a clean white theme.
 
-### Landing page
-Aurora hero, product tour, integrations grid, pricing, FAQ, footer nav — every button routes to a real destination.
+### Landing
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/landing-dark.png" alt="Landing — dark" /></td>
-    <td><img src="docs/screenshots/landing-light.png" alt="Landing — light" /></td>
-  </tr>
-</table>
+| Dark | Light |
+| --- | --- |
+| ![Landing dark](docs/screenshots/landing-dark.png) | ![Landing light](docs/screenshots/landing-light.png) |
 
 ### Pricing
-14-day free trial on every paid plan; trial state is enforced in the app and blocks premium features when it expires.
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/pricing-dark.png" alt="Pricing — dark" /></td>
-    <td><img src="docs/screenshots/pricing-light.png" alt="Pricing — light" /></td>
-  </tr>
-</table>
+| Dark | Light |
+| --- | --- |
+| ![Pricing dark](docs/screenshots/pricing-dark.png) | ![Pricing light](docs/screenshots/pricing-light.png) |
 
 ### About & Contact
-Team story, mission and a working contact form that files a support ticket in the admin queue.
 
-<table>
-  <tr>
-    <td align="center"><b>About</b></td>
-    <td align="center"><b>Contact</b></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/about-dark.png" alt="About — dark" /></td>
-    <td><img src="docs/screenshots/contact-dark.png" alt="Contact — dark" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/about-light.png" alt="About — light" /></td>
-    <td><img src="docs/screenshots/contact-light.png" alt="Contact — light" /></td>
-  </tr>
-</table>
-
----
-
-## 🔐 Authentication
-
-Email + password with confirmation, Google OAuth (one-click), and a full **Reset password** flow. Role-based routing sends admins to `/admin` and merchants to `/dashboard`. Every server function is guarded by `requireSupabaseAuth` middleware; the workspace is auto-provisioned on first sign-in via a Postgres trigger.
-
-<table>
-  <tr>
-    <td align="center"><b>Sign in</b></td>
-    <td align="center"><b>Sign up</b></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/login-dark.png" alt="Login — dark" /></td>
-    <td><img src="docs/screenshots/signup-dark.png" alt="Signup — dark" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/login-light.png" alt="Login — light" /></td>
-    <td><img src="docs/screenshots/signup-light.png" alt="Signup — light" /></td>
-  </tr>
-</table>
-
----
-
-## 🧭 In-app pages, one by one
-
-### 📊 Dashboard — command center
-Personalized welcome, live KPI tiles (revenue, orders by AI, live chats, CSAT), a **Conversation Volume** chart with 1D/7D/30D/90D toggles, "Since you were away" summary, AI suggestions ("Train Ember on your new fall catalog"), and live channel feeds.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/dashboard-dark.png" alt="Dashboard — dark" /></td>
-    <td><img src="docs/screenshots/dashboard-light.png" alt="Dashboard — light" /></td>
-  </tr>
-</table>
-
-### 🤖 AI Employees
-Create, edit and deploy AI teammates. Pick a **model** (Lovable AI, OpenRouter, Gemini, any OpenAI-compatible endpoint), tone, language, escalation rules and product scope. Live connection chip verifies the model key works before you publish.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/ai-employees-dark.png" alt="AI Employees — dark" /></td>
-    <td><img src="docs/screenshots/ai-employees-light.png" alt="AI Employees — light" /></td>
-  </tr>
-</table>
-
-### 🛍️ Products
-Full CRUD catalog with images, variants, stock and channel visibility. Bulk import via **website scraper** (Shopify JSON, sitemap discovery, plain HTML fallback) with an honest "stock unknown — check site" warning for scraped items. Compact card grid; the "more" menu is portal-rendered so it never gets covered.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/products-dark.png" alt="Products — dark" /></td>
-    <td><img src="docs/screenshots/products-light.png" alt="Products — light" /></td>
-  </tr>
-</table>
-
-### 📦 Orders
-Full order pipeline: **new → confirmed → packed → shipped → delivered → cancelled/refunded**, with revenue chart, status stats, bulk actions, channel origin (WhatsApp/IG/Telegram/Web), and a side drawer for private notes and full order history.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/orders-dark.png" alt="Orders — dark" /></td>
-    <td><img src="docs/screenshots/orders-light.png" alt="Orders — light" /></td>
-  </tr>
-</table>
-
-### 💬 Conversations (Inbox)
-Unified inbox across all channels. Threaded messages, human takeover, sentiment tags, escalation flags, live typing indicators, and inline **product cards** the customer can tap to order without leaving the chat.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/conversations-dark.png" alt="Conversations — dark" /></td>
-    <td><img src="docs/screenshots/conversations-light.png" alt="Conversations — light" /></td>
-  </tr>
-</table>
-
-### 🔌 Integrations
-Connect **WhatsApp, Instagram, Facebook Messenger, Telegram** with signed-webhook handshake. Bring-your-own-key **Model Manager** for OpenRouter / Gemini / OpenAI-compatible providers with live latency + token cost check. Website scraper, Shopify sync, and a webhook inspector.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/integrations-dark.png" alt="Integrations — dark" /></td>
-    <td><img src="docs/screenshots/integrations-light.png" alt="Integrations — light" /></td>
-  </tr>
-</table>
-
-### 📚 Knowledge base
-Upload PDFs, docs, FAQs and URLs. Files are chunked, embedded and served as grounding context to the AI. RLS-protected storage bucket with signed URLs for previews.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/knowledge-dark.png" alt="Knowledge — dark" /></td>
-    <td><img src="docs/screenshots/knowledge-light.png" alt="Knowledge — light" /></td>
-  </tr>
-</table>
-
-### 🧪 Playground
-Live chat sandbox to test any AI employee against your catalog before going live. Shows the raw tool calls, product matches and reasoning trace so you can debug prompts fast.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/playground-dark.png" alt="Playground — dark" /></td>
-    <td><img src="docs/screenshots/playground-light.png" alt="Playground — light" /></td>
-  </tr>
-</table>
-
-### 🎫 Support
-Direct line from merchants to admin. Threaded conversations, attachments, status (open / waiting / resolved) and realtime updates via Supabase channels.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/support-dark.png" alt="Support — dark" /></td>
-    <td><img src="docs/screenshots/support-light.png" alt="Support — light" /></td>
-  </tr>
-</table>
-
-### ⚙️ Settings
-Workspace profile, team roles, language (EN / FR / AR with RTL), theme (dark / light + 11 accent palettes), motion preferences, notification channels, billing plan and API keys.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/settings-dark.png" alt="Settings — dark" /></td>
-    <td><img src="docs/screenshots/settings-light.png" alt="Settings — light" /></td>
-  </tr>
-</table>
-
----
-
-## 👑 Admin panel
-
-Restricted to the admin email. Full visibility into every workspace, user, AI employee, order, conversation, integration and support ticket — plus:
-
-- KPI overview across the whole platform (users, workspaces, revenue, escalations).
-- **Recharts** analytics: signups, active workspaces, message volume, model spend.
-- Ban / unban users, impersonate a workspace, edit any resource.
-- Broadcast alerts (info / warning / critical) that pop up in-app for every user.
-- Live support queue with SLA timers.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/admin-dark.png" alt="Admin — dark" /></td>
-    <td><img src="docs/screenshots/admin-light.png" alt="Admin — light" /></td>
-  </tr>
-</table>
-
----
-
-## 🧠 What powers it under the hood
-
-- **Trilingual auto-translation** — Gemini-powered batch translate + `MutationObserver` that catches every new DOM node and translates on the fly. RTL layout flips automatically for Arabic.
-- **Continuous learning** — every confirmed order writes a `workspace_learning` row that seeds future system prompts.
-- **Realtime everywhere** — Supabase Realtime channels stream orders, messages, tickets and alerts into the UI without polling.
-- **Security-first** — RLS on every table, `SECURITY DEFINER` helpers with locked-down grants, HMAC signature verification on Meta/Telegram webhooks, SSRF guard on the scraper, self-admin-grant prevention trigger.
-- **MCP server** — OAuth-protected Model Context Protocol endpoint at `/.mcp/*` exposes `list_products`, `list_orders`, `create_order`, `list_conversations`, `workspace_overview` for agent integrations (Claude, Cursor, etc.).
-- **404 + error boundaries** — animated 404 with return-home CTA; every route ships `errorComponent` + `notFoundComponent`.
-
----
-
-## 🧱 Tech stack
-
-| Layer | Choice |
+| About (dark) | Contact (dark) |
 | --- | --- |
-| Framework | **TanStack Start** (React 19, SSR on Cloudflare Workers) |
-| Bundler | Vite 7 + Lightning CSS |
-| Styling | Tailwind CSS v4 (CSS-first `@theme`) + shadcn/ui |
-| Backend | Supabase (Postgres + Auth + Realtime + Storage + RLS) |
-| AI | Lovable AI Gateway, OpenRouter, Gemini (user BYOK) |
-| Charts | Recharts |
-| Package manager | Bun |
-| Agent protocol | MCP (Model Context Protocol) with OAuth |
+| ![About dark](docs/screenshots/about-dark.png) | ![Contact dark](docs/screenshots/contact-dark.png) |
+
+| About (light) | Contact (light) |
+| --- | --- |
+| ![About light](docs/screenshots/about-light.png) | ![Contact light](docs/screenshots/contact-light.png) |
+
+### Auth
+
+| Login (dark) | Signup (dark) |
+| --- | --- |
+| ![Login dark](docs/screenshots/login-dark.png) | ![Signup dark](docs/screenshots/signup-dark.png) |
+
+| Login (light) | Signup (light) |
+| --- | --- |
+| ![Login light](docs/screenshots/login-light.png) | ![Signup light](docs/screenshots/signup-light.png) |
+
+### Dashboard
+
+| Dark | Light |
+| --- | --- |
+| ![Dashboard dark](docs/screenshots/dashboard-dark.png) | ![Dashboard light](docs/screenshots/dashboard-light.png) |
+
+### AI Employees
+
+| Dark | Light |
+| --- | --- |
+| ![AI Employees dark](docs/screenshots/ai-employees-dark.png) | ![AI Employees light](docs/screenshots/ai-employees-light.png) |
+
+### Products
+
+| Dark | Light |
+| --- | --- |
+| ![Products dark](docs/screenshots/products-dark.png) | ![Products light](docs/screenshots/products-light.png) |
+
+### Orders
+
+| Dark | Light |
+| --- | --- |
+| ![Orders dark](docs/screenshots/orders-dark.png) | ![Orders light](docs/screenshots/orders-light.png) |
+
+### Conversations
+
+| Dark | Light |
+| --- | --- |
+| ![Conversations dark](docs/screenshots/conversations-dark.png) | ![Conversations light](docs/screenshots/conversations-light.png) |
+
+### Integrations
+
+| Dark | Light |
+| --- | --- |
+| ![Integrations dark](docs/screenshots/integrations-dark.png) | ![Integrations light](docs/screenshots/integrations-light.png) |
+
+### Knowledge
+
+| Dark | Light |
+| --- | --- |
+| ![Knowledge dark](docs/screenshots/knowledge-dark.png) | ![Knowledge light](docs/screenshots/knowledge-light.png) |
+
+### Playground
+
+| Dark | Light |
+| --- | --- |
+| ![Playground dark](docs/screenshots/playground-dark.png) | ![Playground light](docs/screenshots/playground-light.png) |
+
+### Settings
+
+| Dark | Light |
+| --- | --- |
+| ![Settings dark](docs/screenshots/settings-dark.png) | ![Settings light](docs/screenshots/settings-light.png) |
+
+### Support
+
+| Dark | Light |
+| --- | --- |
+| ![Support dark](docs/screenshots/support-dark.png) | ![Support light](docs/screenshots/support-light.png) |
+
+### Admin
+
+| Dark | Light |
+| --- | --- |
+| ![Admin dark](docs/screenshots/admin-dark.png) | ![Admin light](docs/screenshots/admin-light.png) |
 
 ---
 
-## 🏁 Getting started
+## Feature tour
+
+### Marketing site
+
+- **Landing** — animated aurora hero, feature grid, live comparison table
+  against the top 3 competitors, region-specific value props, launch discount
+  bar, and social proof placeholders.
+- **Pricing** — 3 tiers with a 14-day free trial, tricky launch discount
+  applied at signup, per-region currency hints.
+- **About / Contact / Terms / Privacy / Security / Status** — real content,
+  proper metadata, JSON-LD, canonical + og:image per route.
+- **Blog** — one seeded post (`/blog/future-of-ai-north-africa`) with Article
+  schema, ready to extend.
+- **Sitemap / robots / llms.txt** — `sitemap.xml` (public routes only),
+  `robots.txt` disallows every authenticated surface, `llms.txt` for AI
+  crawlers.
+- **Public storefront** — `/store/:slug` renders a shop's live catalog
+  without login.
+
+### Auth & onboarding
+
+- Email + password, Google OAuth (configured on first sign-in), password
+  reset flow at `/reset-password`.
+- 14-day free trial starts automatically; a trial banner in the app shows
+  days left and prompts an upgrade when it ends.
+- **Onboarding wizard** — 5 steps: workspace, brand voice, catalog source,
+  channel connection (WhatsApp/Instagram/Messenger/Telegram/Viber with a
+  live *Test connection* button), and finish. Every step can be skipped and
+  revisited later from Settings.
+
+### Dashboard
+
+- **Bento command center** — KPI rail (revenue, orders, conversations,
+  unread), "Since you were away" summary broken down per channel, live
+  charts (recharts), latest orders, latest conversations, active AI
+  employees, quick actions.
+- Personalized welcome ("Welcome, {name}") using the signed-in profile.
+- Realtime updates via Supabase Realtime — new orders and messages appear
+  without a refresh.
+- Admin broadcasts surface as a dismissible glass-morphism popup.
+
+### AI Employees
+
+- Create employees with role, tone, language, greeting, closing message,
+  fallback behavior and advanced controls (temperature, max tokens, guardrail
+  strictness, allow-list of topics).
+- **Model picker** — Lovable AI Gateway, OpenAI, Claude, Mistral, Gemini or
+  any OpenAI-compatible custom endpoint; live *Test connection* chip.
+- **Templates marketplace** — starter employees for retail, restaurant,
+  services; fork into your workspace in one click.
+- Per-employee fine-tuning: workspace-only learnings feed built from
+  confirmed conversations improves replies over time.
+
+### Products & catalog
+
+- Manual CRUD with rich fields (title, description, price, currency, stock,
+  images, category, tags, SKU).
+- **Import** — Shopify JSON, sitemap-based scraper for arbitrary websites
+  (with a stock-accuracy warning), CSV planned.
+- **Stats & filters** — filter by day/week/month, in-stock/out-of-stock,
+  category; live counters for total value, low stock, out-of-stock.
+- **Pagination** — default 8 per page, user-adjustable (8/16/32/64).
+- Row menu rendered via portal so hover targets never conflict with card
+  hover animations.
+
+### Orders & delivery
+
+- Full order lifecycle: pending → confirmed → shipped → delivered → cancelled,
+  each with a history entry and optional private notes.
+- **Statistics** — revenue chart, orders by status, orders by channel
+  (site, WhatsApp, Instagram, Messenger, Telegram, Viber).
+- **Algerian delivery module** — 58 seeded wilayas, workspace-scoped
+  carriers (Yalidine, ZR Express, custom), per-wilaya shipping zones with
+  home/desk pricing, COD amount, tracking number, carrier assignment from
+  the order drawer.
+- `calculate_shipping_fee` RPC quotes fees during AI conversations; the
+  AI can answer "where is my order?" from the tracking table.
+- Order fulfillment webhook (`/api/public/webhooks/fulfillment`) for external
+  carriers to push status updates.
+
+### Conversations & inbox
+
+- Unified inbox across every connected channel with unread counters,
+  channel filter, search and starred threads.
+- **Real product cards** rendered inline when the AI recommends a match;
+  one-click *Place order* creates an order attached to the conversation.
+- **Human handoff** — flip a conversation to "needs human" and the AI
+  stops replying; live agents can take over in place.
+- **Learning feed** — confirmed conversations feed `workspace_learnings`
+  so future replies improve automatically.
+- Message counter shows total messages and best-performing conversations.
+
+### Integrations hub
+
+- **WhatsApp Business**, **Instagram**, **Messenger**, **Telegram** and
+  **Viber** with OAuth or token flows and per-integration *Check
+  connection* status chips.
+- **Shopify / WooCommerce / YouCan** catalog sync (add credentials → import
+  products → keep in sync).
+- **Bring-your-own model** — OpenAI-compatible, Claude, Mistral, Gemini,
+  custom base URLs.
+- **Website scraper** — paste any URL; the scraper tries Shopify JSON first,
+  falls back to sitemap discovery and HTML parsing. Warns the user when
+  stock accuracy can't be guaranteed.
+- Inbound webhook endpoints under `/api/public/webhooks/*` (Telegram, Meta)
+  with signature verification.
+
+### Knowledge base
+
+- Sources: uploaded documents, pasted text, scraped URLs, FAQ pairs.
+- Each source is chunked, embedded and available to every AI employee
+  in the workspace.
+- Full description of what the knowledge base does is shown inline so store
+  owners understand what "training" means before they upload.
+
+### Playground
+
+- Live chat with any AI employee in your workspace before publishing.
+- Model selector pinned at the top; conversation always auto-scrolls to the
+  latest message.
+- Rate-limited per user to keep AI spend predictable.
+
+### Settings
+
+- **Workspace** — name, logo, timezone, currency, region.
+- **Brand voice** — tone, banned words, mandatory disclaimers.
+- **Billing** — plan, trial status, invoices (mock provider, ready for
+  Stripe or Paddle).
+- **Notifications** — email, Slack channel, in-app.
+- **Delivery** — carriers and per-wilaya shipping zones.
+- **API & webhooks** — keys and outbound webhooks (scaffolded).
+- **Team** — invite members, roles, remove.
+- **Advanced** — backups/restore, GDPR data export/delete, referral program
+  (+10 trial days per referral), 2FA (TOTP) with backup codes, audit log.
+- **Appearance** — dark/light mode toggle, 11 color palettes, motion on/off,
+  language (EN/FR/AR with RTL).
+
+### Support
+
+- Users open tickets that land directly in the admin queue.
+- Threaded replies, status (open/pending/resolved), and attachments.
+- Admin can jump from a ticket into the reporter's workspace.
+
+### Admin panel
+
+- Gated by role check; only the configured owner email reaches `/admin`.
+- **Overview** — every KPI across every workspace: users, active
+  workspaces, MRR, message volume, order volume, top channels.
+- **Users** — search, ban/unban, impersonate, reset trial, view profile,
+  view sessions, see audit trail.
+- **Workspaces** — deep-dive per workspace with all stats, integrations,
+  AI employees, orders, conversations; edit and fix issues directly.
+- **Support** — live ticket queue with reply, close, escalate.
+- **Broadcasts** — send an admin message that appears as a popup for every
+  user on their next dashboard visit.
+- **Security dashboard** — 2FA adoption, rate-limit blocks, recent security
+  events, per-role audit.
+- Destructive actions require **fresh 2FA** (8-hour verification window).
+
+---
+
+## Architecture
+
+- **Framework** — [TanStack Start v1](https://tanstack.com/start) (React 19,
+  file-based routing under `src/routes/`, server functions via
+  `createServerFn`).
+- **Bundler** — Vite 7, targeting **Cloudflare Workers** (`nodejs_compat`)
+  for the SSR runtime.
+- **Styling** — Tailwind v4 through `src/styles.css` with `@theme`,
+  `oklch()` tokens and per-mode overrides. shadcn primitives for headless UI.
+- **State** — TanStack Query for reads, Zustand-free context providers for
+  preferences and toasts.
+- **Backend** — Supabase (Postgres + Auth + Realtime + Storage) with strict
+  RLS on every public-schema table and `GRANT` statements per role.
+- **AI** — Lovable AI Gateway by default; per-workspace custom models via
+  OpenAI-compatible endpoints.
+- **Realtime** — Supabase Realtime channels for orders, conversations,
+  presence heartbeat and admin broadcasts.
+- **PWA** — `public/manifest.webmanifest`, install prompt component.
+- **MCP** — `src/lib/mcp/` exposes workspace tools over MCP for agent
+  integrations.
+
+### Route map
+
+```text
+/                      Landing
+/about, /contact       Marketing content
+/pricing (#anchor)     Pricing on landing
+/terms, /privacy       Legal
+/security, /status     Trust & status
+/blog/:slug            Blog post
+/store/:slug           Public storefront
+/sitemap, /sitemap.xml Sitemap
+/login, /signup        Auth
+/reset-password        Password recovery
+/onboarding            5-step wizard
+/dashboard             Bento command center
+/ai-employees          AI employee CRUD + templates
+/products              Catalog
+/orders                Orders + delivery
+/conversations        Unified inbox
+/integrations          Channels, models, scraper
+/knowledge             Knowledge base
+/playground            Live chat
+/settings              All settings
+/support               User tickets
+/admin                 Admin panel (role-gated)
+/api/public/*          Public webhooks (signature-verified)
+/mcp, /.mcp/*          MCP server
+```
+
+---
+
+## Local development
 
 ```bash
 bun install
 bun run dev
 ```
 
-Open http://localhost:8080
+The dev server starts on `http://localhost:8080`.
 
-### Environment
-
-Copy `.env` from your Supabase project. The following are required (Vite exposes only `VITE_*`):
-
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_PUBLISHABLE_KEY=...
-VITE_SUPABASE_PROJECT_ID=...
-```
-
-Server-only secrets (webhook signatures, model provider keys, Lovable API key) are provisioned through the Lovable secret manager and injected into the Cloudflare Worker runtime as `process.env.*`.
-
----
-
-## 🗂️ Project structure
-
-```
-src/
-├── routes/                 # File-based routes (TanStack Start)
-│   ├── __root.tsx          # App shell — providers, head, outlet
-│   ├── index.tsx           # Landing
-│   ├── dashboard.tsx       # In-app dashboard
-│   └── api/public/         # Public webhooks (Meta, Telegram) + MCP
-├── components/
-│   ├── marketing/          # Landing, auth, onboarding, page shells
-│   ├── pages/              # In-app screens (products, orders, …)
-│   ├── admin-*.tsx         # Admin panel + broadcast popups
-│   └── ui/                 # shadcn/ui primitives
-├── lib/
-│   ├── *.functions.ts      # Client-safe server fns (createServerFn)
-│   ├── *.server.ts         # Server-only helpers (admin client, SSRF guard)
-│   ├── mcp/                # MCP tool definitions
-│   ├── i18n.tsx            # i18n context
-│   ├── auto-translate.tsx  # MutationObserver-based live translator
-│   └── preferences.tsx     # Theme, mode, language, motion
-├── integrations/supabase/  # Auto-generated client + auth middleware
-└── styles.css              # Tailwind v4 theme tokens (dark + light)
-```
-
----
-
-## 🚢 One-click publish to GitHub
-
-KC is built inside [Lovable](https://lovable.dev), which ships with a native two-way GitHub sync — no CLI, no manual `git push`.
-
-### From the Lovable editor
-
-1. Click the **+ (Plus)** menu in the bottom-left of the chat input.
-2. Choose **GitHub → Connect project**.
-3. Authorize the **Lovable GitHub App** on the account or organization you want.
-4. Pick the destination account, then click **Create Repository**.
-
-Lovable creates a fresh repo, pushes the whole codebase (README, screenshots, migrations, everything) and enables bidirectional sync — every edit in Lovable pushes automatically, and every push you make on GitHub pulls back into Lovable within seconds.
-
-> One GitHub connection per Lovable account. Change it any time from **Workspace → Git settings**.
-
-### Verify the sync
-
-- The GitHub badge in the top-right of the Lovable editor turns green.
-- Your new repo appears at `https://github.com/<you>/<repo>` with the full commit history.
-- Push a README tweak from GitHub → watch it land in Lovable within seconds.
-
-### Deploy the live site
-
-Publishing the app itself (to `*.lovable.app` or a custom domain) is a separate one-click:
-
-> **Editor → Publish (top-right) → Update**
-
-Custom domains connect from **Project Settings → Domains** after the first publish.
-
----
-
-## 🧪 Scripts
+Useful scripts:
 
 ```bash
-bun run dev        # Vite dev server on :8080
-bun run build      # Production build (Cloudflare Workers target)
-bun run typecheck  # tsgo strict typecheck
-bun run lint       # ESLint
+bun run build          # production build
+bun run build:dev      # dev-style build (prerenders public routes)
+bun run test           # vitest
+bun run lint           # eslint
 ```
 
 ---
 
-## 🤝 Contributing
+## Environment variables
 
-Issues and PRs welcome. Please keep changes scoped and run `bun run typecheck` before pushing.
+Public (safe in the browser, prefixed with `VITE_`):
 
-## 📄 License
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_PROJECT_ID`
 
-MIT © KC — Built in Algiers, made for Algeria · Tunisia · Morocco. 🌍
+Server-only (never expose to the client):
+
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` — server publishable client.
+- `LOVABLE_API_KEY` — Lovable AI Gateway (auto-provisioned).
+- `WEBHOOK_SECRET` — inbound webhook signature verification.
+
+Copy `.env.example` to `.env` before running locally. Managed deployments
+inject the Supabase variables automatically.
+
+---
+
+## Project structure
+
+```text
+src/
+  routes/                 TanStack file-based routes
+    api/public/           Public webhook endpoints
+  components/
+    marketing/            Landing, auth, onboarding
+    pages/                Authenticated app pages
+    app-shell.tsx         Sidebar + top bar
+    dashboard.tsx         Bento dashboard
+    admin-panel.tsx       Admin surfaces
+  lib/
+    *.functions.ts        Client-callable server functions
+    *.server.ts           Server-only helpers
+    mcp/                  MCP tools + server
+    i18n.tsx              EN/FR/AR strings
+    preferences.tsx       Theme/mode/language context
+    auto-translate.tsx    MutationObserver translator
+  integrations/supabase/  Generated Supabase clients (do not edit)
+  styles.css              Tailwind v4 + theme tokens
+supabase/migrations/      SQL migrations
+docs/screenshots/         Screenshots used in this README
+public/                   Static assets (favicon, manifest, robots, llms.txt)
+```
+
+---
+
+## Security & privacy
+
+- Row-level security on every public-schema table with explicit `GRANT`s
+  per role.
+- 2FA (TOTP) with backup codes; enforced for owner and admin actions.
+- Per-user rate limits on sensitive endpoints via `public.rate_limit_hit`.
+- Audit log (`public.security_events`) captures logins, admin actions,
+  rate-limit blocks and 2FA failures.
+- SSRF guard (`safeFetch`) on every outbound URL fetch (scraper, webhooks).
+- Noindex middleware stamps `X-Robots-Tag: noindex` + `Cache-Control:
+  private, no-store` on every authenticated response so intermediaries
+  never cache private content.
+- GDPR data export and delete tools available from Settings → Advanced.
+
+---
+
+## License
+
+Proprietary — © KC.
