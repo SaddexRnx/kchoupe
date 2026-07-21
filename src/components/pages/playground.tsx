@@ -90,7 +90,8 @@ export function Playground() {
   const [draft, setDraft] = useState({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
 
   const [orderProduct, setOrderProduct] = useState<ProductRow | null>(null);
-  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+  const [orderErrors, setOrderErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
 
   const activeEmployee = employees.find((e) => e.id === selectedEmployeeId);
