@@ -297,6 +297,9 @@ export function Products() {
                     <span className="truncate font-medium">{r.name}</span>
                     {r.status === "draft" && <Chip tone="amber">{t("common.draft")}</Chip>}
                     {r.status === "out" && <Chip tone="rose">{t("common.out_of_stock")}</Chip>}
+                    {(now - new Date(r.created_at).getTime()) <= 7 * 864e5 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300"><Sparkles className="h-2.5 w-2.5" /> New</span>
+                    )}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="font-mono">{r.sku}</span>
