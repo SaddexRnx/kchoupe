@@ -589,7 +589,8 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
   const [modelId, setModelId] = useState<string>("");
   const [catalogSize, setCatalogSize] = useState<number | null>(null);
   const [orderProduct, setOrderProduct] = useState<ProductRow | null>(null);
-  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+  const [orderErrors, setOrderErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
 
   const productsByMessage = useMemo(
@@ -599,13 +600,27 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
 
   const openOrder = (product: ProductRow) => {
     setOrderProduct(product);
-    setOrderForm({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+    setOrderForm({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+    setOrderErrors({});
+  };
+
+  const validateOrder = () => {
+    const e: Record<string, string> = {};
+    if (orderForm.customer_name.trim().length < 2) e.customer_name = "Enter the customer's full name";
+    if (orderForm.customer_phone.replace(/\D/g, "").length < 6) e.customer_phone = "Enter a valid phone number";
+    if (orderForm.shipping_address.trim().length < 8) e.shipping_address = "Enter the delivery address";
+    if (orderForm.customer_email.trim() && !/^\S+@\S+\.\S+$/.test(orderForm.customer_email.trim())) e.customer_email = "Invalid email";
+    const qty = Number(orderForm.qty);
+    if (!Number.isFinite(qty) || qty < 1) e.qty = "Quantity must be at least 1";
+    return e;
   };
 
   const submitOrder = async () => {
     if (!orderProduct) return;
-    if (!orderForm.customer_name.trim()) {
-      toast.push({ kind: "warn", title: "Customer name required" });
+    const errs = validateOrder();
+    setOrderErrors(errs);
+    if (Object.keys(errs).length) {
+      toast.push({ kind: "warn", title: "Missing details", body: "Please fill in name, phone and delivery address." });
       return;
     }
     const qty = Math.max(1, Number(orderForm.qty) || 1);
@@ -613,6 +628,11 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
     try {
       const amount = Number(orderProduct.price) * qty;
       const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const composedNotes = [
+        `Phone: ${orderForm.customer_phone.trim()}`,
+        `Address: ${orderForm.shipping_address.trim()}`,
+        orderForm.notes.trim() ? `Notes: ${orderForm.notes.trim()}` : null,
+      ].filter(Boolean).join("\n");
       const res = await placeOrder({ data: {
         customer_name: orderForm.customer_name.trim(),
         customer_email: orderForm.customer_email.trim() || undefined,
@@ -621,10 +641,10 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
         currency: orderProduct.currency,
         status: "pending",
         confirmed_by_ai: true,
-        notes: orderForm.notes.trim() || undefined,
+        notes: composedNotes,
       }});
       toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: summary });
-      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** placed: ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}.` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** confirmed for **${orderForm.customer_name.trim()}** (${orderForm.customer_phone.trim()}): ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Shipping to: ${orderForm.shipping_address.trim()}.` }]);
       setOrderProduct(null);
     } catch (e: any) {
       toast.push({ kind: "error", title: "Order failed", body: e?.message });
@@ -632,6 +652,7 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
       setPlacing(false);
     }
   };
+
 
   const send = async () => {
     if (!input.trim() || busy) return;
@@ -769,12 +790,15 @@ function TestChatPanel({ customModels }: { customModels: CustomModelRow[] }) {
               </div>
               <div className="text-right"><div className="font-display text-sm font-bold">{Number(orderProduct.price).toLocaleString()} <span className="text-[10px] text-muted-foreground">{orderProduct.currency}</span></div></div>
             </div>
-            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" />
-            <TextField label="Customer email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" />
+            <TextField label="Customer name *" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Full name" help={orderErrors.customer_name} />
+            <TextField label="Phone number *" value={orderForm.customer_phone} onChange={(v) => setOrderForm({ ...orderForm, customer_phone: v })} placeholder="+213 555 12 34 56" help={orderErrors.customer_phone} />
+            <TextField label="Delivery address *" value={orderForm.shipping_address} onChange={(v) => setOrderForm({ ...orderForm, shipping_address: v })} placeholder="Street, city, wilaya / country" help={orderErrors.shipping_address} />
+            <TextField label="Email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="name@example.com" help={orderErrors.customer_email} />
             <label className="block">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity *</div>
               <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+              {orderErrors.qty && <div className="mt-1 text-[11px] text-rose-400">{orderErrors.qty}</div>}
             </label>
             <label className="block">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>

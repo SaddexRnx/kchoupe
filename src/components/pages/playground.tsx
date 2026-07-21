@@ -90,7 +90,8 @@ export function Playground() {
   const [draft, setDraft] = useState({ label: "", base: "https://api.openai.com/v1", model: "gpt-4o-mini", key: "" });
 
   const [orderProduct, setOrderProduct] = useState<ProductRow | null>(null);
-  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+  const [orderForm, setOrderForm] = useState({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+  const [orderErrors, setOrderErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
 
   const activeEmployee = employees.find((e) => e.id === selectedEmployeeId);
@@ -146,17 +147,39 @@ export function Playground() {
 
   const openOrder = (p: ProductRow) => {
     setOrderProduct(p);
-    setOrderForm({ customer_name: "", customer_email: "", qty: 1, notes: "" });
+    setOrderForm({ customer_name: "", customer_email: "", customer_phone: "", shipping_address: "", qty: 1, notes: "" });
+    setOrderErrors({});
+  };
+
+  const validateOrder = () => {
+    const e: Record<string, string> = {};
+    if (orderForm.customer_name.trim().length < 2) e.customer_name = "Enter the customer's full name";
+    if (orderForm.customer_phone.replace(/\D/g, "").length < 6) e.customer_phone = "Enter a valid phone number";
+    if (orderForm.shipping_address.trim().length < 8) e.shipping_address = "Enter the delivery address";
+    if (orderForm.customer_email.trim() && !/^\S+@\S+\.\S+$/.test(orderForm.customer_email.trim())) e.customer_email = "Invalid email";
+    const qty = Number(orderForm.qty);
+    if (!Number.isFinite(qty) || qty < 1) e.qty = "Quantity must be at least 1";
+    return e;
   };
 
   const submitOrder = async () => {
     if (!orderProduct) return;
-    if (!orderForm.customer_name.trim()) { toast.push({ kind: "warn", title: "Customer name required" }); return; }
+    const errs = validateOrder();
+    setOrderErrors(errs);
+    if (Object.keys(errs).length) {
+      toast.push({ kind: "warn", title: "Missing details", body: "Please fill in name, phone and delivery address." });
+      return;
+    }
     const qty = Math.max(1, Number(orderForm.qty) || 1);
     setPlacing(true);
     try {
       const amount = Number(orderProduct.price) * qty;
       const summary = `${qty}× ${orderProduct.name} (${orderProduct.sku})`;
+      const composedNotes = [
+        `Phone: ${orderForm.customer_phone.trim()}`,
+        `Address: ${orderForm.shipping_address.trim()}`,
+        orderForm.notes.trim() ? `Notes: ${orderForm.notes.trim()}` : null,
+      ].filter(Boolean).join("\n");
       const res = await placeOrder({ data: {
         customer_name: orderForm.customer_name.trim(),
         customer_email: orderForm.customer_email.trim() || undefined,
@@ -166,10 +189,10 @@ export function Playground() {
         status: "pending",
         confirmed_by_ai: true,
         ai_employee_id: activeEmployee?.id ?? null,
-        notes: orderForm.notes.trim() || undefined,
+        notes: composedNotes,
       }});
       toast.push({ kind: "success", title: `Order ${res.order_no} placed`, body: `${summary} — ${amount.toLocaleString()} ${orderProduct.currency}` });
-      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** placed for ${orderForm.customer_name}: ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Status: pending confirmation.` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `✅ Order **${res.order_no}** confirmed for **${orderForm.customer_name.trim()}** (${orderForm.customer_phone.trim()}): ${summary} — ${amount.toLocaleString()} ${orderProduct.currency}. Shipping to: ${orderForm.shipping_address.trim()}. Status: pending confirmation.` }]);
       setOrderProduct(null);
     } catch (e: any) {
       toast.push({ kind: "error", title: "Order failed", body: e?.message });
@@ -177,6 +200,7 @@ export function Playground() {
       setPlacing(false);
     }
   };
+
 
   return (
     <div>
@@ -377,7 +401,7 @@ export function Playground() {
         description="Confirms as a pending order in your Orders page."
         footer={<>
           <GhostButton onClick={() => setOrderProduct(null)}>Cancel</GhostButton>
-          <PrimaryButton onClick={submitOrder} disabled={placing}>
+          <PrimaryButton onClick={submitOrder} disabled={placing || Object.keys(orderErrors).length > 0 && !orderForm.customer_name}>
             {placing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />} Place order
           </PrimaryButton>
         </>}
@@ -391,12 +415,15 @@ export function Playground() {
                 <div className="text-[11px] text-muted-foreground">{orderProduct.sku} · {Number(orderProduct.price).toLocaleString()} {orderProduct.currency} each</div>
               </div>
             </div>
-            <TextField label="Customer name" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Sara Ait" />
-            <TextField label="Customer email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="sara@example.com" />
+            <TextField label="Customer name *" value={orderForm.customer_name} onChange={(v) => setOrderForm({ ...orderForm, customer_name: v })} placeholder="Sara Ait" help={orderErrors.customer_name} />
+            <TextField label="Phone number *" value={orderForm.customer_phone} onChange={(v) => setOrderForm({ ...orderForm, customer_phone: v })} placeholder="+213 555 12 34 56" help={orderErrors.customer_phone} />
+            <TextField label="Delivery address *" value={orderForm.shipping_address} onChange={(v) => setOrderForm({ ...orderForm, shipping_address: v })} placeholder="Street, city, wilaya / country" help={orderErrors.shipping_address} />
+            <TextField label="Email (optional)" value={orderForm.customer_email} onChange={(v) => setOrderForm({ ...orderForm, customer_email: v })} placeholder="sara@example.com" help={orderErrors.customer_email} />
             <label className="block">
-              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity</div>
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">Quantity *</div>
               <input type="number" min={1} value={orderForm.qty} onChange={(e) => setOrderForm({ ...orderForm, qty: Number(e.target.value) })}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none" />
+              {orderErrors.qty && <div className="mt-1 text-[11px] text-rose-400">{orderErrors.qty}</div>}
             </label>
             <label className="block">
               <div className="mb-1.5 text-xs font-medium text-muted-foreground">Notes (optional)</div>
