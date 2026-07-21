@@ -64,6 +64,59 @@ export type Database = {
           },
         ]
       }
+      custom_models: {
+        Row: {
+          api_key: string
+          base_url: string
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_status: string | null
+          model_id: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          api_key: string
+          base_url: string
+          created_at?: string
+          created_by: string
+          id?: string
+          label: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_status?: string | null
+          model_id: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          api_key?: string
+          base_url?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_status?: string | null
+          model_id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_models_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -541,6 +594,7 @@ export type Database = {
           category: string
           created_at: string
           currency: string
+          description: string | null
           id: string
           image_emoji: string
           name: string
@@ -557,6 +611,7 @@ export type Database = {
           category?: string
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           image_emoji?: string
           name: string
@@ -573,6 +628,7 @@ export type Database = {
           category?: string
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           image_emoji?: string
           name?: string
