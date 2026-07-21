@@ -9,16 +9,20 @@ interface SitemapEntry {
   priority?: string;
 }
 
+// Public, indexable routes only. Never list authenticated app surfaces
+// (dashboard, admin, ai-employees, products, orders, conversations,
+// knowledge, integrations, playground, settings, support, onboarding)
+// or auth flows (login, signup, reset-password) — they're noindex and
+// disallowed in robots.txt.
 const entries: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/about", changefreq: "monthly", priority: "0.7" },
   { path: "/contact", changefreq: "monthly", priority: "0.7" },
-  { path: "/login", changefreq: "yearly", priority: "0.5" },
-  { path: "/signup", changefreq: "yearly", priority: "0.6" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/security", changefreq: "yearly", priority: "0.3" },
   { path: "/status", changefreq: "weekly", priority: "0.4" },
+  { path: "/sitemap", changefreq: "monthly", priority: "0.3" },
   { path: "/blog/future-of-ai-north-africa", changefreq: "monthly", priority: "0.6" },
 ];
 
