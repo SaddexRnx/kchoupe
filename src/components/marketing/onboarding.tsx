@@ -400,6 +400,26 @@ export function Onboarding() {
                             </label>
                           ))}
                         </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <button type="button" onClick={() => testChannel(chan)}
+                            disabled={tests[chan]?.status === "testing"}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-medium hover:bg-white/10 disabled:opacity-50">
+                            {tests[chan]?.status === "testing"
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : <TestTube2 className="h-3 w-3" />}
+                            Test connection
+                          </button>
+                          {tests[chan]?.status === "ok" && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                              <Check className="h-3 w-3" /> {tests[chan]?.msg}
+                            </span>
+                          )}
+                          {tests[chan]?.status === "fail" && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-semibold text-rose-300">
+                              <X className="h-3 w-3" /> {tests[chan]?.msg}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
