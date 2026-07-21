@@ -27,7 +27,7 @@ const SKIP_PREFIXES = ["api", "[.", "__root", "mcp", "sitemap"];
 
 // Key routes we require to be covered — guarantees regressions in these
 // high-traffic surfaces surface immediately even if the walker misses them.
-const REQUIRED_PUBLIC = ["index", "about", "contact", "features", "pricing", "blog", "terms", "privacy"];
+const REQUIRED_PUBLIC = ["index", "about", "contact", "terms", "privacy", "security", "status"];
 const REQUIRED_PRIVATE = ["dashboard", "admin", "settings", "login", "signup"];
 
 type Route = {
