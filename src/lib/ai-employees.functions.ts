@@ -84,7 +84,7 @@ export const updateAiEmployee = createServerFn({ method: "POST" })
       .select("id,name,role,model,system_prompt,avatar_emoji,status,created_at")
       .single();
     if (error) throw new Error(error.message);
-    return row as AiEmployeeRow;
+    return { ...(row as any), convos: 0 } as AiEmployeeRow;
   });
 
 export const deleteAiEmployee = createServerFn({ method: "POST" })
