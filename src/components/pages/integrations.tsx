@@ -10,7 +10,8 @@ import {
 import { PageHeader, Panel, Chip, TextField, PrimaryButton, GhostButton, useToast, useConfirm } from "./_shared";
 import {
   PROVIDERS, listProviderConnections, saveProviderConnection, testProviderConnection,
-  disconnectProviderConnection, type ProviderConnection, type ProviderId, type ProviderMeta,
+  disconnectProviderConnection, scrapeWebsiteProducts,
+  type ProviderConnection, type ProviderId, type ProviderMeta,
   type PingCode,
 } from "@/lib/social.functions";
 import {
