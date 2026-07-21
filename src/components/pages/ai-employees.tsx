@@ -280,13 +280,14 @@ export function AiEmployees() {
         <div className="grid gap-4 md:grid-cols-2">
           <TextField label="Name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="e.g. Nova" />
           <TextField label="Role" value={draft.role} onChange={(v) => setDraft({ ...draft, role: v })} placeholder="Sales lead" />
-          <label className="block">
-            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Model</div>
-            <select value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary/50">
-              {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-            </select>
-          </label>
+          <ModelPicker
+            value={draft.model}
+            onChange={(v) => setDraft({ ...draft, model: v })}
+            options={modelOptions}
+            onTest={runTestCustom}
+            testing={testingCM}
+          />
+
           <label className="block">
             <div className="mb-1.5 text-xs font-medium text-muted-foreground">Avatar</div>
             <div className="flex flex-wrap gap-1.5">
