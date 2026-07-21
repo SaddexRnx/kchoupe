@@ -277,20 +277,29 @@ export async function handleInbound(msg: InboundMessage): Promise<{ reply: strin
     workspace_id: wsId, conversation_id: convoId, role: "user", sender: externalUserLabel, body: msg.body,
   });
 
-  // 6) Build AI context: catalog + history + memory
-  const [prodRes, histRes] = await Promise.all([
+  // 6) Build AI context: catalog + history + memory + prior learnings
+  const [prodRes, histRes, learnRes] = await Promise.all([
     supabaseAdmin.from("products")
       .select("sku,name,category,price,currency,stock,status,description")
       .eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(200),
     supabaseAdmin.from("inbox_messages")
       .select("role,body")
       .eq("conversation_id", convoId).order("created_at", { ascending: true }).limit(20),
+    supabaseAdmin.from("workspace_learnings")
+      .select("lesson").eq("workspace_id", wsId).order("created_at", { ascending: false }).limit(8),
   ]);
+
+  const learningsBlock = (learnRes.data ?? []).length
+    ? "\n\nLEARNED PLAYBOOK (from past confirmed orders — reuse these tactics when relevant):\n" +
+      (learnRes.data as any[]).map((l, i) => `${i + 1}. ${l.lesson}`).join("\n")
+    : "";
 
   const system = SYSTEM_GUARDRAIL
     + (empPrompt ? `\n\nEMPLOYEE INSTRUCTIONS:\n${empPrompt}` : "")
     + "\n\n" + buildCatalog(prodRes.data ?? [])
-    + buildCustomerMemory(customer);
+    + buildCustomerMemory(customer)
+    + learningsBlock;
+
 
   const messages: any[] = ((histRes.data ?? []) as any[])
     .slice(-12)
