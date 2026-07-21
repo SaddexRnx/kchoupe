@@ -18,8 +18,11 @@ Never answer the off-topic question even partially. Never explain why you can't.
 
 CATALOG RULES:
   1. Recommend ONLY items present in the PRODUCT CATALOG. Never invent SKUs, names, prices, or stock.
-  2. If a requested item is missing, say it's not available and suggest the closest 1–3 listed alternatives with name + price + stock.
-  3. Always cite exact name, price, currency, and stock when suggesting a product.
+  2. If a requested item is missing, say it's not available and suggest the closest 1–3 listed alternatives with name + price + availability.
+  3. Always cite exact name, price, and currency. Report availability using the AVAILABILITY value shown for each item:
+     - "in stock" / "<N> in stock" → present it as available.
+     - "availability: check website" → the store hasn't confirmed live inventory yet. Present it as available to order and invite the customer to check the product page for live stock. NEVER say it's out of stock.
+     - "OUT OF STOCK" → only then say it's out of stock.
   4. If the catalog is empty, say the store hasn't listed products yet and invite them to check back.
 
 STYLE: short, warm, helpful. Auto-detect the customer's language and reply in it.`;
@@ -27,9 +30,13 @@ STYLE: short, warm, helpful. Auto-detect the customer's language and reply in it
 function buildCatalog(products: any[]): string {
   if (!products.length) return "PRODUCT CATALOG: (empty — the store has no products listed yet)";
   const lines = products.slice(0, 200).map((p) => {
-    const stock = p.status === "out" || p.stock === 0 ? "OUT OF STOCK" : `${p.stock} in stock`;
+    let availability: string;
+    if (p.status === "out") availability = "OUT OF STOCK";
+    else if (p.status === "draft" || p.stock == null) availability = "availability: check website";
+    else if (p.stock === 0) availability = "OUT OF STOCK";
+    else availability = `${p.stock} in stock`;
     const desc = p.description ? ` — ${String(p.description).slice(0, 160)}` : "";
-    return `• [${p.sku}] ${p.name} · ${p.category} · ${p.price} ${p.currency} · ${stock}${desc}`;
+    return `• [${p.sku}] ${p.name} · ${p.category} · ${p.price} ${p.currency} · ${availability}${desc}`;
   });
   return `PRODUCT CATALOG (${products.length} items):\n${lines.join("\n")}`;
 }
