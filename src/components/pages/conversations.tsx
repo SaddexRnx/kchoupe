@@ -232,6 +232,12 @@ export function Conversations() {
         actions={<PrimaryButton onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> New conversation</PrimaryButton>}
       />
 
+      <HelpNote>
+        The <b>Inbox</b> is the shared home for every conversation across WhatsApp, Instagram, Messenger, Telegram, and your
+        website widget. Click any thread to read the full history, jump in as a human, mark it resolved, or place an order
+        on behalf of the customer. Stats on the right update in real time.
+      </HelpNote>
+
       {/* Message + learning statistics */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
