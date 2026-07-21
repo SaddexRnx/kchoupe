@@ -110,6 +110,8 @@ a[href*="lovable.dev"][target="_blank"] {
 }
 
 /* Light monochrome variant */
+html.light,
+html[data-mode="light"],
 [data-theme="cloud"],
 [data-theme="sand"],
 [data-theme="light"] {
