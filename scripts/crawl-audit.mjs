@@ -10,7 +10,7 @@
  *   3. robots.txt Disallow entries cover every private path we know about.
  *   4. sitemap.xml never advertises a private URL.
  */
-import { load } from "cheerio";
+const HREF_RE = /<a\b[^>]*\bhref=["']([^"'#][^"']*)["']/gi;
 
 const BASE = process.env.CRAWL_BASE ?? "http://localhost:8080";
 const MAX_DEPTH = 2;
