@@ -617,11 +617,28 @@ function UsersTab() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">
+                    {banMap.get(u.id)?.banned_at && (
+                      <span title={banMap.get(u.id)?.ban_reason ?? "Banned"} className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-300">
+                        <Ban className="h-3 w-3" /> Banned
+                      </span>
+                    )}
                     <button
                       onClick={() => toggleAdmin.mutate({ userId: u.id, makeAdmin: !u.is_admin })}
                       className="inline-flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] transition hover:-translate-y-0.5 hover:bg-white/[0.08]"
                     >
                       {u.is_admin ? <><UserMinus className="h-3 w-3" /> Demote</> : <><Crown className="h-3 w-3" /> Promote</>}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const isBanned = !!banMap.get(u.id)?.banned_at;
+                        if (isBanned) { setBan.mutate({ userId: u.id, banned: false }); return; }
+                        const reason = window.prompt(`Ban ${u.email}?\nOptional reason:`);
+                        if (reason === null) return;
+                        setBan.mutate({ userId: u.id, banned: true, reason: reason || undefined });
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-300 transition hover:-translate-y-0.5 hover:bg-amber-500/20"
+                    >
+                      {banMap.get(u.id)?.banned_at ? <><ShieldOff className="h-3 w-3" /> Unban</> : <><Ban className="h-3 w-3" /> Ban</>}
                     </button>
                     <button
                       onClick={async () => {
