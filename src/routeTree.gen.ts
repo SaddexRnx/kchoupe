@@ -26,7 +26,6 @@ import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ChannelsRouteImport } from './routes/channels'
 import { Route as AiEmployeesRouteImport } from './routes/ai-employees'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -118,11 +117,6 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChannelsRoute = ChannelsRouteImport.update({
-  id: '/channels',
-  path: '/channels',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AiEmployeesRoute = AiEmployeesRouteImport.update({
   id: '/ai-employees',
   path: '/ai-employees',
@@ -155,7 +149,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/ai-employees': typeof AiEmployeesRoute
-  '/channels': typeof ChannelsRoute
   '/contact': typeof ContactRoute
   '/conversations': typeof ConversationsRoute
   '/dashboard': typeof DashboardRoute
@@ -180,7 +173,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/ai-employees': typeof AiEmployeesRoute
-  '/channels': typeof ChannelsRoute
   '/contact': typeof ContactRoute
   '/conversations': typeof ConversationsRoute
   '/dashboard': typeof DashboardRoute
@@ -206,7 +198,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/ai-employees': typeof AiEmployeesRoute
-  '/channels': typeof ChannelsRoute
   '/contact': typeof ContactRoute
   '/conversations': typeof ConversationsRoute
   '/dashboard': typeof DashboardRoute
@@ -233,7 +224,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/ai-employees'
-    | '/channels'
     | '/contact'
     | '/conversations'
     | '/dashboard'
@@ -258,7 +248,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/ai-employees'
-    | '/channels'
     | '/contact'
     | '/conversations'
     | '/dashboard'
@@ -283,7 +272,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/ai-employees'
-    | '/channels'
     | '/contact'
     | '/conversations'
     | '/dashboard'
@@ -309,7 +297,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   AiEmployeesRoute: typeof AiEmployeesRoute
-  ChannelsRoute: typeof ChannelsRoute
   ContactRoute: typeof ContactRoute
   ConversationsRoute: typeof ConversationsRoute
   DashboardRoute: typeof DashboardRoute
@@ -451,13 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/channels': {
-      id: '/channels'
-      path: '/channels'
-      fullPath: '/channels'
-      preLoaderRoute: typeof ChannelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/ai-employees': {
       id: '/ai-employees'
       path: '/ai-employees'
@@ -501,7 +481,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   AiEmployeesRoute: AiEmployeesRoute,
-  ChannelsRoute: ChannelsRoute,
   ContactRoute: ContactRoute,
   ConversationsRoute: ConversationsRoute,
   DashboardRoute: DashboardRoute,
