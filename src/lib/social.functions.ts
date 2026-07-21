@@ -781,7 +781,11 @@ export const configureMessagingWebhook = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!integ) throw new Error("Save credentials first.");
 
-    const origin = data.appOrigin.replace(/\/+$/, "");
+    // Telegram/Meta reject redirects (302), so rewrite Lovable's auth-bridged
+    // preview origin (…lovableproject.com or id-preview--…lovable.app) into
+    // the stable public host that serves the current build without auth.
+    const rawOrigin = data.appOrigin.replace(/\/+$/, "");
+    const origin = normalizePublicOrigin(rawOrigin);
     const creds: any = { ...(integ.credentials as any || {}) };
 
     if (data.provider === "telegram") {
@@ -833,3 +837,17 @@ export const getMessagingWebhookInfo = createServerFn({ method: "POST" })
       verify_token: creds.webhookVerifyToken ?? null,
     };
   });
+
+function normalizePublicOrigin(input: string): string {
+  try {
+    const u = new URL(input);
+    const host = u.hostname;
+    // id-preview--<uuid>.lovable.app → project--<uuid>-dev.lovable.app
+    let m = host.match(/^id-preview--([0-9a-f-]{36})\.lovable\.app$/i);
+    if (m) return `https://project--${m[1]}-dev.lovable.app`;
+    // <uuid>.lovableproject.com → project--<uuid>-dev.lovable.app
+    m = host.match(/^([0-9a-f-]{36})\.lovableproject\.com$/i);
+    if (m) return `https://project--${m[1]}-dev.lovable.app`;
+    return `${u.protocol}//${u.host}`;
+  } catch { return input; }
+}
