@@ -88,6 +88,26 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     return row as OrderRow;
   });
 
+export const updateOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; status?: OrderStatus; notes?: string | null; seen?: boolean }) => {
+    if (!input?.id) throw new Error("id required");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<OrderRow> => {
+    const patch: Record<string, unknown> = {};
+    if (data.status) patch.status = data.status;
+    if (data.notes !== undefined) patch.notes = data.notes;
+    if (data.seen !== undefined) patch.seen = data.seen;
+    const { data: row, error } = await context.supabase.from("orders")
+      .update(patch)
+      .eq("id", data.id)
+      .select("id,order_no,customer_name,customer_email,product_summary,amount,currency,status,confirmed_by_ai,ai_employee_id,notes,seen,created_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return row as OrderRow;
+  });
+
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => {
