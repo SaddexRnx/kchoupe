@@ -119,6 +119,10 @@ export function SettingsPage() {
           {active === "billing" && <BillingSection />}
           {active === "notifications" && <NotificationsSection />}
           {active === "security" && <SecuritySection />}
+          {active === "data" && <DataSection />}
+          {active === "shortcuts" && <ShortcutsSection />}
+          {active === "activity" && <ActivitySection />}
+          {active === "labs" && <LabsSection />}
           {active === "danger" && <DangerSection />}
         </div>
       </div>
