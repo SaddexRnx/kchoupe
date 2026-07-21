@@ -243,7 +243,8 @@ async function pingWoo(c: any): Promise<PingResult> {
     const base = String(c.siteUrl || "").replace(/\/+$/, "");
     if (!/^https?:\/\//.test(base)) return withHint({ ok: false, code: "bad_format", message: "Site URL must start with https://" });
     const auth = Buffer.from(`${c.consumerKey}:${c.consumerSecret}`).toString("base64");
-    const r = await fetch(`${base}/wp-json/wc/v3/system_status`, { headers: { Authorization: `Basic ${auth}`, Accept: "application/json" } });
+    const { safeFetch } = await import("./ssrf-guard.server");
+    const r = await safeFetch(`${base}/wp-json/wc/v3/system_status`, { headers: { Authorization: `Basic ${auth}`, Accept: "application/json" } });
     if (r.status === 404) return withHint({ ok: false, code: "not_found", message: "wp-json not found — enable pretty permalinks and the WooCommerce REST API." });
     const j: any = await safeJson(r);
     if (!r.ok) return withHint({ ok: false, code: codeFromStatus(r.status), message: j?.message || `HTTP ${r.status}` });
