@@ -23,7 +23,7 @@ function ago(iso: string) {
 
 type ProductLite = {
   id: string; name: string; sku: string; price: number | string; currency: string;
-  stock: number; image_emoji: string;
+  stock: number; image_emoji: string; status?: string;
 };
 
 function findProductMatches(text: string, products: ProductLite[]): ProductLite[] {
