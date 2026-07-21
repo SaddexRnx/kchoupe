@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { setNoIndexHeader } from "@/lib/noindex";
 import { AuthPage } from "@/components/marketing/auth";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: () => setNoIndexHeader(),
   head: () => ({
     meta: [
       { title: "Sign in — Atlas AI" },
