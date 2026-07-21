@@ -87,26 +87,71 @@ export function Landing() {
         </div>
       </section>
 
-      {/* INTEGRATIONS */}
-      <section id="integrations" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
-        <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
-        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-6">
-          {[
-            { i: Store, l: "Shopify" }, { i: Store, l: "WooCommerce" }, { i: Package, l: "YouCan" },
-            { i: MessageCircle, l: "WhatsApp" }, { i: Instagram, l: "Instagram" }, { i: Facebook, l: "Facebook" },
-            { i: Globe, l: "Your website" }, { i: BarChart3, l: "GA4" }, { i: Bot, l: "OpenAI" },
-            { i: Bot, l: "Claude" }, { i: Bot, l: "Mistral" }, { i: Sparkles, l: "+150 more" },
-          ].map(({ i: Icon, l }, idx) => (
-            <div key={l} className="glass-panel animate-fade-up group flex items-center gap-2 rounded-xl px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30"
-              style={{ animationDelay: `${idx * 30}ms` }}>
-              <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary/20 to-accent/10">
-                <Icon className="h-3.5 w-3.5 text-primary" />
+      {/* INTEGRATIONS — infinite marquee */}
+      <section id="integrations" className="relative py-20 scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <SectionHeader eyebrow="Plug into everything" title="Your stack, already connected." />
+        </div>
+        <div className="relative mt-10 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+          <div className="flex w-max animate-marquee gap-3">
+            {[...INTEGRATIONS, ...INTEGRATIONS].map(({ i: Icon, l }, idx) => (
+              <div key={`${l}-${idx}`} className="glass-panel flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30">
+                <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary/20 to-accent/10">
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="whitespace-nowrap text-xs font-medium">{l}</span>
               </div>
-              <span className="truncate text-xs font-medium">{l}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+        <div className="relative mt-4 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+          <div className="flex w-max animate-marquee gap-3" style={{ animationDirection: "reverse", animationDuration: "55s" }}>
+            {[...INTEGRATIONS_2, ...INTEGRATIONS_2].map(({ i: Icon, l }, idx) => (
+              <div key={`${l}-${idx}`} className="glass-panel flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 transition hover:-translate-y-0.5 hover:border-primary/30">
+                <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-accent/20 to-primary/10">
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span className="whitespace-nowrap text-xs font-medium">{l}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* COMPARISON */}
+      <section id="compare" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
+        <SectionHeader eyebrow="Why Atlas AI" title="Built for North Africa. Priced for local shops." />
+        <div className="mt-10 overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-left">
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Feature</th>
+                <th className="px-4 py-4 text-xs font-bold uppercase tracking-widest">
+                  <span className="aurora-gradient-text animate-gradient">Atlas AI</span>
+                </th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Intercom Fin</th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tidio Lyro</th>
+                <th className="px-4 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Manychat</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {COMPARE.map((row) => (
+                <tr key={row.f} className="transition hover:bg-white/5">
+                  <td className="px-4 py-3 text-foreground">{row.f}</td>
+                  <Cell v={row.us} highlight />
+                  <Cell v={row.a} />
+                  <Cell v={row.b} />
+                  <Cell v={row.c} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Comparison based on publicly documented features (July 2026). Trademarks belong to their owners.
+        </p>
+      </section>
+
 
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
@@ -129,11 +174,16 @@ export function Landing() {
       {/* PRICING */}
       <section id="pricing" className="relative mx-auto max-w-6xl px-6 py-20 scroll-mt-20">
         <SectionHeader eyebrow="Pricing" title="Local prices for local shops." />
+        <div className="mx-auto mt-4 flex justify-center">
+          <div className="animate-glow inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+            🎉 Launch offer — 50% off your first 3 months. Ends soon.
+          </div>
+        </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { n: "Starter", plan: "starter", p: "0", sub: "14-day trial", f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
-            { n: "Growth", plan: "growth", p: "4,900", sub: "DZD / month", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
-            { n: "Scale", plan: "scale", p: "14,900", sub: "DZD / month", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
+            { n: "Starter", plan: "starter", old: null as string | null, p: "0", sub: "14-day trial", off: null as string | null, f: ["1 AI employee", "500 messages/mo", "1 channel", "Email support"], cta: "Start free" },
+            { n: "Growth", plan: "growth", old: "4,900", p: "2,450", sub: "DZD / month · first 3 months", off: "-50%", f: ["5 AI employees", "10k messages/mo", "All channels", "Custom models", "CIB / BaridiMob"], cta: "Get Growth", featured: true },
+            { n: "Scale", plan: "scale", old: "14,900", p: "7,450", sub: "DZD / month · first 3 months", off: "-50%", f: ["Unlimited employees", "100k messages/mo", "Priority support", "Dedicated onboarding"], cta: "Get Scale" },
           ].map((t) => (
             <div key={t.n}
               className={"glass-panel animate-fade-up relative rounded-2xl p-6 " +
@@ -141,11 +191,20 @@ export function Landing() {
               {t.featured && (
                 <div className="absolute -top-3 left-6 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">Most popular</div>
               )}
+              {t.off && (
+                <div className="absolute -top-3 right-6 rounded-full bg-emerald-500/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-500/30">{t.off}</div>
+              )}
               <div className="font-display text-lg font-bold">{t.n}</div>
-              <div className="mt-3 flex items-baseline gap-1">
+              <div className="mt-3 flex items-baseline gap-2">
+                {t.old && (
+                  <span className="font-display text-lg font-semibold text-muted-foreground line-through decoration-rose-400/70">{t.old}</span>
+                )}
                 <span className="font-display text-4xl font-black">{t.p}</span>
                 <span className="text-xs text-muted-foreground">{t.sub}</span>
               </div>
+              {t.old && (
+                <div className="mt-1 text-[11px] font-medium text-emerald-400">Save 50% for 90 days, then {t.old} DZD/mo. Cancel anytime.</div>
+              )}
               <ul className="mt-5 space-y-2 text-sm">
                 {t.f.map((x) => (
                   <li key={x} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {x}</li>
@@ -338,4 +397,53 @@ export function Footer() {
       <div className="border-t border-white/5 px-6 py-5 text-center text-[11px] text-muted-foreground">© 2026 Atlas AI. Made in Algiers.</div>
     </footer>
   );
+}
+
+const INTEGRATIONS = [
+  { i: Store, l: "Shopify" }, { i: Store, l: "WooCommerce" }, { i: Package, l: "YouCan" },
+  { i: MessageCircle, l: "WhatsApp" }, { i: Instagram, l: "Instagram" }, { i: Facebook, l: "Facebook" },
+  { i: Globe, l: "Your website" }, { i: BarChart3, l: "GA4" }, { i: Bot, l: "OpenAI" },
+  { i: Bot, l: "Claude" }, { i: Bot, l: "Mistral" }, { i: Bot, l: "Gemini" },
+  { i: Bot, l: "Groq" }, { i: Bot, l: "OpenRouter" }, { i: MessageCircle, l: "Telegram" },
+  { i: ShoppingBag, l: "Stripe" }, { i: ShoppingBag, l: "CIB" }, { i: ShoppingBag, l: "BaridiMob" },
+];
+
+const INTEGRATIONS_2 = [
+  { i: ShoppingBag, l: "CMI" }, { i: ShoppingBag, l: "Flouci" }, { i: Package, l: "Yalidine" },
+  { i: Package, l: "ZR Express" }, { i: Package, l: "Aramex" }, { i: BarChart3, l: "Meta Pixel" },
+  { i: BarChart3, l: "TikTok Ads" }, { i: Zap, l: "Zapier" }, { i: Zap, l: "n8n" },
+  { i: Zap, l: "Make" }, { i: MessageSquare, l: "Slack" }, { i: MessageSquare, l: "Discord" },
+  { i: Bot, l: "Mistral Saba" }, { i: Globe, l: "Notion" }, { i: Sparkles, l: "+150 more" },
+];
+
+const COMPARE: { f: string; us: string | boolean; a: string | boolean; b: string | boolean; c: string | boolean }[] = [
+  { f: "Trilingual (Arabic · French · English)", us: true, a: "Partial", b: "Partial", c: false },
+  { f: "Native Darija (Maghrebi Arabic)", us: true, a: false, b: false, c: false },
+  { f: "WhatsApp · Instagram · Messenger · Telegram", us: true, a: "WhatsApp only", b: true, c: true },
+  { f: "Order-closing inside chat (COD, CIB, BaridiMob)", us: true, a: false, b: false, c: "Partial" },
+  { f: "Shopify · WooCommerce · YouCan catalog sync", us: true, a: "Shopify only", b: "Shopify only", c: "Shopify only" },
+  { f: "Website scraper (any store)", us: true, a: false, b: false, c: false },
+  { f: "Bring-your-own model (OpenAI, Claude, Mistral, Gemini)", us: true, a: false, b: false, c: false },
+  { f: "Multiple AI employees with roles", us: true, a: false, b: false, c: false },
+  { f: "Live playground before deploy", us: true, a: false, b: "Partial", c: false },
+  { f: "RAG on your own knowledge base", us: true, a: true, b: "Partial", c: false },
+  { f: "Realtime inbox with human handoff", us: true, a: true, b: true, c: "Partial" },
+  { f: "Learns from confirmed conversations", us: true, a: false, b: false, c: false },
+  { f: "AI-only ordering assistant, on-catalog only", us: true, a: false, b: false, c: false },
+  { f: "Admin panel across all workspaces", us: true, a: true, b: "Partial", c: "Partial" },
+  { f: "Support ticket escalation to platform", us: true, a: true, b: true, c: false },
+  { f: "Dark & light theme, full RTL", us: true, a: "Partial", b: "Partial", c: false },
+  { f: "GDPR-style data controls & export", us: true, a: true, b: true, c: "Partial" },
+  { f: "Local currency (DZD · TND · MAD)", us: true, a: false, b: false, c: false },
+  { f: "Cash-on-delivery flow per wilaya", us: true, a: false, b: false, c: false },
+  { f: "MCP agent integration", us: true, a: false, b: false, c: false },
+  { f: "Custom domain webhooks", us: true, a: true, b: "Partial", c: true },
+  { f: "Starts at (USD equivalent)", us: "≈ $18/mo", a: "$29/mo", b: "$29/mo", c: "$15/mo" },
+];
+
+function Cell({ v, highlight }: { v: string | boolean; highlight?: boolean }) {
+  const cls = "px-4 py-3 text-sm " + (highlight ? "bg-primary/5 font-medium text-foreground" : "text-muted-foreground");
+  if (v === true) return <td className={cls}><Check className="h-4 w-4 text-emerald-400" /></td>;
+  if (v === false) return <td className={cls}><span className="text-rose-400/70">—</span></td>;
+  return <td className={cls}>{v}</td>;
 }

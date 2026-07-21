@@ -7,6 +7,21 @@ import { createHmac, timingSafeEqual } from "crypto";
 export const Route = createFileRoute("/api/public/webhooks/inbound")({
   server: {
     handlers: {
+      GET: async () =>
+        json({
+          ok: true,
+          endpoint: "atlas-inbound-webhook",
+          method: "POST",
+          description:
+            "Send inbound customer messages here. Include a HMAC-SHA256 hex digest of the raw body signed with your integration's webhookSecret in the x-atlas-signature header.",
+          body_schema: {
+            integration_id: "uuid — from your integration in the Integrations page",
+            external_user: "string — display name of the sender",
+            body: "string — message content",
+            channel: "web|whatsapp|instagram|messenger|telegram (optional, default 'web')",
+            external_id: "string — stable per-user id (optional)",
+          },
+        }),
       POST: async ({ request }) => {
         const raw = await request.text();
         let payload: any;

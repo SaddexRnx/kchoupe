@@ -201,7 +201,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             {isSignup ? (
               <label className="flex items-start gap-2 text-xs text-muted-foreground">
                 <input type="checkbox" defaultChecked className="mt-0.5 h-3.5 w-3.5 rounded border-white/20 bg-white/5 accent-[color:var(--color-primary)]" />
-                <span>I agree to the <a className="text-primary hover:underline" href="#">Terms</a> and <a className="text-primary hover:underline" href="#">Privacy</a>.</span>
+                <span>I agree to the <Link className="text-primary hover:underline" to="/terms">Terms</Link> and <Link className="text-primary hover:underline" to="/privacy">Privacy</Link>.</span>
               </label>
             ) : (
               <div className="flex items-center justify-between text-xs">
