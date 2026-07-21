@@ -95,7 +95,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     return input;
   })
   .handler(async ({ data, context }): Promise<OrderRow> => {
-    const patch: Record<string, unknown> = {};
+    const patch: { status?: OrderStatus; notes?: string | null; seen?: boolean } = {};
     if (data.status) patch.status = data.status;
     if (data.notes !== undefined) patch.notes = data.notes;
     if (data.seen !== undefined) patch.seen = data.seen;
@@ -107,6 +107,7 @@ export const updateOrder = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row as OrderRow;
   });
+
 
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
