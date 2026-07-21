@@ -5,7 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/pages/_shared";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Atlas AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Reset password — Atlas AI" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/reset-password" }],
+  }),
   component: ResetPasswordPage,
 });
 
