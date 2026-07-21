@@ -22,7 +22,9 @@ export function Landing() {
 
       <Nav />
 
+      <main>
       {/* HERO */}
+
       <section className="relative mx-auto max-w-6xl px-6 pt-24 pb-20 text-center md:pt-32 md:pb-28">
         <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs backdrop-blur">
           <span className="pulse-emerald inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -185,9 +187,11 @@ export function Landing() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>
+
   );
 }
 

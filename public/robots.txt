@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /ai-employees
+Disallow: /products
+Disallow: /orders
+Disallow: /conversations
+Disallow: /knowledge
+Disallow: /integrations
+Disallow: /playground
+Disallow: /settings
+Disallow: /support
+Disallow: /onboarding
+Disallow: /reset-password
+
+Sitemap: https://kchoupe.lovable.app/sitemap.xml

@@ -6,9 +6,13 @@ export const Route = createFileRoute("/privacy")({
     meta: [
       { title: "Privacy Policy — Atlas AI" },
       { name: "description", content: "How Atlas AI collects, uses and protects your data." },
-      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Privacy Policy — Atlas AI" },
+      { property: "og:description", content: "How Atlas AI collects, uses and protects your data." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/privacy" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/privacy" }],
   }),
+
   component: PrivacyPage,
 });
 

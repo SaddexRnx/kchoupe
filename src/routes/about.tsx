@@ -9,8 +9,11 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "Atlas AI is building the AI workforce for North African commerce — trilingual, local-first, revenue-focused." },
       { property: "og:title", content: "About Atlas AI" },
       { property: "og:description", content: "Built in Algiers, made for Algeria, Tunisia and Morocco." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/about" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/about" }],
   }),
+
   component: AboutPage,
 });
 

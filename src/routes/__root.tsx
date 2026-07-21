@@ -99,14 +99,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Atlas AI — Your AI Workforce for Commerce" },
       { name: "description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
       { name: "author", content: "Atlas AI" },
-      { property: "og:title", content: "Atlas AI — Your AI Workforce for Commerce" },
-      { property: "og:description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
+      { property: "og:site_name", content: "Atlas AI" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Atlas AI — Your AI Workforce for Commerce" },
-      { name: "twitter:description", content: "Build, train, and deploy AI employees that sell, support, and grow your store 24/7. Made for North Africa first." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/23445867-2acf-42b4-946f-3462dd592ae4/id-preview-0f20a806--86c5ba99-a6e0-476b-b368-c044198fac7a.lovable.app-1784634695109.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/23445867-2acf-42b4-946f-3462dd592ae4/id-preview-0f20a806--86c5ba99-a6e0-476b-b368-c044198fac7a.lovable.app-1784634695109.png" },
     ],
     links: [
       {
@@ -121,12 +116,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Atlas AI",
+              url: "https://kchoupe.lovable.app",
+              description: "AI workforce for North African commerce — trilingual AI employees that sell, support and grow your store 24/7.",
+            },
+            {
+              "@type": "WebSite",
+              name: "Atlas AI",
+              url: "https://kchoupe.lovable.app",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
 
 function RootShell({ children }: { children: ReactNode }) {
   return (

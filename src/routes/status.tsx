@@ -6,8 +6,13 @@ export const Route = createFileRoute("/status")({
     meta: [
       { title: "Status — Atlas AI" },
       { name: "description", content: "Live status of the Atlas AI platform and its integrations." },
+      { property: "og:title", content: "Status — Atlas AI" },
+      { property: "og:description", content: "Live status of the Atlas AI platform and its integrations." },
+      { property: "og:url", content: "https://kchoupe.lovable.app/status" },
     ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/status" }],
   }),
+
   component: StatusPage,
 });
 
