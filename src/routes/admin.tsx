@@ -8,7 +8,13 @@ import { AdminPanel } from "@/components/admin-panel";
 import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — Atlas AI" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Atlas AI" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [{ rel: "canonical", href: "https://kchoupe.lovable.app/admin" }],
+  }),
   component: AdminGate,
 });
 
