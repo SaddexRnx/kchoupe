@@ -1031,12 +1031,27 @@ export type Database = {
         Args: never
         Returns: {
           avatar_url: string
+          ban_reason: string
+          banned_at: string
+          conversation_count: number
+          countries: string
           created_at: string
+          currencies: string
           display_name: string
           email: string
+          employee_count: number
           id: string
+          integration_count: number
           is_admin: boolean
+          last_activity_at: string
           last_sign_in_at: string
+          message_count: number
+          order_count: number
+          plans: string
+          product_count: number
+          revenue: number
+          ticket_count: number
+          trial_ends_at: string
           workspace_count: number
         }[]
       }
@@ -1062,6 +1077,7 @@ export type Database = {
         Returns: undefined
       }
       admin_timeseries: { Args: never; Returns: Json }
+      admin_user_details: { Args: { _user_id: string }; Returns: Json }
       channel_summary:
         | { Args: { _workspace_id: string }; Returns: Json }
         | { Args: { _since?: string; _workspace_id: string }; Returns: Json }
