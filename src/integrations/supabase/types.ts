@@ -741,6 +741,64 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_learnings: {
+        Row: {
+          channel: string | null
+          conversation_id: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          lesson: string
+          outcome: string
+          score: number
+          workspace_id: string
+        }
+        Insert: {
+          channel?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lesson: string
+          outcome?: string
+          score?: number
+          workspace_id: string
+        }
+        Update: {
+          channel?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lesson?: string
+          outcome?: string
+          score?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_learnings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_learnings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_learnings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -845,6 +903,7 @@ export type Database = {
       }
       admin_platform_stats: { Args: never; Returns: Json }
       admin_timeseries: { Args: never; Returns: Json }
+      conversation_stats: { Args: { _workspace_id: string }; Returns: Json }
       ensure_default_workspace: { Args: { _user_id?: string }; Returns: string }
       has_role: {
         Args: {
