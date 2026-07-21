@@ -197,6 +197,72 @@ export type Database = {
           },
         ]
       }
+      carriers: {
+        Row: {
+          active: boolean
+          api_config: Json
+          api_key: string | null
+          created_at: string
+          default_fee: number
+          id: string
+          is_default: boolean
+          mode: string
+          name: string
+          notes: string | null
+          provider: string | null
+          tracking_url_template: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          api_config?: Json
+          api_key?: string | null
+          created_at?: string
+          default_fee?: number
+          id?: string
+          is_default?: boolean
+          mode?: string
+          name: string
+          notes?: string | null
+          provider?: string | null
+          tracking_url_template?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          api_config?: Json
+          api_key?: string | null
+          created_at?: string
+          default_fee?: number
+          id?: string
+          is_default?: boolean
+          mode?: string
+          name?: string
+          notes?: string | null
+          provider?: string | null
+          tracking_url_template?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carriers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "public_storefronts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carriers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_models: {
         Row: {
           api_key: string
@@ -313,6 +379,58 @@ export type Database = {
           },
           {
             foreignKeyName: "customers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_status_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          order_id: string
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          status: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_status_history_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "public_storefronts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_status_history_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -740,57 +858,93 @@ export type Database = {
       }
       orders: {
         Row: {
+          address: string | null
           ai_employee_id: string | null
           amount: number
+          carrier_id: string | null
           channel: string
+          cod_amount: number | null
+          commune: string | null
           confirmed_by_ai: boolean
           created_at: string
           currency: string
           customer_email: string | null
           customer_name: string
+          customer_phone: string | null
+          delivered_at: string | null
+          delivery_fee: number
+          delivery_type: string
           id: string
           notes: string | null
           order_no: string
           product_summary: string
           seen: boolean
+          shipped_at: string | null
+          shipping_status: string
           status: string
+          tracking_number: string | null
           updated_at: string
+          wilaya_code: number | null
           workspace_id: string
         }
         Insert: {
+          address?: string | null
           ai_employee_id?: string | null
           amount?: number
+          carrier_id?: string | null
           channel?: string
+          cod_amount?: number | null
+          commune?: string | null
           confirmed_by_ai?: boolean
           created_at?: string
           currency?: string
           customer_email?: string | null
           customer_name: string
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_fee?: number
+          delivery_type?: string
           id?: string
           notes?: string | null
           order_no: string
           product_summary: string
           seen?: boolean
+          shipped_at?: string | null
+          shipping_status?: string
           status?: string
+          tracking_number?: string | null
           updated_at?: string
+          wilaya_code?: number | null
           workspace_id: string
         }
         Update: {
+          address?: string | null
           ai_employee_id?: string | null
           amount?: number
+          carrier_id?: string | null
           channel?: string
+          cod_amount?: number | null
+          commune?: string | null
           confirmed_by_ai?: boolean
           created_at?: string
           currency?: string
           customer_email?: string | null
           customer_name?: string
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_fee?: number
+          delivery_type?: string
           id?: string
           notes?: string | null
           order_no?: string
           product_summary?: string
           seen?: boolean
+          shipped_at?: string | null
+          shipping_status?: string
           status?: string
+          tracking_number?: string | null
           updated_at?: string
+          wilaya_code?: number | null
           workspace_id?: string
         }
         Relationships: [
@@ -800,6 +954,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ai_employees"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_wilaya_code_fkey"
+            columns: ["wilaya_code"]
+            isOneToOne: false
+            referencedRelation: "wilayas"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "orders_workspace_id_fkey"
@@ -1103,6 +1271,67 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_zones: {
+        Row: {
+          active: boolean
+          created_at: string
+          desk_fee: number | null
+          estimated_days: number | null
+          free_shipping_threshold: number | null
+          home_fee: number
+          id: string
+          updated_at: string
+          wilaya_code: number
+          workspace_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          desk_fee?: number | null
+          estimated_days?: number | null
+          free_shipping_threshold?: number | null
+          home_fee?: number
+          id?: string
+          updated_at?: string
+          wilaya_code: number
+          workspace_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          desk_fee?: number | null
+          estimated_days?: number | null
+          free_shipping_threshold?: number | null
+          home_fee?: number
+          id?: string
+          updated_at?: string
+          wilaya_code?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_zones_wilaya_code_fkey"
+            columns: ["wilaya_code"]
+            isOneToOne: false
+            referencedRelation: "wilayas"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "shipping_zones_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "public_storefronts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipping_zones_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           body: string
@@ -1233,6 +1462,27 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
           workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      wilayas: {
+        Row: {
+          code: number
+          name_ar: string
+          name_en: string
+          name_fr: string
+        }
+        Insert: {
+          code: number
+          name_ar: string
+          name_en: string
+          name_fr: string
+        }
+        Update: {
+          code?: number
+          name_ar?: string
+          name_en?: string
+          name_fr?: string
         }
         Relationships: []
       }
@@ -1570,6 +1820,59 @@ export type Database = {
       }
       admin_timeseries: { Args: never; Returns: Json }
       admin_user_details: { Args: { _user_id: string }; Returns: Json }
+      assign_shipment: {
+        Args: {
+          _carrier_id: string
+          _order_id: string
+          _status: string
+          _tracking: string
+        }
+        Returns: {
+          address: string | null
+          ai_employee_id: string | null
+          amount: number
+          carrier_id: string | null
+          channel: string
+          cod_amount: number | null
+          commune: string | null
+          confirmed_by_ai: boolean
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          delivered_at: string | null
+          delivery_fee: number
+          delivery_type: string
+          id: string
+          notes: string | null
+          order_no: string
+          product_summary: string
+          seen: boolean
+          shipped_at: string | null
+          shipping_status: string
+          status: string
+          tracking_number: string | null
+          updated_at: string
+          wilaya_code: number | null
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      calculate_shipping_fee: {
+        Args: {
+          _delivery_type?: string
+          _order_value: number
+          _wilaya_code: number
+          _workspace_id: string
+        }
+        Returns: Json
+      }
       channel_summary:
         | { Args: { _workspace_id: string }; Returns: Json }
         | { Args: { _since?: string; _workspace_id: string }; Returns: Json }
