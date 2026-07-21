@@ -35,7 +35,6 @@ type NavKey =
   | "conversations"
   | "products"
   | "orders"
-  | "channels"
   | "integrations"
   | "settings";
 
@@ -47,7 +46,6 @@ const nav: { key: NavKey; icon: typeof LayoutDashboard; to: string }[] = [
   { key: "conversations", icon: MessageSquare, to: "/conversations" },
   { key: "products", icon: Package, to: "/products" },
   { key: "orders", icon: ShoppingCart, to: "/orders" },
-  { key: "channels", icon: Radio, to: "/channels" },
   { key: "integrations", icon: Plug, to: "/integrations" },
   { key: "settings", icon: Settings, to: "/settings" },
 ];
