@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  Shield, Users, Building2, Bot, Package, ShoppingCart, MessageSquare, BookOpen,
+  Shield, Users, Building2, Bot, ShoppingCart, MessageSquare, BookOpen,
   Plug, Bell, TrendingUp, Search, Trash2, Crown, UserMinus, Send, LogOut, Sparkles, ArrowUpRight,
+  Activity, DollarSign, Zap,
 } from "lucide-react";
 import {
   getPlatformStats, getPlatformTimeseries, listAllUsers, listAllWorkspaces, listAllEmployees, listAllOrders,
@@ -12,8 +13,8 @@ import {
   deleteWorkspace, deleteUser, broadcastNotification,
 } from "@/lib/admin.functions";
 import {
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line,
-  PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
+  ResponsiveContainer, ComposedChart, Area, Bar, Line, XAxis, YAxis, Tooltip, CartesianGrid,
+  RadialBarChart, RadialBar, PieChart, Pie, Cell,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast, Modal, useConfirm } from "@/components/pages/_shared";
@@ -45,53 +46,43 @@ export function AdminPanel() {
   return (
     <div className="min-h-screen bg-background">
       {/* Aurora backdrop */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <div className="animate-float absolute -left-40 top-0 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-        <div className="animate-float absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-accent/20 blur-3xl" style={{ animationDelay: "1.4s" }} />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="animate-float absolute -left-40 top-0 h-[32rem] w-[32rem] rounded-full bg-primary/20 blur-[120px]" />
+        <div className="animate-float absolute -right-40 bottom-0 h-[32rem] w-[32rem] rounded-full bg-accent/20 blur-[120px]" style={{ animationDelay: "1.4s" }} />
+        <div className="animate-float absolute left-1/2 top-1/3 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/10 blur-[100px]" style={{ animationDelay: "0.8s" }} />
       </div>
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      {/* Minimal header */}
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-background/50 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40">
+            <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40">
               <Shield className="h-4 w-4 text-primary-foreground" />
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-background pulse-emerald" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-base font-black truncate">Atlas Admin</span>
-                <span className="rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">Root</span>
+              <div className="flex items-center gap-2">
+                <span className="font-display text-[15px] font-black tracking-tight truncate">Atlas Admin</span>
+                <span className="rounded-md bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">Root</span>
               </div>
               <div className="text-[11px] text-muted-foreground">Platform command center</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/dashboard" className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition hover:bg-white/10 sm:inline-flex">
+            <Link to="/dashboard" className="hidden rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition hover:-translate-y-0.5 hover:bg-white/10 sm:inline-flex">
               User view
             </Link>
-            <button onClick={signOut} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition hover:bg-white/10">
+            <button onClick={signOut} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition hover:-translate-y-0.5 hover:bg-white/10">
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-2 pb-2 sm:px-4">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  active ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow" : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {t.label}
-              </button>
-            );
-          })}
-        </nav>
       </header>
+
+      {/* Floating pill nav */}
+      <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6">
+        <PillNav active={tab} onChange={setTab} />
+      </div>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {tab === "overview" && <Overview />}
@@ -107,17 +98,78 @@ export function AdminPanel() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Users; label: string; value: string | number; hint?: string }) {
+function PillNav({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current?.querySelector<HTMLButtonElement>(`button[data-key="${active}"]`);
+    if (el && containerRef.current) {
+      const parent = containerRef.current.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      setIndicator({ left: rect.left - parent.left, width: rect.width });
+    }
+  }, [active]);
+
   return (
-    <div className="glass-panel group relative overflow-hidden rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10">
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-1 font-display text-2xl font-black tabular-nums">{value}</div>
-          {hint && <div className="mt-0.5 text-[11px] text-muted-foreground">{hint}</div>}
+    <div ref={containerRef} className="glass-panel relative flex gap-1 overflow-x-auto rounded-2xl p-1.5 backdrop-blur-xl">
+      {indicator && (
+        <div
+          className="absolute top-1.5 bottom-1.5 rounded-xl bg-gradient-to-r from-primary to-accent shadow-lg shadow-primary/40 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{ left: indicator.left, width: indicator.width }}
+        />
+      )}
+      {TABS.map((t) => {
+        const Icon = t.icon;
+        const isActive = tab_eq(t.key, active);
+        return (
+          <button
+            key={t.key}
+            data-key={t.key}
+            onClick={() => onChange(t.key)}
+            className={`relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors duration-300 ${
+              isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+function tab_eq(a: Tab, b: Tab) { return a === b; }
+
+function KpiRing({ icon: Icon, label, value, hint, pct, tone = "primary", delay = 0 }: {
+  icon: typeof Users; label: string; value: string | number; hint?: string; pct: number; tone?: "primary" | "accent" | "cyan" | "amber"; delay?: number;
+}) {
+  const toneColor = tone === "accent" ? "hsl(var(--accent))" : tone === "cyan" ? "#22d3ee" : tone === "amber" ? "#f59e0b" : "hsl(var(--primary))";
+  const p = Math.max(0, Math.min(100, pct));
+  const R = 26;
+  const C = 2 * Math.PI * R;
+  const dash = (p / 100) * C;
+  return (
+    <div className="glass-panel group animate-fade-up relative overflow-hidden rounded-2xl p-4 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20" style={{ animationDelay: `${delay}ms` }}>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90 transition-transform duration-700 group-hover:scale-110">
+            <circle cx="32" cy="32" r={R} stroke="hsl(var(--border))" strokeWidth="4" fill="none" opacity="0.4" />
+            <circle
+              cx="32" cy="32" r={R} stroke={toneColor} strokeWidth="4" fill="none" strokeLinecap="round"
+              strokeDasharray={`${dash} ${C}`}
+              style={{ transition: "stroke-dasharray 900ms cubic-bezier(0.22,1,0.36,1)", filter: `drop-shadow(0 0 6px ${toneColor})` }}
+            />
+          </svg>
+          <div className="absolute inset-0 grid place-items-center">
+            <Icon className="h-4 w-4" style={{ color: toneColor }} />
+          </div>
         </div>
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 transition group-hover:scale-110">
-          <Icon className="h-4 w-4 text-primary" />
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+          <div className="font-display text-xl font-black tabular-nums leading-tight">{value}</div>
+          {hint && <div className="mt-0.5 truncate text-[10px] text-muted-foreground">{hint}</div>}
         </div>
       </div>
     </div>
@@ -126,21 +178,13 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Users; labe
 
 const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#22d3ee", "#f59e0b", "#ec4899", "#84cc16", "#8b5cf6", "#f43f5e"];
 
-function ChartCard({ title, subtitle, children, height = 260 }: { title: string; subtitle?: string; children: React.ReactNode; height?: number }) {
-  return (
-    <div className="glass-panel rounded-2xl p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <div>
-          <div className="text-sm font-semibold">{title}</div>
-          {subtitle && <div className="text-[11px] text-muted-foreground">{subtitle}</div>}
-        </div>
-      </div>
-      <div style={{ width: "100%", height }}>
-        <ResponsiveContainer>{children as any}</ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
+type Metric = "revenue" | "orders" | "users" | "messages";
+const METRICS: { key: Metric; label: string; icon: typeof Users; color: string }[] = [
+  { key: "revenue", label: "Revenue", icon: DollarSign, color: "hsl(var(--primary))" },
+  { key: "orders", label: "Orders", icon: ShoppingCart, color: "hsl(var(--accent))" },
+  { key: "users", label: "New users", icon: Users, color: "#22d3ee" },
+  { key: "messages", label: "Messages", icon: MessageSquare, color: "#f59e0b" },
+];
 
 function Overview() {
   const statsFn = useServerFn(getPlatformStats);
@@ -156,140 +200,242 @@ function Overview() {
   const orderStatus = toEntries(t.order_status);
   const employeeStatus = toEntries(t.employee_status);
   const integrationStatus = toEntries(t.integration_status);
-  const topWs = ((t.top_workspaces ?? []) as any[]).map((w) => ({ name: w.name?.slice(0, 14) ?? "—", revenue: Number(w.revenue), orders: Number(w.orders) }));
+  const topWs = ((t.top_workspaces ?? []) as any[]).slice(0, 6).map((w) => ({ name: w.name?.slice(0, 18) ?? "—", revenue: Number(w.revenue), orders: Number(w.orders) }));
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Loading platform stats…</div>;
-  return (
-    <div className="animate-fade-up space-y-5">
+  const [primary, setPrimary] = useState<Metric>("revenue");
+  const [secondary, setSecondary] = useState<Metric>("orders");
+
+  const growthPct = (curr: number, prev: number) => {
+    if (!prev) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
+  const kpis = [
+    { icon: Users, label: "Users", value: fmt(s.users), hint: `+${fmt(s.new_users_7d)} this week`, pct: Math.min(100, (s.new_users_7d ?? 0) * 10), tone: "primary" as const },
+    { icon: Building2, label: "Workspaces", value: fmt(s.workspaces), hint: `${fmt(s.trials_active)} on trial`, pct: s.workspaces ? (s.trials_active / s.workspaces) * 100 : 0, tone: "accent" as const },
+    { icon: DollarSign, label: "Revenue", value: fmt(s.revenue), hint: `+${fmt(s.revenue_7d)} this week`, pct: Math.min(100, growthPct(s.revenue_7d ?? 0, (s.revenue ?? 0) - (s.revenue_7d ?? 0))), tone: "cyan" as const },
+    { icon: ShoppingCart, label: "Orders", value: fmt(s.orders), hint: `+${fmt(s.orders_7d)} this week`, pct: Math.min(100, growthPct(s.orders_7d ?? 0, (s.orders ?? 0) - (s.orders_7d ?? 0))), tone: "amber" as const },
+    { icon: Bot, label: "AI Employees", value: fmt(s.ai_employees), pct: Math.min(100, (s.ai_employees ?? 0) * 5), tone: "primary" as const },
+    { icon: MessageSquare, label: "Conversations", value: fmt(s.conversations), hint: `${fmt(s.messages)} messages`, pct: Math.min(100, (s.conversations ?? 0) * 2), tone: "accent" as const },
+    { icon: BookOpen, label: "Knowledge", value: fmt(s.knowledge_sources), pct: Math.min(100, (s.knowledge_sources ?? 0) * 5), tone: "cyan" as const },
+    { icon: Plug, label: "Integrations", value: fmt(s.integrations), pct: Math.min(100, (s.integrations ?? 0) * 8), tone: "amber" as const },
+  ];
+
+  if (isLoading) {
+    return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Users} label="Users" value={fmt(s.users)} hint={`+${fmt(s.new_users_7d)} this week`} />
-        <StatCard icon={Building2} label="Workspaces" value={fmt(s.workspaces)} hint={`${fmt(s.trials_active)} on trial`} />
-        <StatCard icon={Bot} label="AI Employees" value={fmt(s.ai_employees)} />
-        <StatCard icon={ShoppingCart} label="Orders" value={fmt(s.orders)} hint={`+${fmt(s.orders_7d)} this week`} />
-        <StatCard icon={TrendingUp} label="Revenue" value={fmt(s.revenue)} hint={`+${fmt(s.revenue_7d)} this week`} />
-        <StatCard icon={MessageSquare} label="Conversations" value={fmt(s.conversations)} hint={`${fmt(s.messages)} messages`} />
-        <StatCard icon={BookOpen} label="Knowledge sources" value={fmt(s.knowledge_sources)} />
-        <StatCard icon={Plug} label="Integrations" value={fmt(s.integrations)} />
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="glass-panel h-24 animate-pulse rounded-2xl" style={{ animationDelay: `${i * 60}ms` }} />
+        ))}
+      </div>
+    );
+  }
+
+  const primaryDef = METRICS.find((m) => m.key === primary)!;
+  const secondaryDef = METRICS.find((m) => m.key === secondary)!;
+
+  // Total for center label on donut
+  const donutTotal = (arr: { value: number }[]) => arr.reduce((a, b) => a + b.value, 0);
+  const channelsTotal = donutTotal(channels);
+  const orderTotal = donutTotal(orderStatus);
+
+  // Radial data for employees/integrations combined
+  const radialData = [
+    ...employeeStatus.map((e, i) => ({ name: `Emp: ${e.name}`, value: e.value, fill: CHART_COLORS[i % CHART_COLORS.length] })),
+    ...integrationStatus.map((e, i) => ({ name: `Int: ${e.name}`, value: e.value, fill: CHART_COLORS[(i + 3) % CHART_COLORS.length] })),
+  ];
+
+  return (
+    <div className="space-y-5">
+      {/* KPI ring grid */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((k, i) => <KpiRing key={k.label} {...k} delay={i * 60} />)}
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <ChartCard title="Revenue (30 days)" subtitle="Daily gross sales">
-          <AreaChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-            <defs>
-              <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="url(#revGrad)" strokeWidth={2} />
-          </AreaChart>
-        </ChartCard>
-
-        <ChartCard title="Orders & new users (30 days)" subtitle="Daily count">
-          <LineChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Line type="monotone" dataKey="orders" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="users" stroke="#22d3ee" strokeWidth={2} dot={false} />
-          </LineChart>
-        </ChartCard>
-
-        <ChartCard title="Messages (30 days)" subtitle="AI + inbound">
-          <BarChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="day" tick={{ fontSize: 10 }} tickFormatter={(v) => v?.slice(5)} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Bar dataKey="messages" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard title="Top workspaces by revenue">
-          <BarChart data={topWs} layout="vertical" margin={{ left: 10, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis type="number" tick={{ fontSize: 10 }} />
-            <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard title="Conversation channels" height={240}>
-          <PieChart>
-            <Pie data={channels} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
-              {channels.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-            </Pie>
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-          </PieChart>
-        </ChartCard>
-
-        <ChartCard title="Order status" height={240}>
-          <PieChart>
-            <Pie data={orderStatus} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
-              {orderStatus.map((_, i) => <Cell key={i} fill={CHART_COLORS[(i + 2) % CHART_COLORS.length]} />)}
-            </Pie>
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-          </PieChart>
-        </ChartCard>
-
-        <ChartCard title="AI employee status" height={240}>
-          <BarChart data={employeeStatus} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard title="Integration status" height={240}>
-          <BarChart data={integrationStatus} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            <Bar dataKey="value" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ChartCard>
-      </div>
-
-      <div className="glass-panel rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Crown className="h-4 w-4 text-primary" /> Plan breakdown</div>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries((s.plan_breakdown ?? {}) as Record<string, number>).map(([plan, count]) => (
-            <div key={plan} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs">
-              <span className="font-semibold capitalize">{plan}</span>
-              <span className="ml-2 text-muted-foreground">{count} workspaces</span>
+      {/* HERO chart — unified composed */}
+      <div className="glass-panel animate-fade-up relative overflow-hidden rounded-3xl p-5 sm:p-6" style={{ animationDelay: "480ms" }}>
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+              <Activity className="h-3.5 w-3.5 text-primary" /> Live · last 30 days
             </div>
-          ))}
-          {Object.keys(s.plan_breakdown ?? {}).length === 0 && <div className="text-xs text-muted-foreground">No workspaces yet.</div>}
+            <div className="mt-1 font-display text-xl font-black tracking-tight sm:text-2xl">Platform pulse</div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {METRICS.map((m) => {
+              const Icon = m.icon;
+              const isP = primary === m.key;
+              const isS = secondary === m.key;
+              const state = isP ? "primary" : isS ? "secondary" : "off";
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => {
+                    if (isP) return;
+                    if (isS) { setSecondary(primary); setPrimary(m.key); }
+                    else { setSecondary(primary); setPrimary(m.key); }
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300 ${
+                    state === "primary" ? "border-transparent bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30"
+                    : state === "secondary" ? "border-white/10 bg-white/[0.08] text-foreground"
+                    : "border-white/5 bg-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3 w-3" />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ width: "100%", height: 320 }}>
+          <ResponsiveContainer>
+            <ComposedChart data={days} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="primaryGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={primaryDef.color} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={primaryDef.color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 6" stroke="hsl(var(--border))" opacity={0.5} vertical={false} />
+              <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => v?.slice(5)} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: "hsl(var(--card) / 0.95)", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, backdropFilter: "blur(12px)" }}
+                cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.2, strokeWidth: 2 }}
+              />
+              <Area yAxisId="left" type="monotone" dataKey={primary} name={primaryDef.label} stroke={primaryDef.color} strokeWidth={2.5} fill="url(#primaryGrad)" animationDuration={900} />
+              <Bar yAxisId="right" dataKey={secondary} name={secondaryDef.label} fill={secondaryDef.color} radius={[6, 6, 0, 0]} opacity={0.85} animationDuration={900} maxBarSize={14} />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="glass-panel rounded-2xl p-4">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Trial status</div>
-          <div className="mt-1 flex items-baseline gap-3">
-            <div className="font-display text-3xl font-black">{fmt(s.trials_active)}</div>
+      {/* Circle chart row */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <DonutCard title="Conversation channels" data={channels} total={channelsTotal} totalLabel="chats" delay={560} />
+        <DonutCard title="Order status" data={orderStatus} total={orderTotal} totalLabel="orders" colorOffset={2} delay={620} />
+
+        <div className="glass-panel animate-fade-up rounded-2xl p-4" style={{ animationDelay: "680ms" }}>
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold">System health</div>
+              <div className="text-[11px] text-muted-foreground">Employees & integrations</div>
+            </div>
+            <Zap className="h-4 w-4 text-primary" />
+          </div>
+          <div style={{ width: "100%", height: 220 }}>
+            <ResponsiveContainer>
+              <RadialBarChart innerRadius="30%" outerRadius="100%" data={radialData} startAngle={90} endAngle={-270}>
+                <RadialBar dataKey="value" cornerRadius={8} background={{ fill: "hsl(var(--border))", opacity: 0.3 }} animationDuration={900} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card) / 0.95)", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+              </RadialBarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Top workspaces */}
+      <div className="glass-panel animate-fade-up rounded-2xl p-5" style={{ animationDelay: "740ms" }}>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold">Top workspaces</div>
+            <div className="text-[11px] text-muted-foreground">Ranked by revenue</div>
+          </div>
+          <Crown className="h-4 w-4 text-primary" />
+        </div>
+        <div className="space-y-2.5">
+          {topWs.length === 0 && <div className="py-6 text-center text-xs text-muted-foreground">No workspace revenue yet.</div>}
+          {topWs.map((w, i) => {
+            const max = Math.max(...topWs.map((x) => x.revenue), 1);
+            const pct = (w.revenue / max) * 100;
+            return (
+              <div key={i} className="group animate-fade-up" style={{ animationDelay: `${800 + i * 60}ms` }}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 font-medium">
+                    <span className="grid h-5 w-5 place-items-center rounded-md bg-white/5 text-[10px] tabular-nums text-muted-foreground">{i + 1}</span>
+                    {w.name}
+                  </div>
+                  <div className="tabular-nums text-muted-foreground">{w.revenue.toLocaleString()} · {w.orders} orders</div>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-gradient transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Plan + trial + admins */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className="glass-panel animate-fade-up rounded-2xl p-5" style={{ animationDelay: "860ms" }}>
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Crown className="h-4 w-4 text-primary" /> Plan breakdown</div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries((s.plan_breakdown ?? {}) as Record<string, number>).map(([plan, count]) => (
+              <div key={plan} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs transition hover:-translate-y-0.5 hover:bg-white/10">
+                <span className="font-semibold capitalize">{plan}</span>
+                <span className="ml-2 text-muted-foreground">{count}</span>
+              </div>
+            ))}
+            {Object.keys(s.plan_breakdown ?? {}).length === 0 && <div className="text-xs text-muted-foreground">No workspaces yet.</div>}
+          </div>
+        </div>
+        <div className="glass-panel animate-fade-up rounded-2xl p-5" style={{ animationDelay: "920ms" }}>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Trial status</div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <div className="font-display text-3xl font-black tabular-nums">{fmt(s.trials_active)}</div>
             <div className="text-xs text-muted-foreground">active · {fmt(s.trials_expired)} expired</div>
           </div>
         </div>
-        <div className="glass-panel rounded-2xl p-4">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Admins</div>
-          <div className="mt-1 flex items-baseline gap-3">
-            <div className="font-display text-3xl font-black">{fmt(s.admins)}</div>
-            <div className="text-xs text-muted-foreground">accounts with root access</div>
+        <div className="glass-panel animate-fade-up rounded-2xl p-5" style={{ animationDelay: "980ms" }}>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Root admins</div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <div className="font-display text-3xl font-black tabular-nums">{fmt(s.admins)}</div>
+            <div className="text-xs text-muted-foreground">with full access</div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DonutCard({ title, data, total, totalLabel, colorOffset = 0, delay = 0 }: {
+  title: string; data: { name: string; value: number }[]; total: number; totalLabel: string; colorOffset?: number; delay?: number;
+}) {
+  return (
+    <div className="glass-panel animate-fade-up rounded-2xl p-4" style={{ animationDelay: `${delay}ms` }}>
+      <div className="mb-2 text-sm font-semibold">{title}</div>
+      <div className="relative" style={{ width: "100%", height: 220 }}>
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={92} paddingAngle={3} stroke="none" animationDuration={900}>
+              {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[(i + colorOffset) % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip contentStyle={{ background: "hsl(var(--card) / 0.95)", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 grid place-items-center">
+          <div className="text-center">
+            <div className="font-display text-2xl font-black tabular-nums">{total.toLocaleString()}</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{totalLabel}</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {data.slice(0, 6).map((d, i) => (
+          <div key={i} className="inline-flex items-center gap-1.5 rounded-lg border border-white/5 bg-white/[0.03] px-2 py-1 text-[10px]">
+            <span className="h-2 w-2 rounded-full" style={{ background: CHART_COLORS[(i + colorOffset) % CHART_COLORS.length] }} />
+            <span className="text-muted-foreground">{d.name}</span>
+            <span className="tabular-nums font-semibold">{d.value}</span>
+          </div>
+        ))}
+        {data.length === 0 && <div className="text-[11px] text-muted-foreground">No data.</div>}
       </div>
     </div>
   );
