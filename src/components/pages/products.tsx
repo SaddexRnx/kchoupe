@@ -349,12 +349,29 @@ export function Products() {
         </div>
       </Panel>
 
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span>
+            Showing <b className="text-foreground">{filtered.length === 0 ? 0 : (pageSafe - 1) * perPage + 1}–{Math.min(pageSafe * perPage, filtered.length)}</b> of <b className="text-foreground">{filtered.length}</b>
+          </span>
+          <label className="flex items-center gap-1.5">
+            <span>Per page</span>
+            <select value={perPage} onChange={(e) => setPerPage(Number(e.target.value))} className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs">
+              {[8, 12, 24, 48, 96].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setPage(1)} disabled={pageSafe === 1} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs disabled:opacity-40 hover:bg-white/10">First</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={pageSafe === 1} className="rounded-md border border-white/10 bg-white/5 p-1 disabled:opacity-40 hover:bg-white/10"><ChevronLeft className="h-3.5 w-3.5" /></button>
+          <span className="px-2 text-xs text-muted-foreground">Page <b className="text-foreground">{pageSafe}</b> / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={pageSafe === totalPages} className="rounded-md border border-white/10 bg-white/5 p-1 disabled:opacity-40 hover:bg-white/10"><ChevronRight className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setPage(totalPages)} disabled={pageSafe === totalPages} className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs disabled:opacity-40 hover:bg-white/10">Last</button>
+        </div>
+      </div>
       <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Trash2 className="h-3 w-3" /> {t("prod.bulk")}
       </div>
-
-      <Modal
-        open={addOpen}
         onClose={() => setAddOpen(false)}
         title="Add product"
         description="Add a product to your catalog. AI employees will use it in conversations."
