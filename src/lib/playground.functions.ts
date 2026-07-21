@@ -26,6 +26,7 @@ export const sendPlaygroundMessage = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    await enforceRateLimit(supabase, "playground_chat", { limit: 40, windowSeconds: 60 });
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
 
