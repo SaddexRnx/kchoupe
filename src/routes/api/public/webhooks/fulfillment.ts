@@ -39,10 +39,10 @@ export const Route = createFileRoute("/api/public/webhooks/fulfillment")({
         const a = Buffer.from(sig); const b = Buffer.from(expected);
         if (a.length !== b.length || !timingSafeEqual(a, b)) return json({ ok: false, error: "bad_signature" }, 401);
 
-        const query = supabaseAdmin.from("orders").update({
+        const trackingNote = [body.note, body.tracking_url ? `Tracking: ${body.tracking_url}` : "", body.courier ? `Courier: ${body.courier}` : ""].filter(Boolean).join(" · ");
+        const query = (supabaseAdmin.from("orders") as any).update({
           status: body.status,
-          notes: body.note ? body.note : undefined,
-          metadata: { tracking_url: body.tracking_url, courier: body.courier },
+          notes: trackingNote || undefined,
         }).eq("workspace_id", body.workspace_id);
         if (body.order_id) query.eq("id", body.order_id);
         else if (body.order_no) query.eq("order_no", body.order_no);
