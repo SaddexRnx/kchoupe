@@ -268,6 +268,74 @@ export function Orders() {
         </div>
       </Panel>
 
+      <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <Panel className="lg:col-span-2">
+          <div className="mb-3 flex items-baseline justify-between">
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Revenue & orders</div>
+              <div className="font-display text-sm text-foreground/90">Last 14 days</div>
+            </div>
+            <div className="flex gap-3 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Revenue</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Orders</span>
+            </div>
+          </div>
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradOrd" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="rev" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} width={44} />
+                <YAxis yAxisId="ord" orientation="right" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
+                <Tooltip contentStyle={{ background: "rgba(15,15,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }} labelStyle={{ color: "rgba(255,255,255,0.7)" }} />
+                <Area yAxisId="rev" type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gradRev)" name="Revenue" />
+                <Area yAxisId="ord" type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={2} fill="url(#gradOrd)" name="Orders" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-3">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Status breakdown</div>
+            <div className="font-display text-sm text-foreground/90">{stats.total} orders</div>
+          </div>
+          {pieData.length === 0 ? (
+            <div className="flex h-56 items-center justify-center text-xs text-muted-foreground">No orders yet</div>
+          ) : (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2} stroke="none">
+                    {pieData.map((d) => <Cell key={d.status} fill={PIE_COLORS[d.status as OrderStatus]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "rgba(15,15,20,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+            {pieData.map((d) => (
+              <span key={d.status} className="inline-flex items-center gap-1 text-muted-foreground">
+                <span className="h-2 w-2 rounded-full" style={{ background: PIE_COLORS[d.status as OrderStatus] }} />
+                {d.name} <span className="opacity-60">{d.value}</span>
+              </span>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+
       {viewing && (
         <Modal open onClose={() => setViewing(null)} title={viewing.order_no} description={`${viewing.customer_name} · ${new Date(viewing.created_at).toLocaleString()}`}
           footer={<>
