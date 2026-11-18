@@ -6,6 +6,10 @@ Stack: TanStack Start, React 19, Tailwind v4, Supabase, Cloudflare Workers.
 
 ![Dashboard](docs/screenshots/dashboard-dark.png)
 
+## About
+
+I built KC after watching nearby store owners juggle Instagram DMs, cash on delivery, and shipping by hand. The tools they were sold assumed English and cards, which is not how commerce works here. I'm Saddek, a developer in Algeria. You can see more of what I build at [saddexrnx.github.io](https://saddexrnx.github.io) or message me on [Telegram](https://t.me/Saddex_x).
+
 ## Why I built it
 
 Most chat and support tools are made for English-speaking SaaS teams. Commerce in North Africa works differently. Customers write in Darija, they pay cash on delivery, their orders come through Instagram DMs, and their shipping goes through Yalidine or ZR Express. KC is built around those realities instead of treating them as an afterthought.
